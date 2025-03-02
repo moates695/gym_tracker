@@ -2,12 +2,10 @@ import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import * as SecureStore from "expo-secure-store";
 
-type AccountState = "new" | "valid" | "expired" | "error" | null;
+type AccountState = "not-registered" | "not-validated" | "expired" | "good" | null;
 
 export default function RootLayout() {
   const router = useRouter();
-  // const [loading, setLoading] = useState<boolean>(true);
-  // const [authenticated, setAuthenticated] = useState<boolean>(false);
   const [accountState, setAccountState] = useState<AccountState>(null);
 
   useEffect(() => {
@@ -15,9 +13,10 @@ export default function RootLayout() {
       try {
         const token = await SecureStore.getItemAsync("auth_token_long");
         if (!token) {
-          setAccountState("new");
-          return
+          setAccountState("not-registered");
+          return;
         }
+
         const url = process.env.API_URL as string;
         const response = await fetch(`${url}/authenticate`, {
           method: 'POST',
@@ -26,11 +25,12 @@ export default function RootLayout() {
           })
         });
         if (!response.ok) throw new Error("HTTP error");
+        
         const data = await response.json();
 
       } catch (error) {
         console.error("Error checking credentials:", error);
-        setAccountState("error")
+        // show error message
       }
     };
 
@@ -38,15 +38,25 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    if (!accountState) return;
-    else if (accountState === "new") {
-      router.replace("/sign-up");
+    if (accountState === null) {
+      return;
+    } else if (accountState === "not-registered") {
+      // router.replace("/sign-up");
+      router.replace({
+        pathname: "/sign-up",
+        params: { await_validation: "false" }
+      })
+    } else if (accountState === "not-validated") {
+      router.replace({
+        pathname: "/sign-up",
+        params: { await_validation: "true" }
+      })
     } else if (accountState === "expired") {
       router.replace("/sign-in");
-    } else if (accountState === "error") {
-      router.replace("/error")
+    } else if (accountState === "good") {
+      router.replace("/(tabs)")
     } else {
-      router.replace('/(tabs)')
+      // todo show error
     }
   }, [accountState, router]);
 
