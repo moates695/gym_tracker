@@ -2,7 +2,7 @@ import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from "reac
 import { Checkbox } from "react-native-paper";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import TextInputFeild from "../components/TextInputField";
+import TextInputFeild from "../components/InputField";
 
 type Gender = "male" | "female" | "other"
 type GoalStatus = "bulking" | "cutting" | "maintaining"
@@ -14,8 +14,8 @@ interface FormData {
   first_name: string,
   last_name: string,
   gender: Gender,
-  height: 183,
-  weight: 90,
+  height: string,
+  weight: string,
   goal_status: GoalStatus
 }
 
@@ -29,12 +29,17 @@ export default function SignUpScreen() {
     first_name: "",
     last_name: "",
     gender: "male",
-    height: 183,
-    weight: 90,
+    height: "",
+    weight: "",
     goal_status: "bulking"
   })
 
   const handleTextChange = (field: string, value: string): void => {
+    if (field in ["height", "weight"]) {
+      value.replace("^\d*\.?\d+$", "")
+      value = String(Number(value) || 0);
+    }
+    
     setFormData({
       ...formData,
       [field]: value,
@@ -52,13 +57,10 @@ export default function SignUpScreen() {
   };
 
   const handleSubmit = (): void => {
+    console.log('Form data:', formData);
     if (validateForm()) {
-      // Form is valid, proceed with submission
-      console.log('Form submitted:', formData);
       Alert.alert('Success', 'Form submitted successfully!');
-      // Here you would typically send the data to your API
     } else {
-      // Form has errors
       Alert.alert('Error', 'Please fix the errors in the form');
     }
   };
@@ -67,7 +69,13 @@ export default function SignUpScreen() {
     <View style={{ padding: 20 }}>
       <Text>Registration Form</Text>
 
-      <TextInputFeild field="email" label="Email" value={formData.email} onChangeText={handleTextChange}/>
+      <TextInputFeild field="email" label="Email" value={formData.email} is_number={false} onChangeText={handleTextChange}/>
+      <TextInputFeild field="username" label="Username" value={formData.username} is_number={false} onChangeText={handleTextChange}/>
+      <TextInputFeild field="password" label="Password" value={formData.password} is_number={false} onChangeText={handleTextChange}/>
+      <TextInputFeild field="first_name" label="First name" value={formData.first_name} is_number={false} onChangeText={handleTextChange}/>
+      <TextInputFeild field="last_name" label="Last name" value={formData.last_name} is_number={false} onChangeText={handleTextChange}/>
+      <TextInputFeild field="height" label="Height" value={formData.height} is_number={true} onChangeText={handleTextChange}/>
+      <TextInputFeild field="weight" label="Weight" value={formData.weight} is_number={true} onChangeText={handleTextChange}/>
 
       <TouchableOpacity 
         onPress={handleSubmit}
