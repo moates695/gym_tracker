@@ -1,11 +1,11 @@
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from "react-native";
-import { Checkbox } from "react-native-paper";
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import TextInputFeild from "../components/InputField";
+import RadioButtons from "../components/RadioButtons";
 
 type Gender = "male" | "female" | "other"
-type GoalStatus = "bulking" | "cutting" | "maintaining"
+type GoalStatus = "bulking" | "cutting" | "maintaining";
 
 interface FormData {
   email: string,
@@ -22,6 +22,7 @@ interface FormData {
 export default function SignUpScreen() {
   const { await_validation } = useLocalSearchParams();
   const [awaitValidation, setAwaitValidation] = useState<boolean>(await_validation === "true");
+  
   const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
@@ -36,14 +37,20 @@ export default function SignUpScreen() {
 
   const handleTextChange = (field: string, value: string): void => {
     if (field in ["height", "weight"]) {
-      value.replace("^\d*\.?\d+$", "")
-      value = String(Number(value) || 0);
+      value = String(Number(value.replace("^\d*\.?\d+$", "")) || 0);
     }
     
     setFormData({
       ...formData,
       [field]: value,
     });
+  };
+
+  const handleSelectChange = (field: string, value: string): void => {
+    setFormData({
+      ...formData,
+      [field]: value
+    })
   };
 
   const validateForm = (): boolean => {
@@ -66,7 +73,7 @@ export default function SignUpScreen() {
   };
 
   return (
-    <View style={{ padding: 20 }}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text>Registration Form</Text>
 
       <TextInputFeild field="email" label="Email" value={formData.email} is_number={false} onChangeText={handleTextChange}/>
@@ -76,6 +83,8 @@ export default function SignUpScreen() {
       <TextInputFeild field="last_name" label="Last name" value={formData.last_name} is_number={false} onChangeText={handleTextChange}/>
       <TextInputFeild field="height" label="Height" value={formData.height} is_number={true} onChangeText={handleTextChange}/>
       <TextInputFeild field="weight" label="Weight" value={formData.weight} is_number={true} onChangeText={handleTextChange}/>
+      <RadioButtons field="gender" label="Gender" selection={formData.gender} options={["male", "female", "other"]} handleSelect={handleSelectChange}/>
+      <RadioButtons field="goal_status" label="Current status" selection={formData.goal_status} options={["bulking", "cutting", "maintaining"]} handleSelect={handleSelectChange}/>
 
       <TouchableOpacity 
         onPress={handleSubmit}
@@ -88,9 +97,20 @@ export default function SignUpScreen() {
       >
         <Text>Submit</Text>
       </TouchableOpacity>
-
-    </View>
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  content: { padding: 20 }, // Ensures scroll works smoothly
+  box: {
+    padding: 20,
+    marginVertical: 5,
+    backgroundColor: "#f0f0f0",
+    alignItems: "center",
+  },
+});
+
 
 
