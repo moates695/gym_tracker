@@ -1,7 +1,11 @@
-import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from "react-native";
 import { Checkbox } from "react-native-paper";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
+import TextInputFeild from "../components/TextInputField";
+
+type Gender = "male" | "female" | "other"
+type GoalStatus = "bulking" | "cutting" | "maintaining"
 
 interface FormData {
   email: string,
@@ -9,14 +13,10 @@ interface FormData {
   username: string,
   first_name: string,
   last_name: string,
-  gender: "male" | "female" | "other",
+  gender: Gender,
   height: 183,
   weight: 90,
-  goal_status: "bulking" | "cutting" | "maintaining"
-}
-
-interface FormErrors {
-  email?: string;
+  goal_status: GoalStatus
 }
 
 export default function SignUpScreen() {
@@ -33,33 +33,22 @@ export default function SignUpScreen() {
     weight: 90,
     goal_status: "bulking"
   })
-  const [errors, setErrors] = useState<FormErrors>({});
 
-  const handleTextChange = (field: keyof Pick<FormData, 'email'>, value: string): void => {
+  const handleTextChange = (field: string, value: string): void => {
     setFormData({
       ...formData,
       [field]: value,
     });
-    
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors({
-        ...errors,
-        [field]: undefined,
-      });
-    }
   };
 
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
 
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim() || !emailPattern.test(formData.email)) {
-      newErrors.email = 'Valid email is required';
+      return false;
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return true;
   };
 
   const handleSubmit = (): void => {
@@ -75,22 +64,25 @@ export default function SignUpScreen() {
   };
 
   return (
-    <View>
+    <View style={{ padding: 20 }}>
       <Text>Registration Form</Text>
-      <View>
-        <Text>Email</Text>
-        <TextInput
-          value={formData.email}
-          onChangeText={(text) => handleTextChange('email', text)}
-          placeholder="Enter your full name"
-        />
-        {errors.email && <Text>{errors.email}</Text>}
-      </View>
 
-      <TouchableOpacity onPress={handleSubmit}>
+      <TextInputFeild field="email" label="Email" value={formData.email} onChangeText={handleTextChange}/>
+
+      <TouchableOpacity 
+        onPress={handleSubmit}
+        style={{
+          backgroundColor: "blue",
+          padding: 12,
+          borderRadius: 5,
+          alignItems: "center",
+        }} 
+      >
         <Text>Submit</Text>
       </TouchableOpacity>
 
     </View>
   );
 }
+
+
