@@ -1,31 +1,31 @@
+import React from "react";
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Keyboard } from "react-native";
 
 interface InputFieldProps {
   field: string,
   label: string,
   value: string,
-  is_number: boolean,
+  is_number?: boolean,
   onChangeText: (field: string, value: string) => void
 }
 
 export default function InputField(props: InputFieldProps) {
-  const { field, label, value, is_number, onChangeText } = props;
-  
-  const handleSubmit = () => {
-    Keyboard.dismiss();
-  };
+  const { field, label, value, is_number=false, onChangeText } = props;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.inputWrapper}>
+    <View>
         <Text style={styles.formHeader}>{label}</Text>
+        <View style={styles.container}>
         <TextInput
           value={value}
           onChangeText={(text) => onChangeText(field, text)}
-          style={styles.textInput}
+          style={styles.input}
           keyboardType={is_number ? "decimal-pad" : "default"}
         />
-        <TouchableOpacity onPress={handleSubmit} style={styles.button}>
+        <TouchableOpacity 
+          style={styles.button}
+          onPress={() => Keyboard.dismiss()}
+        >
           <Text style={styles.buttonText}>✔</Text>
         </TouchableOpacity>
       </View>
@@ -45,20 +45,32 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 5,
   },
-  button: {
-    padding: 10,
-    backgroundColor: "blue",
-    borderRadius: 5,
-    marginLeft: 10,
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
   },
-  container: { padding: 20 },
-  inputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
+  input: {
+    flex: 1,
+    height: 50,
     borderWidth: 1,
-    borderColor: "gray",
+    borderColor: '#ccc',
     borderRadius: 8,
-    paddingRight: 40, // Space for button inside the input
+    paddingHorizontal: 16,
+    backgroundColor: '#fff',
   },
-  buttonText: { color: "white", fontWeight: "bold" },
+  button: {
+    marginLeft: 8,
+    height: 50,
+    width: 50,
+    borderRadius: 8,
+    backgroundColor: '#007BFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+  }
 })

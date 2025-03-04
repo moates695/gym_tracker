@@ -25,13 +25,13 @@ export default function SignUpScreen() {
   
   const [formData, setFormData] = useState<FormData>({
     email: "",
-    password: "",
     username: "",
+    password: "",
     first_name: "",
     last_name: "",
-    gender: "male",
     height: "",
     weight: "",
+    gender: "male",
     goal_status: "bulking"
   })
 
@@ -72,19 +72,31 @@ export default function SignUpScreen() {
     }
   };
 
+  const formDataLabels: Record<string, string> = {
+    email: "Email",
+    password: "Password",
+    username: "Username",
+    first_name: "First name",
+    last_name: "Last name",
+    gender: "Gender",
+    height: "Height",
+    weight: "Weight",
+    goal_status: "Current goal"
+  }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text>Registration Form</Text>
 
-      <TextInputFeild field="email" label="Email" value={formData.email} is_number={false} onChangeText={handleTextChange}/>
-      <TextInputFeild field="username" label="Username" value={formData.username} is_number={false} onChangeText={handleTextChange}/>
-      <TextInputFeild field="password" label="Password" value={formData.password} is_number={false} onChangeText={handleTextChange}/>
-      <TextInputFeild field="first_name" label="First name" value={formData.first_name} is_number={false} onChangeText={handleTextChange}/>
-      <TextInputFeild field="last_name" label="Last name" value={formData.last_name} is_number={false} onChangeText={handleTextChange}/>
-      <TextInputFeild field="height" label="Height" value={formData.height} is_number={true} onChangeText={handleTextChange}/>
-      <TextInputFeild field="weight" label="Weight" value={formData.weight} is_number={true} onChangeText={handleTextChange}/>
-      <RadioButtons field="gender" label="Gender" selection={formData.gender} options={["male", "female", "other"]} handleSelect={handleSelectChange}/>
-      <RadioButtons field="goal_status" label="Current status" selection={formData.goal_status} options={["bulking", "cutting", "maintaining"]} handleSelect={handleSelectChange}/>
+      {Object.entries(formData).map(([key, value]: [string, string]) => (
+        <>
+          {key === 'gender' || key === 'goal_status' ? (
+            <RadioButtons field={key} label={formDataLabels[key]} selection={formData[key as keyof FormData]} options={key === 'gender' ? ["male", "female", "other"] : ["bulking", "cutting", "maintaining"]} handleSelect={handleSelectChange}/>
+          ) : (
+            <TextInputFeild field={key} label={formDataLabels[key]} value={formData[key as keyof FormData]} onChangeText={handleTextChange}/>
+          )}
+        </>
+      ))}
 
       <TouchableOpacity 
         onPress={handleSubmit}
@@ -95,14 +107,14 @@ export default function SignUpScreen() {
           alignItems: "center",
         }} 
       >
-        <Text>Submit</Text>
+        <Text style={{ color: "white"}}>Submit</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, padding: 20 },
   content: { padding: 20 }, // Ensures scroll works smoothly
   box: {
     padding: 20,

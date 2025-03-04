@@ -14,24 +14,34 @@ export default function RadioButtons (props: RadioButtonProps) {
   return (
     <View>
       <Text>{label}</Text>
-      {options.map((option) => (
-        <TouchableOpacity 
-          key={option} 
-          onPress={() => handleSelect(field, option)}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            padding: 10,
-            marginVertical: 5,
-            borderWidth: 2,
-            borderColor: selection === option ? "blue" : "gray",
-            borderRadius: 5,
-            backgroundColor: selection === option ? "#E0F7FA" : "white",
-          }}
-        >
-          <Text>{option}</Text>
-        </TouchableOpacity>
-      ))}
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          marginVertical: 10
+        }}
+      >
+        {options.map((option) => (
+          <TouchableOpacity 
+            key={option} 
+            onPress={() => handleSelect(field, option)}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 8,
+              marginVertical: 5,
+              marginHorizontal: 4,
+              borderWidth: 2,
+              borderColor: selection === option ? "blue" : "gray",
+              borderRadius: 5,
+              backgroundColor: selection === option ? "#E0F7FA" : "white",
+            }}
+          >
+            <Text>{option}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     </View>
   )
 }
