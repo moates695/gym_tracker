@@ -21,13 +21,8 @@ export default function InputField(props: InputFieldProps) {
           onChangeText={(text) => onChangeText(field, text)}
           style={styles.input}
           keyboardType={is_number ? "decimal-pad" : "default"}
+          returnKeyType="done"
         />
-        <TouchableOpacity 
-          style={styles.button}
-          onPress={() => Keyboard.dismiss()}
-        >
-          <Text style={styles.buttonText}>✔</Text>
-        </TouchableOpacity>
       </View>
     </View>
   )

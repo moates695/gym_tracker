@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import TextInputFeild from "../components/InputField";
@@ -85,31 +85,39 @@ export default function SignUpScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text>Registration Form</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        
+          <Text>Registration Form</Text>
 
-      {Object.entries(formData).map(([key, value]: [string, string]) => (
-        <>
-          {key === 'gender' || key === 'goal_status' ? (
-            <RadioButtons field={key} label={formDataLabels[key]} selection={formData[key as keyof FormData]} options={key === 'gender' ? ["male", "female", "other"] : ["bulking", "cutting", "maintaining"]} handleSelect={handleSelectChange}/>
-          ) : (
-            <TextInputFeild field={key} label={formDataLabels[key]} value={formData[key as keyof FormData]} onChangeText={handleTextChange}/>
-          )}
-        </>
-      ))}
+          {Object.entries(formData).map(([key, value]: [string, string]) => (
+            <>
+              {['gender', 'goal_status'].includes(key) ? (
+                <RadioButtons field={key} label={formDataLabels[key]} selection={value} options={key === 'gender' ? ["male", "female", "other"] : ["bulking", "cutting", "maintaining"]} handleSelect={handleSelectChange}/>
+              ) : (
+                <TextInputFeild field={key} label={formDataLabels[key]} value={value} is_number={['height', 'weight'].includes(key)} onChangeText={handleTextChange}/>
+              )}
+            </>
+          ))}
 
-      <TouchableOpacity 
-        onPress={handleSubmit}
-        style={{
-          backgroundColor: "blue",
-          padding: 12,
-          borderRadius: 5,
-          alignItems: "center",
-        }} 
-      >
-        <Text style={{ color: "white"}}>Submit</Text>
-      </TouchableOpacity>
-    </ScrollView>
+          <TouchableOpacity 
+            onPress={handleSubmit}
+            style={{
+              backgroundColor: "blue",
+              padding: 12,
+              borderRadius: 5,
+              alignItems: "center",
+            }} 
+          >
+            <Text style={{ color: "white"}}>Submit</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
