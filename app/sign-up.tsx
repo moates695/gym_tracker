@@ -87,34 +87,51 @@ export default function SignUpScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: "black"}}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <ScrollView contentContainerStyle={styles.content}>
         
-          <Text>Registration Form</Text>
+          <Text style={styles.text}>Sign Up</Text>
 
-          {Object.entries(formData).map(([key, value]: [string, string]) => (
-            <>
-              {['gender', 'goal_status'].includes(key) ? (
-                <RadioButtons field={key} label={formDataLabels[key]} selection={value} options={key === 'gender' ? ["male", "female", "other"] : ["bulking", "cutting", "maintaining"]} handleSelect={handleSelectChange}/>
-              ) : (
-                <TextInputFeild field={key} label={formDataLabels[key]} value={value} is_number={['height', 'weight'].includes(key)} onChangeText={handleTextChange}/>
-              )}
-            </>
-          ))}
+          <View style={styles.container}>
+            {['email', 'password', 'username'].map((key, index) => (
+              <View style={styles.singleItemRow}>
+                <TextInputFeild key={index} field={key} label={formDataLabels[key]} value={formData[key as keyof FormData]} is_number={false} onChangeText={handleTextChange}/>
+              </View>
+            ))}
+            {[['first_name', 'last_name'], ['height', 'weight']].map((tuple, index) => (
+              <View style={styles.doubleItemRow}>
+                <View style={styles.doubleItem}>
+                  <TextInputFeild key={index} field={tuple[0]} label={formDataLabels[tuple[0]]} value={formData[tuple[0] as keyof FormData]} is_number={false} onChangeText={handleTextChange}/>
+                </View>
+                <View style={styles.doubleItem}>
+                  <TextInputFeild key={index} field={tuple[1]} label={formDataLabels[tuple[1]]} value={formData[tuple[1] as keyof FormData]} is_number={false} onChangeText={handleTextChange}/>
+                </View>
+              </View>
+            ))}
 
-          <TouchableOpacity 
-            onPress={handleSubmit}
-            style={{
-              backgroundColor: "blue",
-              padding: 12,
-              borderRadius: 5,
-              alignItems: "center",
-            }} 
-          >
-            <Text style={{ color: "white"}}>Submit</Text>
-          </TouchableOpacity>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity 
+                onPress={handleSubmit}
+                style={{
+                  backgroundColor: "blue",
+                  padding: 12,
+                  borderRadius: 5,
+                  width: "80%",
+                  alignItems: "center"
+                }} 
+              >
+                <Text style={{ color: "white"}}>Submit</Text>
+              </TouchableOpacity>
+            </View>
+
+            
+
+          </View>
+
+          
+          
         </ScrollView>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
@@ -122,15 +139,53 @@ export default function SignUpScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  content: { padding: 20 }, // Ensures scroll works smoothly
-  box: {
-    padding: 20,
-    marginVertical: 5,
-    backgroundColor: "#f0f0f0",
-    alignItems: "center",
+  text: { color: "white" },
+  content: { padding: 30 },
+  container: {
+    flex: 1,
+    padding: 10,
+    color: "white",
   },
+  fullWidthRow: {
+    width: "100%",
+    padding: 5,
+    marginBottom: 5,
+  },
+  halfWidthRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 5,
+    width: "50%"
+  },
+  halfWidthBox: {
+    width: "50%",
+    alignSelf: "center"
+  },
+
+  singleItemRow: {
+    flex: 1,
+    marginBottom: 10,
+  },
+  singleItem: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 5,
+    padding: 15,
+  },
+  doubleItemRow: {
+    flex: 1,
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  doubleItem: {
+    flex: 1,
+    justifyContent: 'center',
+    borderRadius: 5,
+  },
+  buttonContainer: {
+    flex: 1,
+    padding: 10,
+    alignItems: "center",
+  }
 });
-
-
-
