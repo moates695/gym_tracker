@@ -84,6 +84,11 @@ export default function SignUpScreen() {
     goal_status: "Current goal"
   }
 
+  const formDataOptions: Record<string, string[]> = {
+    gender: ["male", "female", "other"],
+    goal_status: ["bulking", "cutting", "maintaining"]
+  }
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -96,26 +101,30 @@ export default function SignUpScreen() {
 
           <View style={styles.container}>
             {['email', 'password', 'username'].map((key, index) => (
-              <View style={styles.singleItemRow}>
-                <TextInputFeild key={index} field={key} label={formDataLabels[key]} value={formData[key as keyof FormData]} is_number={false} onChangeText={handleTextChange}/>
+              <View key={index} style={styles.singleItemRow}>
+                <TextInputFeild field={key} label={formDataLabels[key]} value={formData[key as keyof FormData]} is_number={false} onChangeText={handleTextChange}/>
               </View>
             ))}
             {[['first_name', 'last_name'], ['height', 'weight']].map((tuple, index) => (
-              <View style={styles.doubleItemRow}>
+              <View key={index} style={styles.doubleItemRow}>
                 <View style={styles.doubleItem}>
-                  <TextInputFeild key={index} field={tuple[0]} label={formDataLabels[tuple[0]]} value={formData[tuple[0] as keyof FormData]} is_number={false} onChangeText={handleTextChange}/>
+                  <TextInputFeild field={tuple[0]} label={formDataLabels[tuple[0]]} value={formData[tuple[0] as keyof FormData]} is_number={index === 1} onChangeText={handleTextChange}/>
                 </View>
                 <View style={styles.doubleItem}>
-                  <TextInputFeild key={index} field={tuple[1]} label={formDataLabels[tuple[1]]} value={formData[tuple[1] as keyof FormData]} is_number={false} onChangeText={handleTextChange}/>
+                  <TextInputFeild field={tuple[1]} label={formDataLabels[tuple[1]]} value={formData[tuple[1] as keyof FormData]} is_number={index === 1} onChangeText={handleTextChange}/>
                 </View>
               </View>
+            ))}
+
+            {['gender', 'goal_status'].map((key, index) => (
+              <RadioButtons key={index} field={key} label={formDataLabels[key]} options={formDataOptions[key]} selection={formData[key as keyof FormData]} handleSelect={handleSelectChange}/>
             ))}
 
             <View style={styles.buttonContainer}>
               <TouchableOpacity 
                 onPress={handleSubmit}
                 style={{
-                  backgroundColor: "blue",
+                  backgroundColor: "green",
                   padding: 12,
                   borderRadius: 5,
                   width: "80%",
@@ -125,13 +134,7 @@ export default function SignUpScreen() {
                 <Text style={{ color: "white"}}>Submit</Text>
               </TouchableOpacity>
             </View>
-
-            
-
           </View>
-
-          
-          
         </ScrollView>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
@@ -146,22 +149,6 @@ const styles = StyleSheet.create({
     padding: 10,
     color: "white",
   },
-  fullWidthRow: {
-    width: "100%",
-    padding: 5,
-    marginBottom: 5,
-  },
-  halfWidthRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 5,
-    width: "50%"
-  },
-  halfWidthBox: {
-    width: "50%",
-    alignSelf: "center"
-  },
-
   singleItemRow: {
     flex: 1,
     marginBottom: 10,

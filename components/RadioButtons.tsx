@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, Text } from "react-native";
+import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
 
 interface RadioButtonProps {
   field: string,
@@ -11,37 +11,41 @@ interface RadioButtonProps {
 export default function RadioButtons (props: RadioButtonProps) {
   const { field, label, options, selection, handleSelect } = props;
   
+  const optionsItemWidth = 100 / options.length;
+
   return (
     <View>
-      <Text>{label}</Text>
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-around',
-          marginVertical: 10
-        }}
-      >
+      <Text style={styles.text}>{label}</Text>
+      <View style={styles.optionsContainer}>
         {options.map((option) => (
           <TouchableOpacity 
             key={option} 
             onPress={() => handleSelect(field, option)}
             style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: 8,
+              padding: 10,
+              justifyContent: "space-around",
+              width: `${optionsItemWidth}%`,
               marginVertical: 5,
               marginHorizontal: 4,
               borderWidth: 2,
-              borderColor: selection === option ? "blue" : "gray",
+              borderColor: selection === option ? "red" : "gray",
               borderRadius: 5,
-              backgroundColor: selection === option ? "#E0F7FA" : "white",
+              backgroundColor: "black"
             }}
           >
-            <Text>{option}</Text>
+            <Text style={{alignSelf: "center", color: "white"}}>{option}</Text>
           </TouchableOpacity>
         ))}
       </View>
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  text: { color: "white" },
+  optionsContainer: {
+    flex: 1,
+    flexDirection: "row",
+    marginBottom: 5
+  }
+})
