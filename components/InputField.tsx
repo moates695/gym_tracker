@@ -6,11 +6,13 @@ interface InputFieldProps {
   label: string,
   value: string,
   is_number?: boolean,
+  is_secure?: boolean,
+  error_message?: string,
   onChangeText: (field: string, value: string) => void
 }
 
 export default function InputField(props: InputFieldProps) {
-  const { field, label, value, is_number=false, onChangeText } = props;
+  const { field, label, value, is_number=false, is_secure=false, error_message='', onChangeText } = props;
 
   return (
     <>
@@ -19,11 +21,15 @@ export default function InputField(props: InputFieldProps) {
         <TextInput
           value={value}
           onChangeText={(text) => onChangeText(field, text)}
-          style={styles.input}
+          style={[styles.input, {borderColor: error_message === '' ? "#ccc": "red"}]}
           keyboardType={is_number ? "decimal-pad" : "default"}
           returnKeyType="done"
           className="text-input"
+          secureTextEntry={is_secure}
         />
+      </View>
+      <View style={styles.container}>
+        <Text style={{color: "red", opacity: error_message === '' ? 0 : 1}}>{error_message}</Text>
       </View>
     </>
   )

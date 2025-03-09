@@ -1,6 +1,6 @@
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from "react-native";
-import { useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import TextInputFeild from "../components/InputField";
 import RadioButtons from "../components/RadioButtons";
 
@@ -22,6 +22,7 @@ interface FormData {
 export default function SignUpScreen() {
   const { await_validation } = useLocalSearchParams();
   const [awaitValidation, setAwaitValidation] = useState<boolean>(await_validation === "true");
+  const router = useRouter();
   
   const [formData, setFormData] = useState<FormData>({
     email: "",
@@ -35,15 +36,49 @@ export default function SignUpScreen() {
     goal_status: "bulking"
   })
 
+  const usernameTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [inError, setInError] = useState<Record<string, string>>({});
+
   const handleTextChange = (field: string, value: string): void => {
-    if (field in ["height", "weight"]) {
+    if (field in ["height", "weight"]) { // todo maybe remove this?
       value = String(Number(value.replace("^\d*\.?\d+$", "")) || 0);
     }
+
+    setInError(prev => {
+      const { [field]: _, ...rest } = prev;
+      return rest;
+    })
     
     setFormData({
       ...formData,
       [field]: value,
     });
+
+    switch (field) {
+      case 'email':
+        validateEmail(value);
+        break;
+      case 'password':
+        validatePassword(value);
+        break;
+      case 'username':
+        validateUsername(value);
+        break;
+      case 'first_name':
+        validateName(value, 'first_name');
+        break;
+      case 'last_name':
+        validateName(value, 'last_name');
+        break;
+      case 'height':
+        validateHeight(value);
+        break;
+      case 'weight':
+        validateWeight(value);
+        break;
+    }
+
   };
 
   const handleSelectChange = (field: string, value: string): void => {
@@ -54,13 +89,114 @@ export default function SignUpScreen() {
   };
 
   const validateForm = (): boolean => {
+    return true;
+  };
 
+  const validateEmail = (email: string) => {
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim() || !emailPattern.test(formData.email)) {
-      return false;
+      setInError({
+        ...inError,
+        'email': 'invalid email'
+      })
+    }
+  };
+
+  const validatePassword = (password: string) => {
+    let error_message = ''
+    
+    if (password.length < 8 || password.length > 36) {
+      error_message = 'password must be between 8 and 36 characters'
+    } else if (!/[A-Z]/.test(password)) {
+      error_message = "password must have at least 1 uppercase letter"
+    } else if (!/[1-9]/.test(password)) {
+      error_message = "password must have at least 1 number"
+    } else if (!/^[^a-zA-Z0-9]$/.test(password)) {
+      error_message = "password must have at least 1 special character"
     }
 
-    return true;
+    setInError({
+      ...inError,
+      'password': error_message
+    })
+  } 
+
+  const validateUsername = (username: string) => {
+    if (usernameTimeoutRef.current) {
+      clearTimeout(usernameTimeoutRef.current);
+    }
+
+    usernameTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await fetch(`${process.env.API_URL}/register/username` + new URLSearchParams({
+          username: username
+        }).toString())
+  
+        const data = await response.json();
+  
+        if (data.taken === false) return;
+  
+        setInError({
+          ...inError,
+          'username': "username is taken"
+        })
+      
+      } catch (error) {
+        console.log(error)
+        console.log(process.env.API_URL)
+        setInError({
+          ...inError,
+          'username': "error checking username"
+        })
+      }
+    }, 1500);
+  }
+
+  // const validateUsername = async (username: string) => {
+  //   try {
+  //     // const response = await fetch(`${process.env.API_URL}/register/username?username=${encodeURIComponent(username)}`)
+  //     const response = await fetch(`${process.env.API_URL}/register/username` + new URLSearchParams({
+  //       username: username
+  //     }).toString())
+
+  //     const data = await response.json();
+
+  //     if (data.taken === false) return;
+
+  //     setInError({
+  //       ...inError,
+  //       'username': "username is taken"
+  //     })
+    
+  //   } catch (error) {
+
+  //   }
+  // };
+
+  const validateName = (name: string, field: string) => {
+    if (name.length > 0 && name.trim().length > 0) return;
+    setInError({
+      ...inError,
+      [field]: "name is empty"
+    })
+  };
+
+  const validateHeight = (height_str: string) => {
+    const height = Number(height_str);
+    if (height >= 20 && height <= 300) return;
+    setInError({
+      ...inError,
+      height: "invalid height"
+    })
+  };
+
+  const validateWeight = (weight_str: string) => {
+    const weight = Number(weight_str);
+    if (weight >= 20 && weight <= 300) return;
+    setInError({
+      ...inError,
+      weight: "invalid weight"
+    })
   };
 
   const handleSubmit = (): void => {
@@ -81,7 +217,7 @@ export default function SignUpScreen() {
     gender: "Gender",
     height: "Height",
     weight: "Weight",
-    goal_status: "Current goal"
+    goal_status: "Current phase"
   }
 
   const formDataOptions: Record<string, string[]> = {
@@ -102,16 +238,16 @@ export default function SignUpScreen() {
           <View style={styles.container}>
             {['email', 'password', 'username'].map((key, index) => (
               <View key={index} style={styles.singleItemRow}>
-                <TextInputFeild field={key} label={formDataLabels[key]} value={formData[key as keyof FormData]} is_number={false} onChangeText={handleTextChange}/>
+                <TextInputFeild field={key} label={formDataLabels[key]} value={formData[key as keyof FormData]} is_number={false} is_secure={key==='password'} error_message={inError[key]} onChangeText={handleTextChange}/>
               </View>
             ))}
             {[['first_name', 'last_name'], ['height', 'weight']].map((tuple, index) => (
               <View key={index} style={styles.doubleItemRow}>
                 <View style={styles.doubleItem}>
-                  <TextInputFeild field={tuple[0]} label={formDataLabels[tuple[0]]} value={formData[tuple[0] as keyof FormData]} is_number={index === 1} onChangeText={handleTextChange}/>
+                  <TextInputFeild field={tuple[0]} label={formDataLabels[tuple[0]]} value={formData[tuple[0] as keyof FormData]} is_number={index === 1} error_message={inError[tuple[0]]} onChangeText={handleTextChange}/>
                 </View>
                 <View style={styles.doubleItem}>
-                  <TextInputFeild field={tuple[1]} label={formDataLabels[tuple[1]]} value={formData[tuple[1] as keyof FormData]} is_number={index === 1} onChangeText={handleTextChange}/>
+                  <TextInputFeild field={tuple[1]} label={formDataLabels[tuple[1]]} value={formData[tuple[1] as keyof FormData]} is_number={index === 1} error_message={inError[tuple[1]]} onChangeText={handleTextChange}/>
                 </View>
               </View>
             ))}
@@ -119,22 +255,32 @@ export default function SignUpScreen() {
             {['gender', 'goal_status'].map((key, index) => (
               <RadioButtons key={index} field={key} label={formDataLabels[key]} options={formDataOptions[key]} selection={formData[key as keyof FormData]} handleSelect={handleSelectChange}/>
             ))}
-
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity 
-                onPress={handleSubmit}
-                style={{
-                  backgroundColor: "green",
-                  padding: 12,
-                  borderRadius: 5,
-                  width: "80%",
-                  alignItems: "center"
-                }} 
-              >
-                <Text style={{ color: "white"}}>Submit</Text>
-              </TouchableOpacity>
-            </View>
           </View>
+
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity 
+              onPress={handleSubmit}
+              style={{
+                backgroundColor: Object.keys(inError).length !== 0 ? "#ccc" : "#0db80d",
+                padding: 12,
+                borderRadius: 5,
+                width: "50%",
+                alignItems: "center"
+              }} 
+              disabled={Object.keys(inError).length !== 0}
+            >
+              <Text style={{ color: "white"}}>Submit</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity 
+              onPress={() => router.replace("/sign-in")}
+            >
+              <Text style={{ color: "white"}}>already have an account?</Text>
+            </TouchableOpacity>
+          </View>
+
         </ScrollView>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
