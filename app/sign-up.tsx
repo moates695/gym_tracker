@@ -21,16 +21,16 @@ interface FormData {
 
 export default function SignUpScreen() {
   const router = useRouter();
-  
+
   const [formData, setFormData] = useState<FormData>({
-    email: "",
-    username: "",
-    password: "",
-    first_name: "",
-    last_name: "",
-    height: "",
-    weight: "",
-    gender: "male",
+    email: "moates695@gmail.com",
+    username: "username2",
+    password: "Password1!",
+    first_name: "first",
+    last_name: "last",
+    height: "55",
+    weight: "60",
+    gender: "female",
     goal_status: "bulking"
   })
 

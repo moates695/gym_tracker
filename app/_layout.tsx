@@ -9,6 +9,7 @@ export default function RootLayout() {
   const [accountState, setAccountState] = useState<AccountState>(null);
 
   useEffect(() => {
+    // todo implement proper token checking once signed up / in
     const checkStorage = async () => {
       try {
         const token = await SecureStore.getItemAsync("auth_token_long");
@@ -17,7 +18,7 @@ export default function RootLayout() {
           return;
         }
 
-        const url = process.env.API_URL as string;
+        const url = process.env.EXPO_PUBLIC_API_URL as string;
         const response = await fetch(`${url}/authenticate`, {
           method: 'POST',
           body: JSON.stringify({

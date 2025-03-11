@@ -13,23 +13,21 @@ export default function Validate() {
     try {
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/register/validate/check?` + 
-        new URLSearchParams({ usernameString }).toString()
+        new URLSearchParams({ username: usernameString }).toString()
       )
       const data = await response.json();
       console.log(data);
-      is_validated = data["is_verified"];
+      if (data["is_verified"] === true) {
+        is_validated = true;
+        router.replace("/(tabs)")
+        return;
+      }
     } catch (error) {
       console.log(error);
     } finally {
-      if (!is_validated) {
-        setTimeout(fetchValidationStatus, 1000);        
-      }
+      if (is_validated) return;
+      setTimeout(fetchValidationStatus, 1500);        
     }
-
-    if (!is_validated) return;
-
-    Alert.alert("email has been validated")
-    // todo save username + data in storage and navigate to home screen (?)
 
   };
 
@@ -39,8 +37,8 @@ export default function Validate() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "black"}}>
-      <Text>Validate your email</Text>
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "black"}}>
+      <Text style={{ color: "white" }}>Validate your email</Text>
     </View>
   )
 
