@@ -20,8 +20,6 @@ interface FormData {
 }
 
 export default function SignUpScreen() {
-  const { await_validation } = useLocalSearchParams();
-  const [awaitValidation, setAwaitValidation] = useState<boolean>(await_validation === "true");
   const router = useRouter();
   
   const [formData, setFormData] = useState<FormData>({
@@ -37,7 +35,7 @@ export default function SignUpScreen() {
   })
 
   const usernameTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
+  const [isTimeoutActive, setIsTimeoutActive] = useState<boolean>(false);
   const [inError, setInError] = useState<Record<string, string>>({});
 
   const handleTextChange = (field: string, value: string): void => {
@@ -88,10 +86,6 @@ export default function SignUpScreen() {
     })
   };
 
-  const validateForm = (): boolean => {
-    return true;
-  };
-
   const validateEmail = (email: string) => {
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim() || !emailPattern.test(formData.email)) {
@@ -111,7 +105,7 @@ export default function SignUpScreen() {
       error_message = "password must have at least 1 uppercase letter"
     } else if (!/[1-9]/.test(password)) {
       error_message = "password must have at least 1 number"
-    } else if (!/^[^a-zA-Z0-9]$/.test(password)) {
+    } else if (!/[^A-Za-z0-9]/ .test(password)) {
       error_message = "password must have at least 1 special character"
     }
 
@@ -126,11 +120,12 @@ export default function SignUpScreen() {
       clearTimeout(usernameTimeoutRef.current);
     }
 
+    setIsTimeoutActive(true);
     usernameTimeoutRef.current = setTimeout(async () => {
       try {
-        const response = await fetch(`${process.env.API_URL}/register/username` + new URLSearchParams({
-          username: username
-        }).toString())
+        const response = await fetch(
+          `${process.env.EXPO_PUBLIC_API_URL}/register/username?` + 
+          new URLSearchParams({ username }).toString())
   
         const data = await response.json();
   
@@ -142,36 +137,15 @@ export default function SignUpScreen() {
         })
       
       } catch (error) {
-        console.log(error)
-        console.log(process.env.API_URL)
         setInError({
           ...inError,
           'username': "error checking username"
         })
+      } finally {
+        setIsTimeoutActive(false);
       }
-    }, 1500);
-  }
-
-  // const validateUsername = async (username: string) => {
-  //   try {
-  //     // const response = await fetch(`${process.env.API_URL}/register/username?username=${encodeURIComponent(username)}`)
-  //     const response = await fetch(`${process.env.API_URL}/register/username` + new URLSearchParams({
-  //       username: username
-  //     }).toString())
-
-  //     const data = await response.json();
-
-  //     if (data.taken === false) return;
-
-  //     setInError({
-  //       ...inError,
-  //       'username': "username is taken"
-  //     })
-    
-  //   } catch (error) {
-
-  //   }
-  // };
+    }, 750);
+  };
 
   const validateName = (name: string, field: string) => {
     if (name.length > 0 && name.trim().length > 0) return;
@@ -199,12 +173,52 @@ export default function SignUpScreen() {
     })
   };
 
-  const handleSubmit = (): void => {
-    console.log('Form data:', formData);
-    if (validateForm()) {
-      Alert.alert('Success', 'Form submitted successfully!');
-    } else {
-      Alert.alert('Error', 'Please fix the errors in the form');
+  const areFormDataFieldsEmpty = (): boolean => {
+    for (const key in formData) {
+      if (formData[key as keyof FormData].trim().length !== 0) continue;
+      return true;
+    }
+    return false;
+  };
+
+  const isFormInError = (): boolean => {
+    for (const key in inError) {
+      if (inError[key].length === 0) continue;
+      return true;
+    }
+    return false;
+  };
+
+  const isButtonDisabled = (): boolean => {
+    return areFormDataFieldsEmpty() || isFormInError() || isTimeoutActive;
+  };
+
+  const handleSubmit = async (): Promise<void> => {
+    let form_copy: Record<any, any> = { ...formData};
+    form_copy.height = parseInt(formData.height);
+    form_copy.weight = parseInt(formData.weight);
+
+    console.log(JSON.stringify(form_copy))
+
+    try {
+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form_copy)
+      });
+
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+      router.replace({
+        pathname: "/validate",
+        params: { username: formData.username }
+      })
+
+    } catch (error) {
+      console.log(error)
+      Alert.alert("error during registration")
     }
   };
 
@@ -261,13 +275,13 @@ export default function SignUpScreen() {
             <TouchableOpacity 
               onPress={handleSubmit}
               style={{
-                backgroundColor: Object.keys(inError).length !== 0 ? "#ccc" : "#0db80d",
+                backgroundColor: isButtonDisabled() ? "#ccc" : "#0db80d",
                 padding: 12,
                 borderRadius: 5,
                 width: "50%",
                 alignItems: "center"
-              }} 
-              disabled={Object.keys(inError).length !== 0}
+              }}
+              disabled={isButtonDisabled()}
             >
               <Text style={{ color: "white"}}>Submit</Text>
             </TouchableOpacity>

@@ -39,16 +39,12 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (accountState === null) {
-      return;
+      router.replace("/loading");
     } else if (accountState === "not-registered") {
-      // router.replace("/sign-up");
-      router.replace({
-        pathname: "/sign-up",
-        params: { await_validation: "false" }
-      })
+      router.replace("/sign-up")
     } else if (accountState === "not-validated") {
       router.replace({
-        pathname: "/sign-up",
+        pathname: "/validate",
         params: { await_validation: "true" }
       })
     } else if (accountState === "expired") {
@@ -71,6 +67,7 @@ export default function RootLayout() {
       <Stack.Screen name="+not-found" />
       <Stack.Screen name="sign-up"/>
       <Stack.Screen name="sign-in"/>
+      <Stack.Screen name="validate"/>
       <Stack.Screen name="error"/>
     </Stack>
   );

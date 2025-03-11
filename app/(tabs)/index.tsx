@@ -9,7 +9,7 @@ export default function Index() {
   return (
     <View style={styles.container}>
       <View style={styles.footerContainer}>
-        <Button label="Choose a photo" theme="primary" />
+        <Button label="Choose a photos" theme="primary" />
         <Button label="Use this photo" />
       </View>
     </View>
