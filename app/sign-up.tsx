@@ -3,6 +3,7 @@ import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import TextInputFeild from "../components/InputField";
 import RadioButtons from "../components/RadioButtons";
+import * as SecureStore from "expo-secure-store";
 
 type Gender = "male" | "female" | "other"
 type GoalStatus = "bulking" | "cutting" | "maintaining";
@@ -37,6 +38,7 @@ export default function SignUpScreen() {
   const usernameTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isTimeoutActive, setIsTimeoutActive] = useState<boolean>(false);
   const [inError, setInError] = useState<Record<string, string>>({});
+  const [submitting, SetSubmitting] = useState<boolean>(false);
 
   const handleTextChange = (field: string, value: string): void => {
     if (field in ["height", "weight"]) { // todo maybe remove this?
@@ -194,13 +196,13 @@ export default function SignUpScreen() {
   };
 
   const handleSubmit = async (): Promise<void> => {
-    let form_copy: Record<any, any> = { ...formData};
-    form_copy.height = parseInt(formData.height);
-    form_copy.weight = parseInt(formData.weight);
-
-    console.log(JSON.stringify(form_copy))
-
+    SetSubmitting(true);
+    
     try {
+      let form_copy: Record<any, any> = { ...formData};
+      form_copy.height = parseInt(formData.height);
+      form_copy.weight = parseInt(formData.weight);
+
       const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/register`, {
         method: "POST",
         headers: {
@@ -211,6 +213,14 @@ export default function SignUpScreen() {
 
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
+      const data = await response.json();
+
+      await SecureStore.setItemAsync('long_token', data.long_token);
+      await SecureStore.setItemAsync('short_token', data.short_token);
+
+      // todo if register but fail token store, delete user record?
+      // todo add user data to global storage (zustand)
+
       router.replace({
         pathname: "/validate",
         params: { username: formData.username }
@@ -219,6 +229,8 @@ export default function SignUpScreen() {
     } catch (error) {
       console.log(error)
       Alert.alert("error during registration")
+    } finally {
+      SetSubmitting(false);
     }
   };
 
@@ -285,6 +297,7 @@ export default function SignUpScreen() {
             >
               <Text style={{ color: "white"}}>Submit</Text>
             </TouchableOpacity>
+            {submitting && <Text style={{ color: "white"}}>submitting...</Text>}
           </View>
 
           <View style={styles.buttonContainer}>
