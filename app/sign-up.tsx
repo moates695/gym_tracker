@@ -127,8 +127,10 @@ export default function SignUpScreen() {
       try {
         const response = await fetch(
           `${process.env.EXPO_PUBLIC_API_URL}/register/username?` + 
-          new URLSearchParams({ username }).toString())
-  
+          new URLSearchParams({ username }).toString()
+        );
+        if (!response.ok) throw new Error('response not ok');
+
         const data = await response.json();
   
         if (data.taken === false) return;
@@ -192,7 +194,7 @@ export default function SignUpScreen() {
   };
 
   const isButtonDisabled = (): boolean => {
-    return areFormDataFieldsEmpty() || isFormInError() || isTimeoutActive;
+    return areFormDataFieldsEmpty() || isFormInError() || isTimeoutActive || submitting;
   };
 
   const handleSubmit = async (): Promise<void> => {
@@ -215,12 +217,8 @@ export default function SignUpScreen() {
 
       const data = await response.json();
 
-      await SecureStore.setItemAsync('long_token', data.long_token);
-      await SecureStore.setItemAsync('short_token', data.short_token);
-
-      // todo if register but fail token store, delete user record?
-      // todo add user data to global storage (zustand)
-
+      await SecureStore.setItemAsync('auth_token', data.auth_token);
+      
       router.replace({
         pathname: "/validate",
         params: { username: formData.username }
@@ -303,6 +301,7 @@ export default function SignUpScreen() {
           <View style={styles.buttonContainer}>
             <TouchableOpacity 
               onPress={() => router.replace("/sign-in")}
+              disabled={submitting}
             >
               <Text style={{ color: "white"}}>already have an account?</Text>
             </TouchableOpacity>

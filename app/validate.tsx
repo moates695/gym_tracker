@@ -14,6 +14,7 @@ export default function Validate() {
 
     const fetchValidationStatus = async () => {
       if (stopFetch) return;
+      console.log(Date.now())  
       
       let is_validated: boolean = false;
       try {
@@ -33,7 +34,6 @@ export default function Validate() {
       } finally {
         if (!is_validated) {
           timeoutId = setTimeout(fetchValidationStatus, 1500);        
-
         }
       }
     };
