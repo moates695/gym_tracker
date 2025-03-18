@@ -1,13 +1,16 @@
 import { useLocalSearchParams, usePathname, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Alert, View, Text, TouchableOpacity } from "react-native";
+import * as SecureStore from "expo-secure-store";
 
 export default function Validate() {
-  const { username } = useLocalSearchParams();
-  const usernameString: string = Array.isArray(username) ? username[0] : username ?? "";
+  const { email } = useLocalSearchParams();
+  const emailString: string = Array.isArray(email) ? email[0] : email ?? "";
 
   const router = useRouter();
   const [stopFetch, SetStopFetch] = useState<boolean>(false); 
+
+  // TODO prevent timeout until on page
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
@@ -20,12 +23,15 @@ export default function Validate() {
       try {
         const response = await fetch(
           `${process.env.EXPO_PUBLIC_API_URL}/register/validate/check?` + 
-          new URLSearchParams({ username: usernameString }).toString()
+          new URLSearchParams({ email: emailString }).toString()
         )
+        if (!response.ok) throw new Error('request not okay');
+
         const data = await response.json();
 
         if (data["is_verified"] === true) {
           is_validated = true;
+          await SecureStore.setItemAsync('auth_token', data.auth_token);
           router.replace("/(tabs)")
           return;
         }

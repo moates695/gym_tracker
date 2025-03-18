@@ -215,13 +215,9 @@ export default function SignUpScreen() {
 
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
-      const data = await response.json();
-
-      await SecureStore.setItemAsync('auth_token', data.auth_token);
-      
       router.replace({
         pathname: "/validate",
-        params: { username: formData.username }
+        params: { email: formData.email }
       })
 
     } catch (error) {
