@@ -1,64 +1,52 @@
 import { Stack, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import * as SecureStore from "expo-secure-store";
-
-type AccountState = "not-registered" | "not-validated" | "expired" | "good" | null;
+import { jwtDecode } from "jwt-decode";
 
 export default function RootLayout() {
   const router = useRouter();
-  const [accountState, setAccountState] = useState<AccountState>(null);
 
   useEffect(() => {
-    const checkStorage = async () => {
+    router.replace("/loading");
+
+    const checkUserState = async () => {
+      const auth_token = await SecureStore.getItemAsync("auth_token");
+      if (!auth_token) {
+        router.replace("/sign-up");
+        return;
+      }
+
       try {
-        const token = await SecureStore.getItemAsync("auth_token_long");
-        if (!token) {
-          setAccountState("not-registered");
-          return;
+        const decoded: {email: string, exp: number, iat: number } = jwtDecode(auth_token);
+        
+        const response = await fetch(
+          `${process.env.EXPO_PUBLIC_API_URL}/register/validate/check?` + 
+          new URLSearchParams({ "email": decoded.email }).toString()
+        );
+        if (!response.ok) throw new Error("response not ok");
+
+        const data = await response.json();
+        if (data.account_state == "none") {
+          router.replace("/sign-in")
+        } else if (data.account_state == "unverified") {
+          router.replace("/validate")
+        } else if (data.account_state == "good") {
+          await SecureStore.setItemAsync("auth_token", data.auth_token);
+          router.replace("/(tabs)");
+        } else {
+          throw new Error("response ot recognised");
         }
 
-        const url = process.env.API_URL as string;
-        const response = await fetch(`${url}/authenticate`, {
-          method: 'POST',
-          body: JSON.stringify({
-            "token": token
-          })
-        });
-        if (!response.ok) throw new Error("HTTP error");
-        
-        const data = await response.json();
-
       } catch (error) {
-        console.error("Error checking credentials:", error);
-        // show error message
+        console.log(error);
+        router.replace("/sign-up")
       }
+      
     };
 
-    checkStorage();
-  }, []);
+    checkUserState();
 
-  useEffect(() => {
-    if (accountState === null) {
-      return;
-    } else if (accountState === "not-registered") {
-      // router.replace("/sign-up");
-      router.replace({
-        pathname: "/sign-up",
-        params: { await_validation: "false" }
-      })
-    } else if (accountState === "not-validated") {
-      router.replace({
-        pathname: "/sign-up",
-        params: { await_validation: "true" }
-      })
-    } else if (accountState === "expired") {
-      router.replace("/sign-in");
-    } else if (accountState === "good") {
-      router.replace("/(tabs)")
-    } else {
-      // todo show error
-    }
-  }, [accountState, router]);
+  }, [])
 
   return (
     <Stack
@@ -71,6 +59,7 @@ export default function RootLayout() {
       <Stack.Screen name="+not-found" />
       <Stack.Screen name="sign-up"/>
       <Stack.Screen name="sign-in"/>
+      <Stack.Screen name="validate"/>
       <Stack.Screen name="error"/>
     </Stack>
   );

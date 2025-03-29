@@ -28,7 +28,7 @@ export default function RadioButtons (props: RadioButtonProps) {
               marginVertical: 5,
               marginHorizontal: 4,
               borderWidth: 2,
-              borderColor: selection === option ? "red" : "gray",
+              borderColor: selection === option ? "#43d9f7" : "gray",
               borderRadius: 5,
               backgroundColor: "black"
             }}
