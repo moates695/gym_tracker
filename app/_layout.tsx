@@ -9,7 +9,12 @@ export default function RootLayout() {
   useEffect(() => {
     router.replace("/loading");
 
+    // router.replace("/(tabs)");
+    // return;
+
     const checkUserState = async () => {
+      await SecureStore.deleteItemAsync("auth_token");
+
       const auth_token = await SecureStore.getItemAsync("auth_token");
       if (!auth_token) {
         router.replace("/sign-up");
@@ -27,14 +32,14 @@ export default function RootLayout() {
 
         const data = await response.json();
         if (data.account_state == "none") {
-          router.replace("/sign-in")
+          router.replace("/sign-up")
         } else if (data.account_state == "unverified") {
           router.replace("/validate")
         } else if (data.account_state == "good") {
           await SecureStore.setItemAsync("auth_token", data.auth_token);
           router.replace("/(tabs)");
         } else {
-          throw new Error("response ot recognised");
+          throw new Error("response not recognised");
         }
 
       } catch (error) {

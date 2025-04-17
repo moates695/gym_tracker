@@ -1,26 +1,30 @@
-import { Text, View, StyleSheet } from "react-native";
-import { Image } from 'expo-image';
+import { Text, View, StyleSheet, SafeAreaView, TouchableOpacity } from "react-native";
 
-import Button from '@/components/Button';
+// if have a schedule, see todays workout(s)
+// button to start workout
+// see previous workouts and their target muscles
+// see previous <day number> workouts and muscles worked
+// other stats and info
+// switch to see friends workouts?
 
-const PlaceholderImage = require('@/assets/images/react-logo.png');
-
-export default function Index() {
+export default function Home() {
   return (
-    <View style={styles.container}>
-      <View style={styles.footerContainer}>
-        <Button label="Choose a photos" theme="primary" />
-        <Button label="Use this photo" />
-      </View>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <Text style={{color: "white"}}>Home</Text>
+      <Text style={{color: "white"}}>Home</Text>
+      <TouchableOpacity>
+        <Text style={{color: "white"}}>Workout</Text>
+      </TouchableOpacity>
+    </SafeAreaView >
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#25292e',
+    backgroundColor: 'black',
     alignItems: 'center',
+    justifyContent: 'space-around'
   },
   imageContainer: {
     flex: 1,

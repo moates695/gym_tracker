@@ -1,9 +1,9 @@
 import { Text, View, StyleSheet } from 'react-native';
 
-export default function AboutScreen() {
+export default function Settings() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>About screen</Text>
+    <View style={{ backgroundColor: "black" }}>
+      <Text style={styles.text}>Settings</Text>
     </View>
   );
 }
