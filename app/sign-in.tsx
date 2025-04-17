@@ -51,7 +51,10 @@ export default function SignInScreen() {
         setMessage("email does not exist");
       } else if (data.status === "unverified") {
         Alert.alert("Your email hasn't been verified yet");
-        router.replace("/validate");
+        router.replace({
+          pathname: "/validate",
+          params: { email: formData.email }
+        })
       } else if (data.status === "incorrect-password") {
         setMessage("incorrect password");
       } else if (data.status === "signed-in") {

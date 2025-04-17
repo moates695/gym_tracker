@@ -34,7 +34,10 @@ export default function RootLayout() {
         if (data.account_state == "none") {
           router.replace("/sign-up")
         } else if (data.account_state == "unverified") {
-          router.replace("/validate")
+          router.replace({
+            pathname: "/validate",
+            params: { email: decoded.email }
+          })
         } else if (data.account_state == "good") {
           await SecureStore.setItemAsync("auth_token", data.auth_token);
           router.replace("/(tabs)");

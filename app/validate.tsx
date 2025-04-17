@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { Alert, View, Text, TouchableOpacity } from "react-native";
 import * as SecureStore from "expo-secure-store";
 
+// todo resend validate email button
+
 export default function Validate() {
   const { email } = useLocalSearchParams();
   const emailString: string = Array.isArray(email) ? email[0] : email ?? "";
