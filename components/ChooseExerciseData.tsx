@@ -1,53 +1,83 @@
-import React from "react"
-import { Text, StyleSheet, View } from "react-native"
+import { workoutExercisesAtom } from "@/store/workout";
+import { useAtom } from "jotai";
+import React, { useState } from "react"
+import { Text, StyleSheet, View, TouchableOpacity } from "react-native"
 
 interface ChooseExerciseDataProps {
-  exercise: Object
+  exercise: any
+  onPress: () => void
 }
 
 export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
+  const { exercise, onPress } = props;
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [workoutExercises, setWorkoutExercisesAtom] = useAtom(workoutExercisesAtom);
+
+  const handleAddExercise = () => {
+    setWorkoutExercisesAtom(prev => [...prev, exercise]);
+    onPress();
+  };
+
   return (
-    <View style={styles.box}>
-      <Text style={{color:"white"}}>test</Text>
-    </View>
+    <TouchableOpacity 
+      style={styles.box}
+      onPress={() => setIsExpanded(!isExpanded)}
+    >
+      {isExpanded ? 
+        <View>
+          <View style={styles.row}>
+            <Text style={styles.text}>{exercise.name}</Text>
+            <TouchableOpacity 
+              onPress={handleAddExercise}
+              style={styles.addButton}
+            >
+              <Text style={styles.text}>add</Text> 
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.text}>Muscle target: {Object.entries(exercise.targets).map(([key, value]) => `${key} (${value})`).join(', ')}</Text>
+
+          <Text style={styles.text}>Bodyweight?: {exercise.is_body_weight ? "true": "false"}</Text>
+        </View>
+        :
+        <View style={styles.row}>
+          <Text style={styles.text}>{exercise.name}</Text>
+          <TouchableOpacity 
+            onPress={handleAddExercise}
+            style={styles.addButton}
+          >
+            <Text style={styles.text}>add</Text> 
+          </TouchableOpacity>
+        </View>
+      }
+      
+    </TouchableOpacity>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: 'column',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-    backgroundColor: 'black'
-  },
   box: {
-    backgroundColor: 'green',
-    padding: 15,
-    marginVertical: 8,
+    backgroundColor: 'black',
+    padding: 10,
+    marginVertical: 5,
     borderRadius: 8,
     width: '100%',
-  },
-  modalBackground: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center'
-  },
-  modalContainer: {
-    margin: 20,
-    height: 100,
-    backgroundColor: 'black',
-    borderRadius: 10,
-    padding: 5,
-    alignItems: 'center',
-    elevation: 5,
     borderColor: 'red',
     borderWidth: 2
   },
-  modalText: {
-    marginBottom: 15,
-    textAlign: 'center',
-    color: 'white'
+  text: {
+    color: 'white',
+    marginBottom: 5,
   },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+  addButton: {
+    backgroundColor: 'green',
+    padding: 5,
+    margin: 0
+  }
 });
 

@@ -20,10 +20,10 @@ export default function Workout() {
   const [chooseNewExercise, setChooseNewExercise] = useState<boolean>(false);
 
   const setNewWorkout = () => {
-    setWorkout({
-      "start_timestamp": Date.now(),
-      "exercises": []
-    })
+    // setWorkout({
+    //   "start_timestamp": Date.now(),
+    //   "exercises": []
+    // })
   };
 
   const handleContinueWorkout = () => {

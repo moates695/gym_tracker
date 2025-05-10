@@ -35,7 +35,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
         <ScrollView style={styles.scrollView}>
           {exercises.map((exercise, i) => {
             return (
-              <ChooseExerciseData key={i} exercise={exercise}/>
+              <ChooseExerciseData key={i} exercise={exercise} onPress={onPress}/>
             )
           })}
         </ScrollView>
