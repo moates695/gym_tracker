@@ -1,36 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal } from "react-native";
 import { useAtom } from "jotai";
-import * as SecureStore from "expo-secure-store";
 
 import { workoutAtom, exercisesAtom } from "@/store/workout";
 import ChooseExercise from "@/components/ChooseExercise";
+import { fetchExercises } from "@/middleware/helpers";
 
 // workout has:
 // a start time
 // contain list exercises
 // has list of sets
 // exercises are performed for reps at a weight
-
-export const fetchExercises = async (setExercises: any) => {
-  try {
-    const auth_token = await SecureStore.getItemAsync("auth_token");
-    const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/exercises/list/all`, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${auth_token}`
-      }         
-    });
-    
-    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-  
-    const data = await response.json();
-    setExercises(data.exercises);
-    
-  } catch (error) {
-    console.log(error)
-  }
-};
 
 export default function Workout() {
   const [workout, setWorkout] = useAtom(workoutAtom);
