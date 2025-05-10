@@ -2,6 +2,7 @@ import { Stack, useRouter } from "expo-router";
 import { useEffect } from "react";
 import * as SecureStore from "expo-secure-store";
 import { jwtDecode } from "jwt-decode";
+import React from "react";
 
 export default function RootLayout() {
   const router = useRouter();
@@ -9,11 +10,11 @@ export default function RootLayout() {
   useEffect(() => {
     router.replace("/loading");
 
-    // router.replace("/(tabs)");
-    // return;
+    router.replace("/(tabs)");
+    return;
 
     const checkUserState = async () => {
-      await SecureStore.deleteItemAsync("auth_token");
+      await SecureStore.deleteItemAsync("auth_token"); //!!!!
 
       const auth_token = await SecureStore.getItemAsync("auth_token");
       if (!auth_token) {

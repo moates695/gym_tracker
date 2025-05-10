@@ -1,3 +1,4 @@
+import React from "react";
 import { Text, View, StyleSheet, SafeAreaView, TouchableOpacity } from "react-native";
 
 // if have a schedule, see todays workout(s)

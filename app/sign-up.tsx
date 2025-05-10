@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import TextInputFeild from "../components/InputField";
 import RadioButtons from "../components/RadioButtons";
 import * as SecureStore from "expo-secure-store";
+import React from "react";
 
 type Gender = "male" | "female" | "other"
 type GoalStatus = "bulking" | "cutting" | "maintaining";
