@@ -3,7 +3,7 @@ import { TouchableOpacity, View, Text, StyleSheet, ScrollView } from "react-nati
 
 import { fetchExercises } from "@/middleware/helpers";
 import { useAtom } from "jotai";
-import { exercisesAtom } from "@/store/workout";
+import { exerciseListAtom } from "@/store/general";
 import ChooseExerciseData from "./ChooseExerciseData";
 
 interface ChooseExerciseProps {
@@ -12,9 +12,8 @@ interface ChooseExerciseProps {
 
 export default function ChooseExercise(props: ChooseExerciseProps) {
   const { onPress } = props;
-  const [exercises, setExercises] = useAtom(exercisesAtom);
+  const [exercises, setExercises] = useAtom(exerciseListAtom);
   
-
   const handleExercisesRefresh = async () => {
     await fetchExercises(setExercises);
   };

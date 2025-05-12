@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal } from "react-native";
 import { useAtom } from "jotai";
 
-import { workoutAtom, exercisesAtom } from "@/store/workout";
+import { workoutAtom, exerciseListAtom, workoutExercisesAtom } from "@/store/general";
 import ChooseExercise from "@/components/ChooseExercise";
 import { fetchExercises } from "@/middleware/helpers";
+import WorkoutExercise from "@/components/WorkoutExercise";
 
 // workout has:
 // a start time
@@ -14,39 +15,39 @@ import { fetchExercises } from "@/middleware/helpers";
 
 export default function Workout() {
   const [workout, setWorkout] = useAtom(workoutAtom);
-  const [exercises, setExercises] = useAtom(exercisesAtom);
+  const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom);
+  const [exerciseList, setExerciseList] = useAtom(exerciseListAtom);
 
   const [showStartOptions, setShowStartOptions] = useState<boolean>(true);
   const [chooseNewExercise, setChooseNewExercise] = useState<boolean>(false);
 
   const setNewWorkout = () => {
-    // setWorkout({
-    //   "start_timestamp": Date.now(),
-    //   "exercises": []
-    // })
+    setWorkout({
+      "start_timestamp": Date.now(),
+      "exercises": []
+    })
   };
 
   const handleContinueWorkout = () => {
     setShowStartOptions(false);
-  }
+  } 
 
   const handleStartNewWorkout = () => {
     setNewWorkout();
     setShowStartOptions(false);
   };
 
-  useEffect(() => {
-    if (Object.keys(workout).length !== 0) return;
-    setNewWorkout();
-  }, []);
-
   const handleAddNewExercise = () => {
     setChooseNewExercise(true);
   };
 
   useEffect(() => {
-    fetchExercises(setExercises);
-  }, []);
+    fetchExercises(setExerciseList);
+  }, []); 
+
+  useEffect(() => {
+    console.log(workout)
+  }, [workout]);
 
   return (
     <SafeAreaView style={styles.container}> 
@@ -70,6 +71,11 @@ export default function Workout() {
           {workout.exercises.length === 0 &&
             <Text style={{color:'white'}}>no exercises so far</Text>
           }
+          {workoutExercises.map((exercise, i) => {
+            return (
+              <WorkoutExercise key={i} exercise={exercise}/>
+            )
+          })}
           <TouchableOpacity 
             onPress={() => handleAddNewExercise()}
           >
@@ -95,37 +101,5 @@ const styles = StyleSheet.create({
     backgroundColor: 'black',
     alignItems: 'center',
     justifyContent: 'center'
-  },
-  imageContainer: {
-    flex: 1,
-  },
-  image: {
-    width: 320,
-    height: 440,
-    borderRadius: 18,
-  },
-  footerContainer: {
-    flex: 1 / 3,
-    alignItems: 'center',
-  },
-  modalBackground: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center'
-  },
-  modalContainer: {
-    margin: 10,
-    backgroundColor: 'black',
-    borderRadius: 10,
-    padding: 35,
-    alignItems: 'center',
-    elevation: 5,
-    borderColor: 'red',
-    borderWidth: 1
-  },
-  modalText: {
-    marginBottom: 15,
-    textAlign: 'center',
-    color: 'white'
   },
 });
