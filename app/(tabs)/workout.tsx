@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal } from "react-native";
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollView } from "react-native";
 import { useAtom } from "jotai";
 
 import { workoutAtom, exerciseListAtom, workoutExercisesAtom } from "@/store/general";
@@ -15,7 +15,6 @@ import WorkoutExercise from "@/components/WorkoutExercise";
 
 export default function Workout() {
   const [workout, setWorkout] = useAtom(workoutAtom);
-  const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom);
   const [exerciseList, setExerciseList] = useAtom(exerciseListAtom);
 
   const [showStartOptions, setShowStartOptions] = useState<boolean>(true);
@@ -52,7 +51,7 @@ export default function Workout() {
   return (
     <SafeAreaView style={styles.container}> 
       {showStartOptions ?
-        <>
+        <View>
           {Object.keys(workout).length !== 0 &&
             <TouchableOpacity 
               onPress={() => handleContinueWorkout()}
@@ -65,17 +64,23 @@ export default function Workout() {
           >
             <Text style={{ color: "white"}}>start new workout</Text>
           </TouchableOpacity>
-        </> 
+        </View> 
         : 
-        <>
+        <View style={styles.workoutContainer}>
           {workout.exercises.length === 0 &&
             <Text style={{color:'white'}}>no exercises so far</Text>
           }
-          {workoutExercises.map((exercise, i) => {
-            return (
-              <WorkoutExercise key={i} exercise={exercise}/>
-            )
-          })}
+          <ScrollView 
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollViewContainer}
+          >
+            {workout.exercises.map((exercise, i) => {
+              return (
+                <WorkoutExercise key={i} exercise={exercise} exerciseIndex={i}/>
+              )
+            })}
+          </ScrollView>
+          
           <TouchableOpacity 
             onPress={() => handleAddNewExercise()}
           >
@@ -89,7 +94,7 @@ export default function Workout() {
           >
             <ChooseExercise onPress={() => setChooseNewExercise(false)}/>
           </Modal>
-        </>
+        </View>
       }    
     </SafeAreaView>
   )
@@ -100,6 +105,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'black',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    width: '100%'
   },
+  scrollView: {
+    width: '100%',
+    height: '90%',
+  },
+  scrollViewContainer: {
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  workoutContainer: {
+    height: '100%',
+    width: '100%',
+    paddingBottom: 10,
+    justifyContent: 'flex-start',
+    alignItems: 'center'
+  }
 });

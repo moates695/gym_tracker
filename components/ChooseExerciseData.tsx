@@ -15,7 +15,13 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
 
   const handleAddExercise = () => {
     const exercise_copy = JSON.parse(JSON.stringify(exercise));
-    exercise_copy.sets = [];
+    exercise_copy.sets = [
+      {
+        "reps": null,
+        "weight": null,
+        "sets": null,
+      }
+    ];
     setWorkoutExercisesAtom(prev => [...prev, exercise_copy]);
     onPress();
   };
