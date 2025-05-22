@@ -11,33 +11,45 @@ interface WorkoutExerciseProps {
 export default function workoutExercise(props: WorkoutExerciseProps) {
   const { exercise, exerciseIndex } = props; 
 
-  const [isExpanded, setIsExpanded] = useState<boolean>(true);
   const [numSets, setNumSets] = useState<number>(0);
+  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+  const [isDataExpanded, setIsDataExpanded] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!isExpanded) {
+      setIsDataExpanded(false);
+    }
+  }, [isExpanded]);
 
   useEffect(() => {
     const isValidSet = (set: any) => {
       return set.reps !== null && set.weight !== null && set.sets !== null;
     };
-    setNumSets(exercise.sets.filter(isValidSet).length);
+    setNumSets(exercise.sets.filter(isValidSet).reduce((sum: any, obj: { sets: any; }) => sum + obj.sets, 0));
   }, [exercise.sets]);
 
   return (
-    <TouchableOpacity style={styles.box}
-      onPress={() => setIsExpanded(!isExpanded)}
-    >
-      <View style={styles.row}>
+    <View style={styles.box}>
+      <TouchableOpacity style={styles.row}
+        onPress={() => setIsExpanded(!isExpanded)}
+      >
         <Text style={styles.text}>{exercise.name}</Text>
         <Text style={styles.text}>{numSets} sets</Text>
-      </View>
+      </TouchableOpacity>
       {isExpanded &&
         <View>
-          <Text style={styles.text}>{exercise.is_body_weight ? 'bodyweight' : 'weighted'}</Text>
-          <Text style={styles.text}>{JSON.stringify(exercise.targets).toString()}</Text>
-          <Text style={styles.text}>{JSON.stringify(exercise.sets).toString()}</Text>
           <ExerciseSets exercise={exercise} exerciseIndex={exerciseIndex}/>
+          <TouchableOpacity
+            onPress={() => setIsDataExpanded(!isDataExpanded)}
+          >
+            <Text style={styles.text}>{isDataExpanded ? 'close data': 'open data'}</Text>
+          </TouchableOpacity>
+          {isDataExpanded &&
+            <View style={styles.divider}/>
+          }
         </View>
       }
-    </TouchableOpacity>
+    </View>
   )
 }
 
@@ -56,7 +68,13 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    padding: 5,
     alignItems: 'center',
     width: '100%',
   },
+  divider: {
+    height: 1,
+    backgroundColor: 'gray',
+    marginVertical: 8
+  }
 })

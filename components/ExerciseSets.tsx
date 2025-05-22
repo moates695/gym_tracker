@@ -16,21 +16,33 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
   const handleUpdateReps = (text: string, index: number) => {
     text = text.replace(/\D/g, '');
     const tempSets = [...exercise.sets];
-    tempSets[index].reps = parseInt(text);
+    let num: any = parseFloat(text);
+    if (isNaN(num)) {
+      num = null;
+    }
+    tempSets[index].reps = num;
     updateExerciseSets(tempSets);
   };
 
   const handleUpdateWeight = (text: string, index: number) => {
-    text = text.replace(/\D/g, '');
+    text = text.replace(/[^0-9.]+/g, '');
     const tempSets = [...exercise.sets];
-    tempSets[index].weight = parseFloat(text);
+    let num: any = parseFloat(text);
+    if (isNaN(num)) {
+      num = null;
+    }
+    tempSets[index].weight = num;
     updateExerciseSets(tempSets);
   };
 
   const handleUpdateSets = (text: string, index: number) => {
     text = text.replace(/\D/g, '');
     const tempSets = [...exercise.sets];
-    tempSets[index].sets = parseInt(text);
+    let num: any = parseFloat(text);
+    if (isNaN(num)) {
+      num = null;
+    }
+    tempSets[index].sets = num;
     updateExerciseSets(tempSets);
   };
 
@@ -42,7 +54,6 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
 
   const handleIncrementSet = (index: number) => {
     const tempSets = [...exercise.sets];
-    // const index =  exercise.sets.length - 1;
     let num = tempSets[index].sets;
     num = num !== null ? ++num : 1
     tempSets[index].sets = num;
@@ -51,7 +62,6 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
 
   const handleDecrementSet = (index: number) => {
     const tempSets = [...exercise.sets];
-    // const index =  exercise.sets.length - 1;
     let num = tempSets[index].sets;
     if (num === 0 || num === null) return;
     tempSets[index].sets = --num;
@@ -65,9 +75,20 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
   }
 
   const handleDeleteSet = (index: number) => {
-    const tempSets = [...exercise.sets];
-    tempSets.splice(index, 1);
-    updateExerciseSets(tempSets);
+    let tempSets = [...exercise.sets];
+    if (tempSets.length > 1) {
+      tempSets.splice(index, 1);
+      updateExerciseSets(tempSets);
+      return;
+    }
+    tempSets = [
+      {
+        "reps": null,
+        "weight": null,
+        "sets": null,
+      }
+    ]
+    updateExerciseSets(tempSets)
   }
 
   const handleNewSet = () => {
@@ -80,12 +101,18 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
     updateExerciseSets(tempSets);
   }
 
-  // add set to set object
-  // remove set from set object
-  // delete set object
-
-  // new empty set object
-  // copy last set object
+  useEffect(() => {
+    if (exercise.sets.length > 0) return;
+    const tempExercises = [...exercises];
+    tempExercises[exerciseIndex].sets = [
+      {
+        "reps": null,
+        "weight": null,
+        "sets": null,
+      }
+    ]
+    setExercises(tempExercises);
+  }, [exercise.sets])
 
   return (
     <View style={styles.container}>
@@ -144,16 +171,15 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
               <Text style={styles.text}>copy</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            onPress={handleNewSet}
-            style={styles.textButton}
-          >
-            <Text style={styles.text}>new</Text>
-            </TouchableOpacity>
         </View>
       ))}
       <View style={styles.row}>
-        
+        <TouchableOpacity
+          onPress={handleNewSet}
+          style={styles.textButton}
+        >
+          <Text style={styles.text}>new</Text>
+        </TouchableOpacity>
       </View>
     </View>
     
@@ -174,12 +200,10 @@ const styles = StyleSheet.create({
     alignContent: 'center',
   },
   container: {
-    backgroundColor: 'green',
     alignItems: 'center',
   },
   row: {
     flexDirection: 'row',
-    backgroundColor: 'purple',
     width: '100%',
     justifyContent: 'space-around'
   },

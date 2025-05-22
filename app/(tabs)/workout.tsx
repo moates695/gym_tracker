@@ -7,11 +7,7 @@ import ChooseExercise from "@/components/ChooseExercise";
 import { fetchExercises } from "@/middleware/helpers";
 import WorkoutExercise from "@/components/WorkoutExercise";
 
-// workout has:
-// a start time
-// contain list exercises
-// has list of sets
-// exercises are performed for reps at a weight
+// workout overview: allow to see muscles worked, time, sets, volume (if on plan % completed)
 
 export default function Workout() {
   const [workout, setWorkout] = useAtom(workoutAtom);
