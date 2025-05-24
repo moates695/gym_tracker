@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import React, { TouchableOpacity, View } from "react-native"
+import { TouchableOpacity, View } from "react-native"
 import { Text, StyleSheet } from "react-native"
 import ExerciseSets from "./ExerciseSets";
+import React from 'react-native'
+import ExerciseData from "./ExerciseData";
 
 interface WorkoutExerciseProps {
   exercise: any
@@ -45,7 +47,10 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
             <Text style={styles.text}>{isDataExpanded ? 'close data': 'open data'}</Text>
           </TouchableOpacity>
           {isDataExpanded &&
-            <View style={styles.divider}/>
+            <>
+              <View style={styles.divider}/>
+              <ExerciseData />
+            </>
           }
         </View>
       }

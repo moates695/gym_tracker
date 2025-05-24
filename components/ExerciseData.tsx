@@ -1,4 +1,4 @@
-import React from "react-native"
+import React, { View } from "react-native"
 
 // on select exercise, load in user data (async)
 // allow refresh in case of errors
@@ -9,9 +9,12 @@ import React from "react-native"
 // total volume per session (vs current session)
 // graph of reps (x), sets (y), weight (z)
 
+import ThreeDPlot from './ThreeAxisChart'
+
 export default function ExerciseData() {
   return (
-    <>
-    </>
+    <View style={{ height: 300 }}>
+      <ThreeDPlot />
+    </View>
   )
 }
