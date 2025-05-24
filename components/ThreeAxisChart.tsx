@@ -13,20 +13,6 @@ const ThreeDPlot = () => {
   const rotationPoint = normMax / 2;
   const rotationRef = useRef({ x: rotationPoint, y: rotationPoint });
 
-
-  // Sample 3D points data
-  // const points = [
-  //   { x: 1, y: 2, z: 3 },
-  //   { x: -1, y: 1, z: -2 },
-  //   { x: 2, y: -1, z: 1 },
-  //   { x: 0, y: 3, z: -1 },
-  //   { x: -2, y: 0, z: 2 },
-  //   { x: 1, y: -2, z: 0 },
-  //   { x: 3, y: 1, z: -3 },
-  //   { x: -1, y: -1, z: 1 }
-  // ];
-
-
   const points = [
     { x: 12, y: 30, z: 3 },
     { x: 12, y: 70, z: 2 },
@@ -71,17 +57,18 @@ const ThreeDPlot = () => {
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: () => true,
     onPanResponderMove: (evt, gestureState) => {
-      rotationRef.current.x += gestureState.dy * 0.003;
-      rotationRef.current.y += gestureState.dx * 0.003;
+      rotationRef.current.x += gestureState.dy * 0.0005;
+      rotationRef.current.y += gestureState.dx * 0.0005;
     },
   });
 
   const onContextCreate = async (gl: any) => {
     // Scene setup
+    console.log("here44")
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
     
-    const camera = new THREE.PerspectiveCamera(60, gl.drawingBufferWidth / gl.drawingBufferHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(75, gl.drawingBufferWidth / gl.drawingBufferHeight, 0.1, 1000);
     const cameraPosition = normMax * 1.5;
     camera.position.set(cameraPosition, cameraPosition, cameraPosition);
     camera.lookAt(0, 0, 0);
@@ -92,6 +79,7 @@ const ThreeDPlot = () => {
     // Create axes
     const axesHelper = new THREE.AxesHelper(normMax);
     scene.add(axesHelper);
+    console.log("here55")
 
     // const createAxisMarkings = (axis: any, color: any) => {
     //   for (let i = 0; i <= 50; i += 5) {
@@ -157,8 +145,9 @@ const ThreeDPlot = () => {
       renderer.render(scene, camera);
       gl.endFrameEXP();
     };
-    
+    console.log("here66")
     animate();
+    console.log("here77")
   };
 
   return (

@@ -2,6 +2,7 @@ import { useAtom } from "jotai";
 import { useEffect, useState } from "react";
 import React, { View, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native"
 import { workoutExercisesAtom } from "@/store/general";
+import ConfirmationModal from "./ConfirmationModal";
 
 interface ExerciseSetsProps {
   exercise: any
@@ -12,7 +13,9 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
   const { exercise, exerciseIndex } = props; 
 
   const [exercises, setExercises] = useAtom(workoutExercisesAtom);
-
+  const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false);
+  const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
+  
   const handleUpdateReps = (text: string, index: number) => {
     text = text.replace(/\D/g, '');
     const tempSets = [...exercise.sets];
@@ -70,9 +73,31 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
 
   const handleCopySet = (index: number) => {
     const tempSets = [...exercise.sets];
-    tempSets.push(exercise.sets[index]);
+    const tempSet = { ...tempSets[index] };
+    tempSets.push(tempSet);
     updateExerciseSets(tempSets);
   }
+
+  const openConfirm = (): Promise<boolean> => {
+    setDeleteModalVisible(true);
+    return new Promise(resolve => setResolver(() => resolve));
+  };
+
+  const handleDeletePress = async (index: number) => {
+    const confirmed = await openConfirm();
+    if (!confirmed) return;
+    handleDeleteSet(index);
+  };
+
+   const handleConfirm = () => {
+    resolver?.(true);
+    setDeleteModalVisible(false);
+  };
+
+    const handleCancel = () => {
+      resolver?.(false);
+      setDeleteModalVisible(false);
+    };
 
   const handleDeleteSet = (index: number) => {
     let tempSets = [...exercise.sets];
@@ -159,7 +184,7 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
           </View>
           <View style={styles.row}>
             <TouchableOpacity
-              onPress={() => handleDeleteSet(index)}
+              onPress={() => handleDeletePress(index)}
               style={styles.textButton}
             >
               <Text style={styles.text}>delete</Text>
@@ -181,8 +206,8 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
           <Text style={styles.text}>new</Text>
         </TouchableOpacity>
       </View>
+      <ConfirmationModal visible={deleteModalVisible} onConfirm={handleConfirm} onCancel={handleCancel} />
     </View>
-    
   )
 }
 

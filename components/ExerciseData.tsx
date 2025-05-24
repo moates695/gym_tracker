@@ -5,9 +5,11 @@ import React, { View } from "react-native"
 
 // time periods: last week, month, 3 months, 6 months, year, all time
 
-// n rep max (chart or table)
-// total volume per session (vs current session)
-// graph of reps (x), sets (y), weight (z)
+// n rep maxes (chart or table)
+// 3D graph of reps (x), sets (y), weight (z) + can collapse into 2D views
+// 2D graphs: 
+//    volume per session vs time
+//    n rep maxes vs time
 
 import ThreeDPlot from './ThreeAxisChart'
 
