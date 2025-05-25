@@ -64,7 +64,6 @@ const ThreeDPlot = () => {
 
   const onContextCreate = async (gl: any) => {
     // Scene setup
-    console.log("here44")
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
     
@@ -77,33 +76,8 @@ const ThreeDPlot = () => {
     renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
     
     // Create axes
-    const axesHelper = new THREE.AxesHelper(normMax);
+    const axesHelper = new THREE.AxesHelper(normMax * 1.25);
     scene.add(axesHelper);
-    console.log("here55")
-
-    // const createAxisMarkings = (axis: any, color: any) => {
-    //   for (let i = 0; i <= 50; i += 5) {
-    //     if (i === 0) continue;
-        
-    //     const geometry = new THREE.RingGeometry(0.5, 0.8, 8);
-    //     const material = new THREE.MeshBasicMaterial({ color });
-    //     const marker = new THREE.Mesh(geometry, material);
-        
-    //     if (axis === 'x') marker.position.set(i, 0, 0);
-    //     else if (axis === 'y') marker.position.set(0, i, 0);
-    //     else marker.position.set(0, 0, i);
-        
-    //     scene.add(marker);
-    //   }
-    // };
-
-    // createAxisMarkings('x', 0xff0000); // Red for X
-    // createAxisMarkings('y', 0x00ff00); // Green for Y  
-    // createAxisMarkings('z', 0x0000ff); // Blue for Z
-    
-    // Create grid
-    // const gridHelper = new THREE.GridHelper(6, 10, 0x444444, 0x444444);
-    // scene.add(gridHelper);
     
     // Create point geometries and materials
     const pointGeometry = new THREE.SphereGeometry(1, 8, 8);
@@ -136,7 +110,7 @@ const ThreeDPlot = () => {
       scene.rotation.y = rotationRef.current.y;
       
       // Animate point colors
-      const time = Date.now() * 0.0005;
+      const time = Date.now() * 0.0001;
       pointMeshes.forEach((mesh: any, index: any) => {
         const hue = (time + index * 0.5) % 1;
         mesh.material.color.setHSL(hue, 0.8, 0.6);
@@ -145,9 +119,7 @@ const ThreeDPlot = () => {
       renderer.render(scene, camera);
       gl.endFrameEXP();
     };
-    console.log("here66")
     animate();
-    console.log("here77")
   };
 
   return (
