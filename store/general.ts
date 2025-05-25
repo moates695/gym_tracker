@@ -51,4 +51,4 @@ export const workoutAtom = atom(
 
 export const exerciseListAtom = atomWithStorage('exerciseListAtom', [])
 
-export const exerciseHistoricalData = atom({});
+export const exercisesHistoricalDataAtom = atom({});
