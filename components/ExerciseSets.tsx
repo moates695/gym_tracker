@@ -206,7 +206,7 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
           <Text style={styles.text}>new</Text>
         </TouchableOpacity>
       </View>
-      <ConfirmationModal visible={deleteModalVisible} onConfirm={handleConfirm} onCancel={handleCancel} />
+      <ConfirmationModal visible={deleteModalVisible} onConfirm={handleConfirm} onCancel={handleCancel} message="Delete set?" confirm_string="yeah" cancel_string="nah"/>
     </View>
   )
 }

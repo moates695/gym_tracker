@@ -41,7 +41,7 @@ export default function Workout() {
   }, []); 
 
   useEffect(() => {
-    console.log(workout)
+    // console.log(workout)
   }, [workout]);
 
   return (
