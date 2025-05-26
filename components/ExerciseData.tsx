@@ -1,4 +1,5 @@
-import React, { View, StyleSheet, Text, Platform } from "react-native"
+import * as React from 'react';
+import { View, StyleSheet, Text, Platform } from "react-native"
 import { Picker } from '@react-native-picker/picker';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { exercisesHistoricalDataAtom } from "@/store/general"
@@ -28,6 +29,8 @@ import ThreeDPlot from './ThreeAxisChart'
 import { useState } from "react";
 import Dropdown from "./Dropdown";
 import { useAtom } from "jotai";
+import TwoAxisChart from './TwoAxisGraph';
+import TimeSeriesChart from './TimeSeriesChart';
 
 interface ExerciseDataProps {
   exercise: any
@@ -80,6 +83,8 @@ export default function ExerciseData(props: ExerciseDataProps) {
         <>
         </>
       }
+      <TwoAxisChart />
+      <TimeSeriesChart />
     </View>
   )
 }
