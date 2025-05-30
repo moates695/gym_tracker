@@ -51,8 +51,9 @@ import ThreeDPlot from './ThreeAxisChart'
 import { useState } from "react";
 import Dropdown from "./Dropdown";
 import { useAtom } from "jotai";
-import TwoAxisChart from './TwoAxisGraph';
-import TimeSeriesChart from './TimeSeriesChart';
+// import TwoAxisChart from './TwoAxisGraph';
+// import TimeSeriesChart from './TimeSeriesChart';
+import LineGraph, {LineGraphPoint} from './LineGraph';
 
 interface ExerciseDataProps {
   exercise: any
@@ -68,7 +69,6 @@ export default function ExerciseData(props: ExerciseDataProps) {
 
   const [exercisesHistoricalData, setExercisesHistoricalDataAtom] = useAtom(exercisesHistoricalDataAtom);
   const exerciseData = (exercisesHistoricalData as any)[exercise.id];
-  console.log(exerciseData)
 
   const [selectedIdx, setSelectedIdx] = useState<number>(0);
   const dataOptions = [
@@ -76,6 +76,23 @@ export default function ExerciseData(props: ExerciseDataProps) {
     { label: 'reps x sets x weight', value: 'reps_sets_weight' },
     { label: 'volume per workout', value: 'volume_per_workout' },
   ]
+  const selectedDataOption = dataOptions[selectedIdx].value;
+
+  const [nRepMaxIdx, setNRepMaxIdx] = useState<number>(0);
+  const nRepMaxOptions = [
+    { label: 'all time maxes', value: 'all_time' },
+    { label: 'rep max history', value: 'history' },
+  ]
+  const nRepMaxOption = nRepMaxOptions[nRepMaxIdx].value;
+
+  const [nRepMaxHistoryIdx, setNRepMaxHistoryIdx] = useState<number>(0);
+  const nRepMaxHistoryOptions = [];
+  for (const key in exerciseData['n_rep_max']['history']) {
+    nRepMaxHistoryOptions.push({
+      label: key, value: key
+    })
+  }
+  const nRepMaxHistoryOption = nRepMaxHistoryOptions[nRepMaxHistoryIdx].value;
 
   const [timeSpanIdx, setTimeSpanIdx] = useState<number>(0);
   const timeSpanOptions = [
@@ -85,15 +102,15 @@ export default function ExerciseData(props: ExerciseDataProps) {
     { label: '6 months', value: '6_months' },
     { label: 'year', value: 'year' },
     { label: 'all', value: 'all' },
-
   ]
+  const timeSpanOption = timeSpanOptions[timeSpanIdx].value;
 
-  const timeSpanToMs = {
+  const timeSpanToMs: Record<string, number> = {
     'week': 7 * 24 * 60 * 60 * 1000,
     'month': 30 * 24 * 60 * 60 * 1000,
-    '3_months': 30 * 24 * 60 * 60 * 1000,
-    '6_months': 30 * 24 * 60 * 60 * 1000,
-    'year': 30 * 24 * 60 * 60 * 1000,
+    '3_months': 3 * 30 * 24 * 60 * 60 * 1000,
+    '6_months': 6 * 30 * 24 * 60 * 60 * 1000,
+    'year': 365 * 24 * 60 * 60 * 1000,
     'all': 0,
   }
   const cutoff = Date.now() - (timeSpanToMs as any)[timeSpanOptions[timeSpanIdx].value];
@@ -108,38 +125,82 @@ export default function ExerciseData(props: ExerciseDataProps) {
     setDataVisual('graph');
   }
 
-  const filterHistory = () => {
-
+  const filterTimeSeries = (points: LineGraphPoint[]) => {
+    if (timeSpanOption === 'all') return points;
+    return points.filter(point => {
+      return point.x >= (Date.now() - timeSpanToMs[timeSpanOption])
+    });
   }
 
-  const dummyPoints = [];
+  const getPoints = (): LineGraphPoint[] => {
+    if (selectedDataOption === 'n_rep_max') {
+      return getNRepMaxPoints();
+    }
+    return [];
+  };
+
+  const getNRepMaxPoints = (): LineGraphPoint[] => {
+    if (nRepMaxOption === 'all_time') {
+      const points: any[] = [];
+      for (const [key, obj] of Object.entries(exerciseData['n_rep_max']['all_time'])) {
+        points.push({
+          'x': parseInt(key),
+          'y': parseFloat((obj as any).weight)
+        })
+      }
+      return points;
+    } else if (nRepMaxOption === 'history') {
+      const points: any[] = [];
+      for (const point of exerciseData['n_rep_max']['history'][nRepMaxHistoryOption]) {
+        points.push({
+          "x": parseInt((point as any)["timestamp"]),
+          "y": parseFloat((point as any)["weight"]),
+        })
+      }
+      return filterTimeSeries(points);
+    }
+    return [];
+  };
+
+  const points = [];
   for (const point of exerciseData['n_rep_max']['history']["1"]) {
-    dummyPoints.push({
-      "timestamp": parseInt((point as any)["timestamp"]),
-      "value": parseFloat((point as any)["weight"]),
+    points.push({
+      "x": parseInt((point as any)["timestamp"]),
+      "y": parseFloat((point as any)["weight"]),
     })
   }
-  console.log(dummyPoints)
 
   return (
     <View>
       {/* <ThreeDPlot /> */}
-      <View style={styles.row}>
-        <View>
-          <Text style={styles.text}>Choose an option:</Text>
-          <Dropdown selectedIdx={selectedIdx} setSelectedIdx={setSelectedIdx} options={dataOptions}/>
-        </View>
-        <View>
-          <Text style={styles.text}>Choose a time span:</Text>
-          <Dropdown selectedIdx={timeSpanIdx} setSelectedIdx={setTimeSpanIdx} options={timeSpanOptions}/>
-        </View>
+      <View>
+        <Text style={styles.text}>Choose a data type:</Text>
+        <Dropdown selectedIdx={selectedIdx} setSelectedIdx={setSelectedIdx} options={dataOptions}/>
       </View>
       {dataOptions[selectedIdx].value === 'n_rep_max' &&
         <>
-          {dataVisual == 'graph' && 
-            <TimeSeriesChart points={dummyPoints}/>
+          <View>
+            <Text style={styles.text}>Choose a view:</Text>
+            <Dropdown selectedIdx={nRepMaxIdx} setSelectedIdx={setNRepMaxIdx} options={nRepMaxOptions}/>
+          </View>
+          {/* <TimeSeriesChart points={dummyPoints}/> */}
+          {nRepMaxOption === 'history' &&
+            <>
+              <View>
+                <Text style={styles.text}>Choose a rep number:</Text>
+                <Dropdown selectedIdx={nRepMaxHistoryIdx} setSelectedIdx={setNRepMaxHistoryIdx} options={nRepMaxHistoryOptions}/>
+              </View>
+              <View>
+                <Text style={styles.text}>Choose a lookback:</Text>
+                <Dropdown selectedIdx={timeSpanIdx} setSelectedIdx={setTimeSpanIdx} options={timeSpanOptions}/>
+              </View>
+            </>
           }
-          {dataVisual == 'table' && 
+
+          {dataVisual === 'graph' && 
+            <LineGraph points={getPoints()} scale_type={nRepMaxOption === 'all_time' ? 'value' : 'time'}/>
+          }
+          {dataVisual === 'table' && 
             <>
             </>
           }
@@ -150,7 +211,6 @@ export default function ExerciseData(props: ExerciseDataProps) {
           </TouchableOpacity>
         </>
       }
-      {/* <TimeSeriesChart points={[]}/> */}
     </View>
   )
 }
