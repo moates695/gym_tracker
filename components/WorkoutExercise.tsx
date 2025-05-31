@@ -29,7 +29,12 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
 
   useEffect(() => {
     const isValidSet = (set: SetData): boolean => {
-      return set.reps !== null && set.weight !== null && set.num_sets !== null;
+      for (const value of Object.values(set)) {
+        if (value !== null && value !== 0) continue;
+        return false;
+      }
+      return true;
+      // return set.reps !== null && set.weight !== null && set.num_sets !== null;
     };
     const reducer = (sum: number, obj: SetData): number => {
       return sum + (obj.num_sets ?? 0)

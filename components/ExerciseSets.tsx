@@ -3,11 +3,17 @@ import { useEffect, useState } from "react";
 import React, { View, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native"
 import { SetData, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
 import ConfirmationModal from "./ConfirmationModal";
+import ShiftTextInput from "./ShiftTextInput";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 interface ExerciseSetsProps {
   exercise: WorkoutExercise
   exerciseIndex: number
 }
+
+// todo: fix column spacing with adjacent buttons
+// todo: fix onDeleteSet, update displayWeight for index
 
 // todo: numeric weight in storage
 // todo: handle partial reps?
@@ -24,7 +30,7 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
   useEffect(() => {
     const temp: string[] = [];
     for (const data of exercise.set_data) {
-      temp.push(data.weight ? data.weight.toFixed(3) : '');
+      temp.push(formatFloatString((data.num_sets ?? '').toString()));
     }
     setDisplayWeights(temp);
   }, []);
@@ -40,11 +46,7 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
 
   const handleUpdateWeight = (text: string, index: number) => {
     const cleanedText = text.replace(/[^0-9.]/g, '');
-    const parts = cleanedText.split('.');
-    let formattedText = parts[0];
-    if (parts.length > 1) {
-      formattedText += '.' + parts[1].substring(0, 3);
-    }
+    const formattedText = formatFloatString(cleanedText);
 
     const tempDisplayWeights: string[] = [...displayWeights];
     tempDisplayWeights[index] = formattedText;
@@ -54,12 +56,18 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
     if (formattedText !== '' && formattedText !== '.') {
       weight = Math.abs(parseFloat(formattedText) || 0);
     }
-   
     const tempSetData: SetData[] = [...exercise.set_data];
     tempSetData[index].weight = weight;
     updateExerciseSetData(tempSetData);
+  };
 
-
+  const formatFloatString = (text: string): string => {
+    const parts = text.split('.');
+    let formattedText = parts[0];
+    if (parts.length > 1) {
+      formattedText += '.' + parts[1].substring(0, 3);
+    }
+    return formattedText;
   };
 
   const updateExerciseSetData = (set_data: any) => {
@@ -149,6 +157,10 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
     setExercises(tempExercises);
   }, [exercise.set_data])
 
+  // useEffect(() => {
+  //   console.log(exercise.set_data)
+  // }, [exercise.set_data])
+
   return (
     <View style={styles.container}>
       <View style={[styles.row, styles.header]}>
@@ -159,11 +171,18 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
       {exercise.set_data.map((set_data: SetData, index: number) => (
         <View key={index} style={styles.container}>
           <View style={styles.row}>
+            <TouchableOpacity
+              onPress={() => handleDeletePress(index)}
+              style={styles.textButton}
+            >
+              {/* <Ionicons name={focused ? 'home-sharp' : 'home-outline'} color={color} size={24} /> */}
+              <MaterialIcons name="delete-outline" size={20} color="red" />
+            </TouchableOpacity>
             <TextInput 
               style={styles.textInput}
               keyboardType="number-pad"
               onChangeText={(text) => handleUpdateInteger(text, index, 'reps')}
-              value={(set_data.num_sets ?? '').toString()}
+              value={(set_data.reps ?? '').toString()}
             />
             <TextInput 
               style={styles.textInput}
@@ -171,39 +190,16 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
               onChangeText={(text) => handleUpdateWeight(text, index)}
               value={displayWeights[index]}
             />
-            <TextInput 
-              style={styles.textInput}
-              keyboardType="number-pad"
+            <ShiftTextInput
               onChangeText={(text) => handleUpdateInteger(text, index, 'num_sets')}
               value={(set_data.num_sets ?? '').toString()}
+              shiftPress={(increase: boolean) => handleShiftSet(index, increase)}
             />
-          </View>
-          <View style={styles.row}>
-            <TouchableOpacity
-              onPress={() => handleShiftSet(index, true)}
-              style={styles.textButton}
-            >
-              <Text style={styles.text}>++sets</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleShiftSet(index, false)}
-              style={styles.textButton}
-            >
-              <Text style={styles.text}>sets--</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.row}>
-            <TouchableOpacity
-              onPress={() => handleDeletePress(index)}
-              style={styles.textButton}
-            >
-              <Text style={styles.text}>delete</Text>
-            </TouchableOpacity>
             <TouchableOpacity
               onPress={() => handleCopySet(index)}
               style={styles.textButton}
             >
-              <Text style={styles.text}>copy</Text>
+              <Ionicons name={'copy-outline'} color={'red'} size={20} />
             </TouchableOpacity>
           </View>
         </View>
@@ -243,9 +239,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     width: '100%',
     justifyContent: 'space-around',
+    paddingBottom: 5
   },
   header: {
-    paddingBottom: 5,
+    // paddingBottom: 5,
   },
   textButton: {
     padding: 8
