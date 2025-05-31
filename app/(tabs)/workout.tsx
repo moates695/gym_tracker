@@ -1,26 +1,26 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollView } from "react-native";
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollView, Platform } from "react-native";
 import { useAtom } from "jotai";
+import { StatusBar } from 'expo-status-bar';
 
-import { workoutAtom, exerciseListAtom, workoutExercisesAtom } from "@/store/general";
+import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
 import ChooseExercise from "@/components/ChooseExercise";
 import { fetchExercises } from "@/middleware/helpers";
 import WorkoutExercise from "@/components/WorkoutExercise";
 
-// workout overview: allow to see muscles worked, time, sets, volume (if on plan % completed)
+// todo: workout overview -> allow to see muscles worked, time, sets, volume (if on plan % completed)
 
 export default function Workout() {
-  const [workout, setWorkout] = useAtom(workoutAtom);
+  const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom);
+  const [workoutStartTime, setWorkoutStartTime] = useAtom(workoutStartTimeAtom);
   const [exerciseList, setExerciseList] = useAtom(exerciseListAtom);
 
   const [showStartOptions, setShowStartOptions] = useState<boolean>(true);
   const [chooseNewExercise, setChooseNewExercise] = useState<boolean>(false);
 
   const setNewWorkout = () => {
-    setWorkout({
-      "start_timestamp": Date.now(),
-      "exercises": []
-    })
+    setWorkoutExercises([]);
+    setWorkoutStartTime(Date.now());
   };
 
   const handleContinueWorkout = () => {
@@ -38,17 +38,16 @@ export default function Workout() {
 
   useEffect(() => {
     fetchExercises(setExerciseList);
-  }, []); 
-
-  useEffect(() => {
-    // console.log(workout)
-  }, [workout]);
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}> 
+      {Platform.OS == 'android' &&
+        <StatusBar style="light" backgroundColor="black" translucent={false} />
+      }
       {showStartOptions ?
         <View>
-          {Object.keys(workout).length !== 0 &&
+          {Object.keys(workoutExercises).length !== 0 &&
             <TouchableOpacity 
               onPress={() => handleContinueWorkout()}
             >
@@ -61,22 +60,21 @@ export default function Workout() {
             <Text style={{ color: "white"}}>start new workout</Text>
           </TouchableOpacity>
         </View> 
-        : 
+      : 
         <View style={styles.workoutContainer}>
-          {workout.exercises.length === 0 &&
+          {workoutExercises.length === 0 &&
             <Text style={{color:'white'}}>no exercises so far</Text>
           }
           <ScrollView 
             style={styles.scrollView}
             contentContainerStyle={styles.scrollViewContainer}
           >
-            {workout.exercises.map((exercise, i) => {
+            {workoutExercises.map((exercise, i) => {
               return (
                 <WorkoutExercise key={i} exercise={exercise} exerciseIndex={i}/>
               )
             })}
           </ScrollView>
-          
           <TouchableOpacity 
             onPress={() => handleAddNewExercise()}
           >
@@ -84,7 +82,7 @@ export default function Workout() {
           </TouchableOpacity>
           <Modal
             animationType="slide"
-            transparent={true}
+            transparent={false}
             visible={chooseNewExercise}
             onRequestClose={() => setChooseNewExercise(false)}
           >
@@ -102,11 +100,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'black',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%'
+    width: '100%',
   },
   scrollView: {
     width: '100%',
-    height: '90%',
+    height: '100%',
   },
   scrollViewContainer: {
     alignItems: 'center',
@@ -117,6 +115,6 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingBottom: 10,
     justifyContent: 'flex-start',
-    alignItems: 'center'
+    alignItems: 'center',
   }
 });

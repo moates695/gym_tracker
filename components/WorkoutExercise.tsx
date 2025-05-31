@@ -60,13 +60,13 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
             >
               <Text style={styles.text}>{isDataExpanded ? 'close data': 'open data'}</Text>
             </TouchableOpacity>
-          {isDataExpanded && 
-            <TouchableOpacity
-              onPress={handleRefreshHistory}
-            >
-              <Text style={styles.text}>refresh data</Text>
-            </TouchableOpacity>
-          }
+            {isDataExpanded && 
+              <TouchableOpacity
+                onPress={handleRefreshHistory}
+              >
+                <Text style={styles.text}>refresh data</Text>
+              </TouchableOpacity>
+            }
           </View>
           {isDataExpanded &&
             <>
@@ -85,12 +85,12 @@ const styles = StyleSheet.create({
     color: 'white'
   },
   box: {
-    width: '90%',
-    padding: 15,
+    width: '100%',
+    padding: 10,
     margin: 2,
     borderColor: 'red',
     borderWidth: 2,
-    borderRadius: 8
+    borderRadius: 8,
   },
   row: {
     flexDirection: 'row',
@@ -104,6 +104,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
+    paddingLeft: 5,
+    paddingRight: 5,
   },
   divider: {
     height: 1,

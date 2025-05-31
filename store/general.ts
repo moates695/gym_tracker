@@ -13,7 +13,7 @@ export const workoutExercisesAtom = atomWithStorage<any[]>('workoutExercisesAtom
     "sets": [
       {
         "reps": 10,
-        "weight": 55,
+        "weight": 55.3,
         "sets": 2,
       }
     ]
@@ -36,18 +36,19 @@ export const workoutExercisesAtom = atomWithStorage<any[]>('workoutExercisesAtom
     ]
   },
 ]);
+
 export const workoutStartTimeAtom = atomWithStorage('workoutStartTimeAtom', Date.now());
 
-export const workoutAtom = atom(
-  (get) => ({
-    start_timestamp: get(workoutStartTimeAtom),
-    exercises: get(workoutExercisesAtom),
-  }),
-  (get, set, newWorkout: { start_timestamp: number; exercises: any[] }) => {
-    set(workoutStartTimeAtom, newWorkout.start_timestamp);
-    set(workoutExercisesAtom, newWorkout.exercises);
-  }
-);
+// export const workoutAtom = atom(
+//   (get) => ({
+//     start_timestamp: get(workoutStartTimeAtom),
+//     exercises: get(workoutExercisesAtom),
+//   }),
+//   (get, set, newWorkout: { start_timestamp: number; exercises: any[] }) => {
+//     set(workoutStartTimeAtom, newWorkout.start_timestamp);
+//     set(workoutExercisesAtom, newWorkout.exercises);
+//   }
+// );
 
 export const exerciseListAtom = atomWithStorage('exerciseListAtom', [])
 
@@ -75,7 +76,8 @@ export const exercisesHistoricalDataAtom = atom({
           { weight: 150.8, timestamp: now - 1000 * 60 * 60 * 24 * 60 },
           { weight: 150.5, timestamp: now - 1000 * 60 * 60 * 24 * 80 },
           { weight: 153.7, timestamp: now - 1000 * 60 * 60 * 24 * 150 },
-          { weight: 148.1, timestamp: now - 1000 * 60 * 60 * 24 * 365 }
+          { weight: 153.7, timestamp: now - 1000 * 60 * 60 * 24 * 300 },
+          { weight: 148.1, timestamp: now - 1000 * 60 * 60 * 24 * 370 }
         ],
         "3": [
           { weight: 141.0, timestamp: now - 1000 * 60 * 60 * 24 * 2 },

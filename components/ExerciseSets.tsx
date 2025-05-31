@@ -9,6 +9,9 @@ interface ExerciseSetsProps {
   exerciseIndex: number
 }
 
+// todo: numeric weight in storage
+// todo: handle partial reps?
+
 export default function ExerciseSets(props: ExerciseSetsProps) {
   const { exercise, exerciseIndex } = props; 
 
@@ -19,7 +22,7 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
   const handleUpdateReps = (text: string, index: number) => {
     text = text.replace(/\D/g, '');
     const tempSets = [...exercise.sets];
-    let num: any = parseFloat(text);
+    let num: any = parseInt(text);
     if (isNaN(num)) {
       num = null;
     }
@@ -28,20 +31,54 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
   };
 
   const handleUpdateWeight = (text: string, index: number) => {
-    text = text.replace(/[^0-9.]+/g, '');
+    const num = getWeightNumber(text);    
     const tempSets = [...exercise.sets];
-    let num: any = parseFloat(text);
-    if (isNaN(num)) {
-      num = null;
-    }
     tempSets[index].weight = num;
     updateExerciseSets(tempSets);
+
+    // setInputText(formattedText);
+    
+    // text = text.replace(/[^0-9.]+/g, '');
+    // const tempSets = [...exercise.sets];
+    // let num: any = parseFloat(text);
+    // if (isNaN(num)) {
+    //   num = null;
+    // }
+    // tempSets[index].weight = num;
+    // updateExerciseSets(tempSets);
+
   };
+
+  const getWeightNumber = (text: string): number => {
+    const cleanedText = text.replace(/[^0-9.]/g, '');
+    
+    if (cleanedText === '' || cleanedText === '.') {
+      return 0;
+    }
+    
+    const parts = cleanedText.split('.');
+    let formattedText = parts[0];
+    if (parts.length > 1) {
+      formattedText += '.' + parts[1].substring(0, 3);
+    }
+    
+    return Math.abs(parseFloat(formattedText) || 0);
+  };
+
+  // const handleBlur = (text: string, index: number) => {
+  //   const tempSets = [...exercise.sets];
+  //   if (!exercise.sets[index].weight) return
+  //     // Format on blur to 3 decimals (adds trailing zeros if needed)
+  //   const num = parseFloat(text);
+  //   if (!isNaN(num)) {
+  //     // setValue(num.toFixed(3));
+  //   }
+  // };
 
   const handleUpdateSets = (text: string, index: number) => {
     text = text.replace(/\D/g, '');
     const tempSets = [...exercise.sets];
-    let num: any = parseFloat(text);
+    let num: any = parseInt(text);
     if (isNaN(num)) {
       num = null;
     }
@@ -141,7 +178,7 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.row}>
+      <View style={[styles.row, styles.header]}>
         <Text style={styles.text}>reps</Text>
         <Text style={styles.text}>weight</Text>
         <Text style={styles.text}>sets</Text>
@@ -153,6 +190,7 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
               style={styles.textInput}
               keyboardType="number-pad"
               onChangeText={(text) => handleUpdateReps(text, index)}
+              // onBlur={(text) => handleBlur(text, index)}
               value={set.reps !== null ? set.reps.toString() : ''}
             />
             <TextInput 
@@ -217,12 +255,13 @@ const styles = StyleSheet.create({
   },
   textInput: {
     color: 'white',
-    borderWidth: 1,
-    borderColor: 'white',
+    borderWidth: 2,
+    borderColor: '#ccc',
     borderRadius: 5,
-    width: '20%',
+    width: '25%',
     justifyContent: 'center',
     alignContent: 'center',
+    textAlign: 'center',
   },
   container: {
     alignItems: 'center',
@@ -230,7 +269,10 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     width: '100%',
-    justifyContent: 'space-around'
+    justifyContent: 'space-around',
+  },
+  header: {
+    paddingBottom: 5,
   },
   textButton: {
     padding: 8

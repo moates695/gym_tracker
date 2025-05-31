@@ -15,11 +15,10 @@ interface LineGraphProps  {
 }
 
 // todo: ability to click on point and see data for it ?
+// todo: option to normalize time series data (even spread) ?
 
 export default function LineGraph(props: LineGraphProps) {
   const {points, scale_type} = props;
-
-  console.log(points)
 
   const width = Dimensions.get('window').width - 80;
   const height = 250;
