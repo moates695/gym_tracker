@@ -4,11 +4,11 @@ import { Text, StyleSheet } from "react-native"
 import ExerciseSets from "./ExerciseSets";
 import React from 'react-native'
 import ExerciseData from "./ExerciseData";
-import { exercisesHistoricalDataAtom } from "@/store/general"
+import { exercisesHistoricalDataAtom, SetData, WorkoutExercise } from "@/store/general"
 import { useAtom } from "jotai";
 
 interface WorkoutExerciseProps {
-  exercise: any
+  exercise: WorkoutExercise
   exerciseIndex: number
 }
 
@@ -28,11 +28,14 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
   }, [isExpanded]);
 
   useEffect(() => {
-    const isValidSet = (set: any) => {
-      return set.reps !== null && set.weight !== null && set.sets !== null;
+    const isValidSet = (set: SetData): boolean => {
+      return set.reps !== null && set.weight !== null && set.num_sets !== null;
     };
-    setNumSets(exercise.sets.filter(isValidSet).reduce((sum: any, obj: { sets: any; }) => sum + obj.sets, 0));
-  }, [exercise.sets]);
+    const reducer = (sum: number, obj: SetData): number => {
+      return sum + (obj.num_sets ?? 0)
+    };
+    setNumSets(exercise.set_data.filter(isValidSet).reduce(reducer, 0));
+  }, [exercise.set_data]);
 
   const handleRefreshHistory = async () => {
     // send request to refresh all historical data from exercise.id
@@ -113,93 +116,3 @@ const styles = StyleSheet.create({
     marginVertical: 8
   }
 })
-
-// const exampleData = {
-//   "n_rep_max": {
-//     "maxes": {
-//       "1": {
-//         "weight": "155",
-//         "timestamp": "1748252144422"
-//       },
-//       "3": {
-//         "weight": "130",
-//         "timestamp": "1748338544422"
-//       },
-//       "5": {
-//         "weight": "100",
-//         "timestamp": "1748424944422"
-//       },
-//       "10": {
-//         "weight": "95",
-//         "timestamp": "1748511344422"
-//       },
-//       "11": {
-//         "weight": "92",
-//         "timestamp": "1748597744422"
-//       },
-//       "20": {
-//         "weight": "87",
-//         "timestamp": "1748684144422"
-//       }
-//     },
-//     "history": {
-//       "1": [
-//         {
-//           "weight": "155",
-//           "timestamp": "1748252144422"
-//         },
-//         {
-//           "weight": "150",
-//           "timestamp": "1748165744422"
-//         },
-//         {
-//           "weight": "148",
-//           "timestamp": "1748079344422"
-//         },
-//         {
-//           "weight": "152",
-//           "timestamp": "1747992944422"
-//         },
-//         {
-//           "weight": "149",
-//           "timestamp": "1747906544422"
-//         }
-//       ],
-//       "3": [
-//         { "weight": "130", "timestamp": "1748338544422" },
-//         { "weight": "128", "timestamp": "1748252144422" },
-//         { "weight": "127", "timestamp": "1748165744422" },
-//         { "weight": "125", "timestamp": "1748079344422" },
-//         { "weight": "129", "timestamp": "1747992944422" }
-//       ],
-//       "5": [
-//         { "weight": "100", "timestamp": "1748424944422" },
-//         { "weight": "98",  "timestamp": "1748338544422" },
-//         { "weight": "97",  "timestamp": "1748252144422" },
-//         { "weight": "95",  "timestamp": "1748165744422" },
-//         { "weight": "96",  "timestamp": "1748079344422" }
-//       ],
-//       "10": [
-//         { "weight": "95",  "timestamp": "1748511344422" },
-//         { "weight": "93",  "timestamp": "1748424944422" },
-//         { "weight": "91",  "timestamp": "1748338544422" },
-//         { "weight": "90",  "timestamp": "1748252144422" },
-//         { "weight": "92",  "timestamp": "1748165744422" }
-//       ],
-//       "11": [
-//         { "weight": "92",  "timestamp": "1748597744422" },
-//         { "weight": "90",  "timestamp": "1748511344422" },
-//         { "weight": "89",  "timestamp": "1748424944422" },
-//         { "weight": "88",  "timestamp": "1748338544422" },
-//         { "weight": "91",  "timestamp": "1748252144422" }
-//       ],
-//       "20": [
-//         { "weight": "87",  "timestamp": "1748684144422" },
-//         { "weight": "85",  "timestamp": "1748597744422" },
-//         { "weight": "84",  "timestamp": "1748511344422" },
-//         { "weight": "83",  "timestamp": "1748424944422" },
-//         { "weight": "86",  "timestamp": "1748338544422" }
-//       ]
-//     }
-//   },
-// };

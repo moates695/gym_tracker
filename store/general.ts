@@ -1,20 +1,34 @@
 import { atom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils';
 
-export const workoutExercisesAtom = atomWithStorage<any[]>('workoutExercisesAtom', [
+export interface SetData {
+  reps: number | null
+  weight: number | null
+  num_sets: number | null
+}
+
+export interface WorkoutExercise {
+  id: string
+  name: string
+  targets: Record<string, number>
+  is_body_weight: boolean
+  set_data: SetData[]
+}
+
+export const workoutExercisesAtom = atomWithStorage<WorkoutExercise[]>('workoutExercisesAtom', [
   {
     "id": "000",
     "name": "Dumbbell Bicep Curl",
     "targets": {
-        "bicep": "100",
-        "forearm": "20"
+        "bicep": 100,
+        "forearm": 20
     },
     "is_body_weight": false,
-    "sets": [
+    "set_data": [
       {
         "reps": 10,
         "weight": 55.3,
-        "sets": 2,
+        "num_sets": 2,
       }
     ]
   },
@@ -22,16 +36,16 @@ export const workoutExercisesAtom = atomWithStorage<any[]>('workoutExercisesAtom
     "id": "001",
     "name": "Push-Up",
     "targets": {
-        "chest": "80",
-        "tricep": "60",
-        "shoulder": "40"
+        "chest": 80,
+        "tricep": 60,
+        "shoulder": 40
     },
     "is_body_weight": true,
-    "sets": [
+    "set_data": [
       {
         "reps": null,
         "weight": null,
-        "sets": null,
+        "num_sets": null,
       }
     ]
   },

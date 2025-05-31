@@ -1,11 +1,11 @@
 import { useAtom } from "jotai";
 import { useEffect, useState } from "react";
 import React, { View, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native"
-import { workoutExercisesAtom } from "@/store/general";
+import { SetData, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
 import ConfirmationModal from "./ConfirmationModal";
 
 interface ExerciseSetsProps {
-  exercise: any
+  exercise: WorkoutExercise
   exerciseIndex: number
 }
 
@@ -18,98 +18,86 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
   const [exercises, setExercises] = useAtom(workoutExercisesAtom);
   const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false);
   const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
-  
+  const [displayWeights, setDisplayWeights] = useState<string[]>([]);
+
+  useEffect(() => {
+    const temp: string[] = [];
+    for (const data of exercise.set_data) {
+      temp.push(data.weight ? data.weight.toFixed(3) : '');
+    }
+    setDisplayWeights(temp)
+  }, []);
+
   const handleUpdateReps = (text: string, index: number) => {
     text = text.replace(/\D/g, '');
-    const tempSets = [...exercise.sets];
+    const tempSetData: SetData[] = [...exercise.set_data];
     let num: any = parseInt(text);
     if (isNaN(num)) {
       num = null;
     }
-    tempSets[index].reps = num;
-    updateExerciseSets(tempSets);
+    tempSetData[index].reps = num;
+    updateExerciseSets(tempSetData);
   };
 
   const handleUpdateWeight = (text: string, index: number) => {
-    const num = getWeightNumber(text);    
-    const tempSets = [...exercise.sets];
-    tempSets[index].weight = num;
-    updateExerciseSets(tempSets);
-
-    // setInputText(formattedText);
-    
-    // text = text.replace(/[^0-9.]+/g, '');
-    // const tempSets = [...exercise.sets];
-    // let num: any = parseFloat(text);
-    // if (isNaN(num)) {
-    //   num = null;
-    // }
-    // tempSets[index].weight = num;
-    // updateExerciseSets(tempSets);
-
-  };
-
-  const getWeightNumber = (text: string): number => {
     const cleanedText = text.replace(/[^0-9.]/g, '');
-    
-    if (cleanedText === '' || cleanedText === '.') {
-      return 0;
-    }
-    
     const parts = cleanedText.split('.');
     let formattedText = parts[0];
     if (parts.length > 1) {
       formattedText += '.' + parts[1].substring(0, 3);
     }
-    
-    return Math.abs(parseFloat(formattedText) || 0);
-  };
 
-  // const handleBlur = (text: string, index: number) => {
-  //   const tempSets = [...exercise.sets];
-  //   if (!exercise.sets[index].weight) return
-  //     // Format on blur to 3 decimals (adds trailing zeros if needed)
-  //   const num = parseFloat(text);
-  //   if (!isNaN(num)) {
-  //     // setValue(num.toFixed(3));
-  //   }
-  // };
+    const tempDisplayWeights: string[] = [...displayWeights];
+    tempDisplayWeights[index] = formattedText;
+    setDisplayWeights(tempDisplayWeights);
+
+    let weight = null;
+    if (formattedText !== '' && formattedText !== '.') {
+      weight = Math.abs(parseFloat(formattedText) || 0);
+    }
+   
+    const tempSetData: SetData[] = [...exercise.set_data];
+    tempSetData[index].weight = weight;
+    updateExerciseSets(tempSetData);
+
+
+  };
 
   const handleUpdateSets = (text: string, index: number) => {
     text = text.replace(/\D/g, '');
-    const tempSets = [...exercise.sets];
+    const tempSetData: SetData[] = [...exercise.set_data];
     let num: any = parseInt(text);
     if (isNaN(num)) {
       num = null;
     }
-    tempSets[index].sets = num;
-    updateExerciseSets(tempSets);
+    tempSetData[index].num_sets = num;
+    updateExerciseSets(tempSetData);
   };
 
   const updateExerciseSets = (sets: any) => {
-    const tempExercises = [...exercises];
-    tempExercises[exerciseIndex].sets = sets;
+    const tempExercises: WorkoutExercise[] = [...exercises];
+    tempExercises[exerciseIndex].set_data = sets;
     setExercises(tempExercises);
   };
 
   const handleIncrementSet = (index: number) => {
-    const tempSets = [...exercise.sets];
-    let num = tempSets[index].sets;
+    const tempSets = [...exercise.set_data];
+    let num = tempSets[index].num_sets;
     num = num !== null ? ++num : 1
-    tempSets[index].sets = num;
+    tempSets[index].num_sets = num;
     updateExerciseSets(tempSets);
   };
 
   const handleDecrementSet = (index: number) => {
-    const tempSets = [...exercise.sets];
-    let num = tempSets[index].sets;
+    const tempSets = [...exercise.set_data];
+    let num = tempSets[index].num_sets;
     if (num === 0 || num === null) return;
-    tempSets[index].sets = --num;
+    tempSets[index].num_sets = --num;
     updateExerciseSets(tempSets);
   };
 
   const handleCopySet = (index: number) => {
-    const tempSets = [...exercise.sets];
+    const tempSets = [...exercise.set_data];
     const tempSet = { ...tempSets[index] };
     tempSets.push(tempSet);
     updateExerciseSets(tempSets);
@@ -137,7 +125,7 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
     };
 
   const handleDeleteSet = (index: number) => {
-    let tempSets = [...exercise.sets];
+    let tempSets = [...exercise.set_data];
     if (tempSets.length > 1) {
       tempSets.splice(index, 1);
       updateExerciseSets(tempSets);
@@ -147,34 +135,34 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
       {
         "reps": null,
         "weight": null,
-        "sets": null,
+        "num_sets": null,
       }
     ]
     updateExerciseSets(tempSets)
   }
 
   const handleNewSet = () => {
-    const tempSets = [...exercise.sets];
+    const tempSets = [...exercise.set_data];
     tempSets.push({
       "reps": null,
       "weight": null,
-      "sets": null,
+      "num_sets": null,
     })
     updateExerciseSets(tempSets);
   }
 
   useEffect(() => {
-    if (exercise.sets.length > 0) return;
+    if (exercise.set_data.length > 0) return;
     const tempExercises = [...exercises];
-    tempExercises[exerciseIndex].sets = [
+    tempExercises[exerciseIndex].set_data = [
       {
         "reps": null,
         "weight": null,
-        "sets": null,
+        "num_sets": null,
       }
     ]
     setExercises(tempExercises);
-  }, [exercise.sets])
+  }, [exercise.set_data])
 
   return (
     <View style={styles.container}>
@@ -183,27 +171,27 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
         <Text style={styles.text}>weight</Text>
         <Text style={styles.text}>sets</Text>
       </View>
-      {exercise.sets.map((set: any, index: number) => (
+      {exercise.set_data.map((set_data: SetData, index: number) => (
         <View key={index} style={{width:'100%'}}>
           <View style={styles.row}>
             <TextInput 
               style={styles.textInput}
               keyboardType="number-pad"
               onChangeText={(text) => handleUpdateReps(text, index)}
-              // onBlur={(text) => handleBlur(text, index)}
-              value={set.reps !== null ? set.reps.toString() : ''}
+              value={set_data.reps !== null ? set_data.reps.toString() : ''}
             />
             <TextInput 
               style={styles.textInput}
               keyboardType="number-pad"
               onChangeText={(text) => handleUpdateWeight(text, index)}
-              value={set.weight !== null ? set.weight.toString() : ''}
+              // value={set_data.weight !== null ? set_data.weight.toString() : ''}
+              value={displayWeights[index]}
             />
             <TextInput 
               style={styles.textInput}
               keyboardType="number-pad"
               onChangeText={(text) => handleUpdateSets(text, index)}
-              value={set.sets !== null ? set.sets.toString() : ''}
+              value={set_data.num_sets !== null ? set_data.num_sets.toString() : ''}
             />
           </View>
           <View style={styles.row}>

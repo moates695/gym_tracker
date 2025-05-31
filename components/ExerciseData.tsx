@@ -2,7 +2,7 @@ import * as React from 'react';
 import { View, StyleSheet, Text, Platform, TouchableOpacity } from "react-native"
 import { Picker } from '@react-native-picker/picker';
 import DropDownPicker from 'react-native-dropdown-picker';
-import { exercisesHistoricalDataAtom } from "@/store/general"
+import { exercisesHistoricalDataAtom, WorkoutExercise } from "@/store/general"
 
 // on select exercise, load in user data (async)
 // allow refresh in case of errors
@@ -56,7 +56,7 @@ import { useAtom } from "jotai";
 import LineGraph, {LineGraphPoint} from './LineGraph';
 
 interface ExerciseDataProps {
-  exercise: any
+  exercise: WorkoutExercise
   exerciseIndex: number
 }
 
