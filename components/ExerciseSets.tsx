@@ -16,6 +16,7 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
   const { exercise, exerciseIndex } = props; 
 
   const [exercises, setExercises] = useAtom(workoutExercisesAtom);
+  
   const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false);
   const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
   const [displayWeights, setDisplayWeights] = useState<string[]>([]);
@@ -25,19 +26,17 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
     for (const data of exercise.set_data) {
       temp.push(data.weight ? data.weight.toFixed(3) : '');
     }
-    setDisplayWeights(temp)
+    setDisplayWeights(temp);
   }, []);
 
-  const handleUpdateReps = (text: string, index: number) => {
+  const handleUpdateInteger = (text: string, index: number, key: 'reps' | 'num_sets') => {
     text = text.replace(/\D/g, '');
     const tempSetData: SetData[] = [...exercise.set_data];
     let num: any = parseInt(text);
-    if (isNaN(num)) {
-      num = null;
-    }
-    tempSetData[index].reps = num;
-    updateExerciseSets(tempSetData);
-  };
+    if (isNaN(num)) num = null;
+    tempSetData[index][key] = num;
+    updateExerciseSetData(tempSetData);
+  }
 
   const handleUpdateWeight = (text: string, index: number) => {
     const cleanedText = text.replace(/[^0-9.]/g, '');
@@ -58,49 +57,52 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
    
     const tempSetData: SetData[] = [...exercise.set_data];
     tempSetData[index].weight = weight;
-    updateExerciseSets(tempSetData);
+    updateExerciseSetData(tempSetData);
 
 
   };
 
-  const handleUpdateSets = (text: string, index: number) => {
-    text = text.replace(/\D/g, '');
-    const tempSetData: SetData[] = [...exercise.set_data];
-    let num: any = parseInt(text);
-    if (isNaN(num)) {
-      num = null;
-    }
-    tempSetData[index].num_sets = num;
-    updateExerciseSets(tempSetData);
-  };
-
-  const updateExerciseSets = (sets: any) => {
+  const updateExerciseSetData = (set_data: any) => {
     const tempExercises: WorkoutExercise[] = [...exercises];
-    tempExercises[exerciseIndex].set_data = sets;
+    tempExercises[exerciseIndex].set_data = set_data;
     setExercises(tempExercises);
   };
 
-  const handleIncrementSet = (index: number) => {
-    const tempSets = [...exercise.set_data];
-    let num = tempSets[index].num_sets;
-    num = num !== null ? ++num : 1
-    tempSets[index].num_sets = num;
-    updateExerciseSets(tempSets);
-  };
-
-  const handleDecrementSet = (index: number) => {
-    const tempSets = [...exercise.set_data];
-    let num = tempSets[index].num_sets;
-    if (num === 0 || num === null) return;
-    tempSets[index].num_sets = --num;
-    updateExerciseSets(tempSets);
-  };
+  const handleShiftSet = (index: number, increase: boolean) => {
+    const tempSetData = [...exercise.set_data];
+    let num = tempSetData[index].num_sets;
+    if (increase) {
+      num = num !== null ? ++num : 1
+    } else {
+      if (num === 0 || num === null) return;
+      tempSetData[index].num_sets = --num;
+    }
+    tempSetData[index].num_sets = num;
+    updateExerciseSetData(tempSetData);
+  }
 
   const handleCopySet = (index: number) => {
     const tempSets = [...exercise.set_data];
     const tempSet = { ...tempSets[index] };
     tempSets.push(tempSet);
-    updateExerciseSets(tempSets);
+    updateExerciseSetData(tempSets);
+  }
+
+  const handleDeleteSet = (index: number) => {
+    let tempSets = [...exercise.set_data];
+    if (tempSets.length > 1) {
+      tempSets.splice(index, 1);
+      updateExerciseSetData(tempSets);
+      return;
+    }
+    tempSets = [
+      {
+        "reps": null,
+        "weight": null,
+        "num_sets": null,
+      }
+    ]
+    updateExerciseSetData(tempSets)
   }
 
   const openConfirm = (): Promise<boolean> => {
@@ -119,27 +121,10 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
     setDeleteModalVisible(false);
   };
 
-    const handleCancel = () => {
-      resolver?.(false);
-      setDeleteModalVisible(false);
-    };
-
-  const handleDeleteSet = (index: number) => {
-    let tempSets = [...exercise.set_data];
-    if (tempSets.length > 1) {
-      tempSets.splice(index, 1);
-      updateExerciseSets(tempSets);
-      return;
-    }
-    tempSets = [
-      {
-        "reps": null,
-        "weight": null,
-        "num_sets": null,
-      }
-    ]
-    updateExerciseSets(tempSets)
-  }
+  const handleCancel = () => {
+    resolver?.(false);
+    setDeleteModalVisible(false);
+  };
 
   const handleNewSet = () => {
     const tempSets = [...exercise.set_data];
@@ -148,7 +133,7 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
       "weight": null,
       "num_sets": null,
     })
-    updateExerciseSets(tempSets);
+    updateExerciseSetData(tempSets);
   }
 
   useEffect(() => {
@@ -172,37 +157,36 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
         <Text style={styles.text}>sets</Text>
       </View>
       {exercise.set_data.map((set_data: SetData, index: number) => (
-        <View key={index} style={{width:'100%'}}>
+        <View key={index} style={styles.container}>
           <View style={styles.row}>
             <TextInput 
               style={styles.textInput}
               keyboardType="number-pad"
-              onChangeText={(text) => handleUpdateReps(text, index)}
-              value={set_data.reps !== null ? set_data.reps.toString() : ''}
+              onChangeText={(text) => handleUpdateInteger(text, index, 'reps')}
+              value={(set_data.num_sets ?? '').toString()}
             />
             <TextInput 
               style={styles.textInput}
               keyboardType="number-pad"
               onChangeText={(text) => handleUpdateWeight(text, index)}
-              // value={set_data.weight !== null ? set_data.weight.toString() : ''}
               value={displayWeights[index]}
             />
             <TextInput 
               style={styles.textInput}
               keyboardType="number-pad"
-              onChangeText={(text) => handleUpdateSets(text, index)}
-              value={set_data.num_sets !== null ? set_data.num_sets.toString() : ''}
+              onChangeText={(text) => handleUpdateInteger(text, index, 'num_sets')}
+              value={(set_data.num_sets ?? '').toString()}
             />
           </View>
           <View style={styles.row}>
             <TouchableOpacity
-              onPress={() => handleIncrementSet(index)}
+              onPress={() => handleShiftSet(index, true)}
               style={styles.textButton}
             >
               <Text style={styles.text}>++sets</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => handleDecrementSet(index)}
+              onPress={() => handleShiftSet(index, false)}
               style={styles.textButton}
             >
               <Text style={styles.text}>sets--</Text>
@@ -253,6 +237,7 @@ const styles = StyleSheet.create({
   },
   container: {
     alignItems: 'center',
+    width: '100%',
   },
   row: {
     flexDirection: 'row',
