@@ -51,33 +51,36 @@ export const workoutExercisesAtom = atomWithStorage<WorkoutExercise[]>('workoutE
   },
 ]);
 
-export const workoutStartTimeAtom = atomWithStorage('workoutStartTimeAtom', Date.now());
-
-// export const workoutAtom = atom(
-//   (get) => ({
-//     start_timestamp: get(workoutStartTimeAtom),
-//     exercises: get(workoutExercisesAtom),
-//   }),
-//   (get, set, newWorkout: { start_timestamp: number; exercises: any[] }) => {
-//     set(workoutStartTimeAtom, newWorkout.start_timestamp);
-//     set(workoutExercisesAtom, newWorkout.exercises);
-//   }
-// );
+export const workoutStartTimeAtom = atomWithStorage<number>('workoutStartTimeAtom', Date.now());
 
 export const exerciseListAtom = atomWithStorage('exerciseListAtom', [])
 
-const now = Date.now();
+interface WeightTimestamp {
+  weight: number
+  timestamp: number
+}
 
-export const exercisesHistoricalDataAtom = atom({
+interface NRepMaxData {
+  all_time: Record<string, WeightTimestamp>
+  history: Record<string, WeightTimestamp[]>
+}
+
+interface ExerciseHistoricalData {
+  n_rep_max: NRepMaxData
+  // reps_sets: any
+}
+
+const now = Date.now();
+export const exercisesHistoricalDataAtom = atom<Record<string, ExerciseHistoricalData>>({
   "000": {
     "n_rep_max": {
       "all_time": {
-        "1": { weight: 155.8, timestamp: now - 1000 * 60 * 60 * 24 * 30 },       // ~1 month ago
-        "3": { weight: 152.9, timestamp: now - 1000 * 60 * 60 * 24 * 180 },      // ~6 months ago
-        "5": { weight: 143.2, timestamp: now - 1000 * 60 * 60 * 24 * 90 },       // ~3 months ago
-        "10": { weight: 135.6, timestamp: now - 1000 * 60 * 60 * 24 * 14 },      // ~2 weeks ago
-        "11": { weight: 133.5, timestamp: now - 1000 * 60 * 60 * 24 * 7 },       // ~1 week ago
-        "20": { weight: 90.9, timestamp: now - 1000 * 60 * 60 * 24 * 400 }       // ~13 months ago
+        "1": { weight: 155.8, timestamp: now - 1000 * 60 * 60 * 24 * 30 },
+        "3": { weight: 152.9, timestamp: now - 1000 * 60 * 60 * 24 * 180 },
+        "5": { weight: 143.2, timestamp: now - 1000 * 60 * 60 * 24 * 90 },
+        "10": { weight: 135.6, timestamp: now - 1000 * 60 * 60 * 24 * 14 },
+        "11": { weight: 133.5, timestamp: now - 1000 * 60 * 60 * 24 * 7 },
+        "20": { weight: 90.9, timestamp: now - 1000 * 60 * 60 * 24 * 400 }
       },
       "history": {
         "1": [

@@ -15,7 +15,7 @@ interface WorkoutExerciseProps {
 export default function workoutExercise(props: WorkoutExerciseProps) {
   const { exercise, exerciseIndex } = props; 
 
-  const [exercisesHistoricalData, setExercisesHistoricalDataAtom] = useAtom(exercisesHistoricalDataAtom);
+  const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
 
   const [numSets, setNumSets] = useState<number>(0);
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
@@ -44,7 +44,7 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
 
   const handleRefreshHistory = async () => {
     // send request to refresh all historical data from exercise.id
-    setExercisesHistoricalDataAtom(exercisesHistoricalData);
+    setExercisesHistoricalData(exercisesHistoricalData);
     // const data = {};
     // const temp = {...exercisesHistoricalData} as any;
     // temp[exercise.id] = data;

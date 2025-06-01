@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
+import WorkoutHeader from '@/components/WorkoutHeader';
 
 export default function TabLayout() {
   return (
@@ -38,7 +39,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="workout"
         options={{
-          title: 'Workout',
+          title: 'Workouts',
+          headerTitle: () => <WorkoutHeader />,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'accessibility' : 'accessibility-outline'} color={color} size={24} />
           ),

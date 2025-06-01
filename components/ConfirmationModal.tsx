@@ -61,8 +61,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   container: {
-    borderColor: 'gray',
-    borderWidth: 5,
+    borderColor: '#ccc',
+    borderWidth: 2,
     borderRadius: 10,
     backgroundColor: 'black',
     width: '60%',
