@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import { Text, StyleSheet, View } from 'react-native'
-import { workoutStartTimeAtom } from '@/store/general'
+import { workoutStartTimeAtom, showWorkoutStartOptionsAtom} from '@/store/general'
 import { useAtom } from 'jotai';
 
 export default function WorkoutHeader() {
   const [workoutStartTime, setWorkoutStartTime] = useAtom(workoutStartTimeAtom);
+  const [showStartOptions, setShowStartOptions] = useAtom(showWorkoutStartOptionsAtom);
   const [timeString, setTimeString] = useState<string>('');
+
 
   useEffect(() => {
     const updateTime = () => {
@@ -25,7 +27,9 @@ export default function WorkoutHeader() {
   return (
     <View style={styles.row}>
       <Text style={[styles.text, styles.boldText]}>Workout</Text>
-      <Text style={[styles.text, {fontFamily: 'monospace'}]}>{timeString}</Text>
+      {!showStartOptions &&
+        <Text style={[styles.text, {fontFamily: 'monospace'}]}>{timeString}</Text>
+      }
     </View>
   )
 }

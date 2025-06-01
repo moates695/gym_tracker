@@ -33,10 +33,14 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
   useEffect(() => {
     const temp: string[] = [];
     for (const data of exercise.set_data) {
-      temp.push(formatFloatString((data.num_sets ?? '').toString()));
+      temp.push(formatFloatString((data.weight ?? '').toString()));
     }
     setDisplayWeights(temp);
   }, []);
+
+  useEffect(() => {
+    console.log(displayWeights)
+  }, [displayWeights, exercise.set_data]);
 
   const handleUpdateInteger = (text: string, index: number, key: 'reps' | 'num_sets') => {
     text = text.replace(/\D/g, '');
@@ -93,29 +97,36 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
   }
 
   const handleCopySet = (index: number) => {
-    const tempSets = [...exercise.set_data];
-    const tempSet = { ...tempSets[index] };
-    tempSets.push(tempSet);
-    updateExerciseSetData(tempSets);
+    const tempSetData = [...exercise.set_data];
+    const tempSet = { ...tempSetData[index] };
+    tempSetData.push(tempSet);
+    updateExerciseSetData(tempSetData);
+    
+    const tempDisplayWeights = [...displayWeights];
+    tempDisplayWeights.push(tempDisplayWeights[index])
+    setDisplayWeights(tempDisplayWeights)
   }
 
   const handleDeleteSet = (index: number) => {
     let tempSetData = [...exercise.set_data];
-    if (tempSetData.length > 1) {
-      tempSetData.splice(index, 1);
+    if (tempSetData.length <= 1) {
+      tempSetData = [
+        {
+          "reps": null,
+          "weight": null,
+          "num_sets": null,
+        }
+      ]
       updateExerciseSetData(tempSetData);
+      setDisplayWeights(['']);
       return;
     }
-    tempSetData = [
-      {
-        "reps": null,
-        "weight": null,
-        "num_sets": null,
-      }
-    ]
+
+    tempSetData.splice(index, 1);
     updateExerciseSetData(tempSetData);
+
     const tempDisplayWeights = [...displayWeights];
-    tempDisplayWeights[index] = '';
+    tempDisplayWeights.splice(index, 1);
     setDisplayWeights(tempDisplayWeights);
   }
 
@@ -148,6 +159,10 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
       "num_sets": null,
     })
     updateExerciseSetData(tempSets);
+
+    const tempDisplayWeights = [...displayWeights];
+    tempDisplayWeights.push('')
+    setDisplayWeights(tempDisplayWeights);
   }
 
   useEffect(() => {
@@ -226,7 +241,7 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
               onPress={() => handleCopySet(index)}
               style={styles.button}
               onPressIn={() => handleCopyPressOn(index, true)}
-              onPressOut={() =>  handleDeletePressOn(index, false)}
+              onPressOut={() => handleCopyPressOn(index, false)}
               activeOpacity={1}
             >
               <Ionicons name={copyPressOn[index] ? 'copy' : 'copy-outline'} color={'green'} size={20} />

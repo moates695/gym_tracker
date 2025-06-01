@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollVi
 import { useAtom } from "jotai";
 import { StatusBar } from 'expo-status-bar';
 
-import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
+import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom } from "@/store/general";
 import ChooseExercise from "@/components/ChooseExercise";
 import { fetchExercises } from "@/middleware/helpers";
 import WorkoutExercise from "@/components/WorkoutExercise";
@@ -15,7 +15,8 @@ export default function Workout() {
   const [workoutStartTime, setWorkoutStartTime] = useAtom(workoutStartTimeAtom);
   const [exerciseList, setExerciseList] = useAtom(exerciseListAtom);
 
-  const [showStartOptions, setShowStartOptions] = useState<boolean>(true);
+  const [showStartOptions, setShowStartOptions] = useAtom(showWorkoutStartOptionsAtom);
+
   const [chooseNewExercise, setChooseNewExercise] = useState<boolean>(false);
 
   const setNewWorkout = () => {

@@ -56,7 +56,7 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
       <TouchableOpacity style={styles.row}
         onPress={() => setIsExpanded(!isExpanded)}
       >
-        <Text style={styles.text}>{exercise.name}</Text>
+        <Text style={[styles.text, {fontWeight: 500}]}>{exercise.name}</Text>
         <Text style={styles.text}>{numSets} sets</Text>
       </TouchableOpacity>
       {isExpanded &&
