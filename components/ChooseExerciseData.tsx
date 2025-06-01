@@ -1,4 +1,4 @@
-import { workoutExercisesAtom } from "@/store/general";
+import { WorkoutExercise, workoutExercisesAtom } from "@/store/general";
 import { useAtom } from "jotai";
 import React, { useState } from "react"
 import { Text, StyleSheet, View, TouchableOpacity } from "react-native"
@@ -14,15 +14,15 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
   const [workoutExercises, setWorkoutExercisesAtom] = useAtom(workoutExercisesAtom);
 
   const handleAddExercise = () => {
-    const exercise_copy = JSON.parse(JSON.stringify(exercise));
-    exercise_copy.sets = [
+    const exerciseCopy = JSON.parse(JSON.stringify(exercise));
+    exerciseCopy.set_data = [
       {
         "reps": null,
         "weight": null,
-        "sets": null,
+        "num_sets": null,
       }
     ];
-    setWorkoutExercisesAtom(prev => [...prev, exercise_copy]);
+    setWorkoutExercisesAtom(prev => [...prev, exerciseCopy]);
     onPress();
   };
 

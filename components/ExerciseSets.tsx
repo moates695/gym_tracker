@@ -12,9 +12,6 @@ interface ExerciseSetsProps {
   exerciseIndex: number
 }
 
-// todo: fix column spacing with adjacent buttons
-// todo: fix onDeleteSet, update displayWeight for index
-
 // todo: numeric weight in storage
 // todo: handle partial reps?
 
@@ -37,10 +34,6 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
     }
     setDisplayWeights(temp);
   }, []);
-
-  useEffect(() => {
-    console.log(displayWeights)
-  }, [displayWeights, exercise.set_data]);
 
   const handleUpdateInteger = (text: string, index: number, key: 'reps' | 'num_sets') => {
     text = text.replace(/\D/g, '');
@@ -297,7 +290,7 @@ const styles = StyleSheet.create({
     padding: 8
   },
   button: {
-    padding: 4,
+    padding: 0,
     justifyContent: 'center',
   },
 })

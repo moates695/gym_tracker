@@ -10,6 +10,8 @@ type ConfirmationModalProps = {
   cancel_string: string
 }
 
+// todo on press do some button highlighting
+
 export default function ConfirmationModal(props: ConfirmationModalProps) {
   const { visible, onConfirm, onCancel, message, confirm_string, cancel_string } = props;
 
