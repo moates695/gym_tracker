@@ -27,6 +27,9 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
   const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
   const [displayWeights, setDisplayWeights] = useState<string[]>([]);
 
+  const [deletePressOn, setDeletePressOn] = useState<boolean[]>(Array(exercise.set_data.length).fill(false));
+  const [copyPressOn, setCopyPressOn] = useState<boolean[]>(Array(exercise.set_data.length).fill(false));
+
   useEffect(() => {
     const temp: string[] = [];
     for (const data of exercise.set_data) {
@@ -97,20 +100,23 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
   }
 
   const handleDeleteSet = (index: number) => {
-    let tempSets = [...exercise.set_data];
-    if (tempSets.length > 1) {
-      tempSets.splice(index, 1);
-      updateExerciseSetData(tempSets);
+    let tempSetData = [...exercise.set_data];
+    if (tempSetData.length > 1) {
+      tempSetData.splice(index, 1);
+      updateExerciseSetData(tempSetData);
       return;
     }
-    tempSets = [
+    tempSetData = [
       {
         "reps": null,
         "weight": null,
         "num_sets": null,
       }
     ]
-    updateExerciseSetData(tempSets)
+    updateExerciseSetData(tempSetData);
+    const tempDisplayWeights = [...displayWeights];
+    tempDisplayWeights[index] = '';
+    setDisplayWeights(tempDisplayWeights);
   }
 
   const openConfirm = (): Promise<boolean> => {
@@ -157,26 +163,47 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
     setExercises(tempExercises);
   }, [exercise.set_data])
 
+  const handleDeletePressOn = (index: number, bool: boolean) => {
+    const tempDeletePressOn = [...deletePressOn];
+    tempDeletePressOn[index] = bool;
+    setDeletePressOn(tempDeletePressOn);
+  };
+
+  const handleCopyPressOn = (index: number, bool: boolean) => {
+    const tempCopyPressOn = [...copyPressOn];
+    tempCopyPressOn[index] = bool;
+    setCopyPressOn(tempCopyPressOn);
+  };
+
+  useEffect(() => {
+    setDeletePressOn(Array(exercise.set_data.length).fill(false));
+    setCopyPressOn(Array(exercise.set_data.length).fill(false));
+  }, [exercise.set_data.length])
+
   // useEffect(() => {
   //   console.log(exercise.set_data)
   // }, [exercise.set_data])
 
   return (
     <View style={styles.container}>
-      <View style={[styles.row, styles.header]}>
-        <Text style={styles.text}>reps</Text>
-        <Text style={styles.text}>weight</Text>
-        <Text style={styles.text}>sets</Text>
+      <View style={[styles.row, styles.headerRow]}>
+        <View style={styles.button}/>
+        <Text style={[styles.text, styles.header]}>reps</Text>
+        <Text style={[styles.text, styles.header]}>weight</Text>
+        <Text style={[styles.text, styles.header]}>sets</Text>
+        <View style={styles.button}/>
       </View>
       {exercise.set_data.map((set_data: SetData, index: number) => (
         <View key={index} style={styles.container}>
           <View style={styles.row}>
             <TouchableOpacity
               onPress={() => handleDeletePress(index)}
-              style={styles.textButton}
+              style={styles.button}
+              onPressIn={() => handleDeletePressOn(index, true)}
+              onPressOut={() =>  handleDeletePressOn(index, false)}
+              activeOpacity={1}
             >
-              {/* <Ionicons name={focused ? 'home-sharp' : 'home-outline'} color={color} size={24} /> */}
-              <MaterialIcons name="delete-outline" size={20} color="red" />
+              <MaterialIcons name={deletePressOn[index] ? 'delete' : "delete-outline"} size={20} color="red" />
             </TouchableOpacity>
             <TextInput 
               style={styles.textInput}
@@ -197,9 +224,12 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
             />
             <TouchableOpacity
               onPress={() => handleCopySet(index)}
-              style={styles.textButton}
+              style={styles.button}
+              onPressIn={() => handleCopyPressOn(index, true)}
+              onPressOut={() =>  handleDeletePressOn(index, false)}
+              activeOpacity={1}
             >
-              <Ionicons name={'copy-outline'} color={'red'} size={20} />
+              <Ionicons name={copyPressOn[index] ? 'copy' : 'copy-outline'} color={'green'} size={20} />
             </TouchableOpacity>
           </View>
         </View>
@@ -241,11 +271,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     paddingBottom: 5
   },
+  headerRow: {
+    width: '93.5%'
+  },
   header: {
-    // paddingBottom: 5,
+    width: '25%',
+    textAlign: 'center',
   },
   textButton: {
     padding: 8
   },
-
+  button: {
+    padding: 4,
+    justifyContent: 'center',
+  },
 })
