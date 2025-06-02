@@ -14,5 +14,10 @@ export const commonStyles = StyleSheet.create({
   },
   greenBorder: {
     borderColor: 'green',
-  }
+  },
+  boldText: {
+    fontWeight: 500,
+    fontSize: 20,
+    color: 'white',
+  },
 })

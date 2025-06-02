@@ -7,6 +7,7 @@ import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorko
 import ChooseExercise from "@/components/ChooseExercise";
 import { fetchExercises } from "@/middleware/helpers";
 import WorkoutExercise from "@/components/WorkoutExercise";
+import WorkoutOverview from "@/components/WorkoutOverview";
 
 // todo: workout overview -> allow to see muscles worked, time, sets, volume (if on plan % completed)
 
@@ -18,8 +19,10 @@ export default function Workout() {
   const [showStartOptions, setShowStartOptions] = useAtom(showWorkoutStartOptionsAtom);
 
   const [chooseNewExercise, setChooseNewExercise] = useState<boolean>(false);
+  const [showOverview, setShowOverview] = useState<boolean>(false);
+  const [editExercises, setEditExercises] = useState<boolean>(false);
 
-  const setNewWorkout = () => {
+  const createNewWorkout = () => {
     setWorkoutExercises([]);
     setWorkoutStartTime(Date.now());
   };
@@ -29,7 +32,7 @@ export default function Workout() {
   } 
 
   const handleStartNewWorkout = () => {
-    setNewWorkout();
+    createNewWorkout();
     setShowStartOptions(false);
   };
 
@@ -76,11 +79,26 @@ export default function Workout() {
               )
             })}
           </ScrollView>
-          <TouchableOpacity 
-            onPress={() => handleAddNewExercise()}
-          >
-            <Text style={{ color: "white"}}>add new exercise</Text>
-          </TouchableOpacity>
+          <View style={styles.row}>
+            <TouchableOpacity 
+              style={styles.textContainer}
+              onPress={() => handleAddNewExercise()}
+            >
+              <Text style={{ color: "white"}}>add new exercise</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.textContainer}
+              onPress={() => setShowOverview(true)}
+            >
+              <Text style={{ color: "white"}}>overview</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.textContainer}
+              onPress={() => {}}
+            >
+              <Text style={{ color: "white"}}>edit exercises</Text>
+            </TouchableOpacity>
+          </View>
           <Modal
             animationType="slide"
             transparent={true}
@@ -88,6 +106,14 @@ export default function Workout() {
             onRequestClose={() => setChooseNewExercise(false)}
           >
             <ChooseExercise onPress={() => setChooseNewExercise(false)}/>
+          </Modal>
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={showOverview}
+            onRequestClose={() => setShowOverview(false)}
+          >
+            <WorkoutOverview onPress={() => setShowOverview(false)}/>
           </Modal>
         </View>
       }    
@@ -117,5 +143,16 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     justifyContent: 'flex-start',
     alignItems: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  textContainer: {
+    width: '30%',
+    alignItems: 'center',
+    justifyContent: 'center'
   }
 });
