@@ -6,6 +6,7 @@ import React from 'react-native'
 import ExerciseData from "./ExerciseData";
 import { exercisesHistoricalDataAtom, SetData, WorkoutExercise } from "@/store/general"
 import { useAtom } from "jotai";
+import { commonStyles } from "@/styles/commonStyles";
 
 interface WorkoutExerciseProps {
   exercise: WorkoutExercise
@@ -64,6 +65,7 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
           <ExerciseSets exercise={exercise} exerciseIndex={exerciseIndex}/>
           <View style={styles.rowThin}>
             <TouchableOpacity
+              style={styles.thinTextButton}
               onPress={() => setIsDataExpanded(!isDataExpanded)}
             >
               <Text style={styles.text}>{isDataExpanded ? 'close data': 'open data'}</Text>
@@ -119,5 +121,16 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: 'gray',
     marginVertical: 8
-  }
+  },
+  thinTextButton: {
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 2,
+    padding: 1,
+    paddingLeft: 8,
+    paddingRight: 8,
+    // backgroundColor: 'grey',
+    minWidth: 80,
+    alignItems: 'center'
+  },
 })

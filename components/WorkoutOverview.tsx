@@ -23,12 +23,12 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
       <View style={styles.modalContainer}>
         <View style={styles.headerRow}>
           <Text style={commonStyles.boldText}>Overview</Text>
-          <TouchableOpacity 
-            style={styles.closeButton}
+          {/* <TouchableOpacity
+            style={[commonStyles.button, {borderColor: 'green'}]}
             onPress={() => setShowFinishOptions(true)}
           >
             <Text style={styles.text}>finish</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
         <Modal
           animationType="slide"
@@ -42,10 +42,10 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
           
         </View>
         <TouchableOpacity 
-          style={styles.closeButton}
+          style={[commonStyles.thinTextButton, {width: 50, alignSelf: 'center'}]}
           onPress={onPress}
         >
-          <Text style={styles.text}>close</Text>
+          <Text style={styles.text}>hide</Text>
         </TouchableOpacity>
       </View>
     </View>

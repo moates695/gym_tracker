@@ -8,6 +8,7 @@ import ChooseExercise from "@/components/ChooseExercise";
 import { fetchExercises } from "@/middleware/helpers";
 import WorkoutExercise from "@/components/WorkoutExercise";
 import WorkoutOverview from "@/components/WorkoutOverview";
+import { commonStyles } from "@/styles/commonStyles";
 
 // todo: workout overview -> allow to see muscles worked, time, sets, volume (if on plan % completed)
 
@@ -53,12 +54,14 @@ export default function Workout() {
         <View>
           {Object.keys(workoutExercises).length !== 0 &&
             <TouchableOpacity 
+              style={styles.button}
               onPress={() => handleContinueWorkout()}
             >
               <Text style={{ color: "white"}}>continue workout</Text>
             </TouchableOpacity>
           }
           <TouchableOpacity 
+            style={styles.button}
             onPress={() => handleStartNewWorkout()}
           >
             <Text style={{ color: "white"}}>start new workout</Text>
@@ -67,7 +70,7 @@ export default function Workout() {
       : 
         <View style={styles.workoutContainer}>
           {workoutExercises.length === 0 &&
-            <Text style={{color:'white'}}>no exercises so far</Text>
+            <Text style={{color:'white'}}>no exercises yet</Text>
           }
           <ScrollView 
             style={styles.scrollView}
@@ -80,24 +83,30 @@ export default function Workout() {
             })}
           </ScrollView>
           <View style={styles.row}>
-            <TouchableOpacity 
-              style={styles.textContainer}
-              onPress={() => handleAddNewExercise()}
-            >
-              <Text style={{ color: "white"}}>add new exercise</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.textContainer}
-              onPress={() => setShowOverview(true)}
-            >
-              <Text style={{ color: "white"}}>overview</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.textContainer}
-              onPress={() => {}}
-            >
-              <Text style={{ color: "white"}}>edit exercises</Text>
-            </TouchableOpacity>
+            <View style={styles.textContainer}>
+              <TouchableOpacity 
+                style={commonStyles.textButton}
+                onPress={() => handleAddNewExercise()}
+              >
+                <Text style={{ color: "white"}}>add new exercise</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.textContainer}>
+              <TouchableOpacity 
+                style={commonStyles.textButton}
+                onPress={() => setShowOverview(true)}
+              >
+                <Text style={{ color: "white"}}>overview</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.textContainer}>
+              <TouchableOpacity 
+                style={commonStyles.textButton}
+                onPress={() => {}}
+              >
+                <Text style={{ color: "white"}}>edit exercises</Text>
+              </TouchableOpacity>
+            </View>
           </View>
           <Modal
             animationType="slide"
@@ -149,10 +158,22 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'space-around',
     alignItems: 'center',
+    marginTop: 10,
   },
   textContainer: {
     width: '30%',
     alignItems: 'center',
     justifyContent: 'center'
+  },
+  button: {
+    borderWidth: 2,
+    borderRadius: 5,
+    borderColor: 'gray',
+    padding: 10,
+    paddingLeft: 20,
+    paddingRight: 20,
+    marginBottom: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   }
 });

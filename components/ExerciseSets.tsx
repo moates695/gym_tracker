@@ -6,6 +6,7 @@ import ConfirmationModal from "./ConfirmationModal";
 import ShiftTextInput from "./ShiftTextInput";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { commonStyles } from "@/styles/commonStyles";
 
 interface ExerciseSetsProps {
   exercise: WorkoutExercise
@@ -245,7 +246,7 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
       <View style={styles.row}>
         <TouchableOpacity
           onPress={handleNewSet}
-          style={styles.textButton}
+          style={[commonStyles.thinTextButton, {borderColor: 'green', marginTop: 5}]}
         >
           <Text style={styles.text}>new set</Text>
         </TouchableOpacity>

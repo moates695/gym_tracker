@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react'
-import { Text, StyleSheet, View } from 'react-native'
+import { Text, StyleSheet, View, TouchableOpacity, Modal } from 'react-native'
 import { workoutStartTimeAtom, showWorkoutStartOptionsAtom} from '@/store/general'
 import { useAtom } from 'jotai';
+import { commonStyles } from '@/styles/commonStyles';
+import WorkoutFinishOptions from './WorkoutFinishOptions';
 
 export default function WorkoutHeader() {
   const [workoutStartTime, setWorkoutStartTime] = useAtom(workoutStartTimeAtom);
   const [showStartOptions, setShowStartOptions] = useAtom(showWorkoutStartOptionsAtom);
   const [timeString, setTimeString] = useState<string>('');
+  const [showFinishOptions, setShowFinishOptions] = useState<boolean>(false);
 
 
   useEffect(() => {
@@ -26,10 +29,32 @@ export default function WorkoutHeader() {
 
   return (
     <View style={styles.row}>
-      <Text style={[styles.text, styles.boldText]}>Workout</Text>
+      <View style={[styles.rowObject, {width: showStartOptions ? '100%' : '30%'}]}>
+        <Text style={[styles.text, styles.boldText]}>Workout</Text>
+      </View>
       {!showStartOptions &&
-        <Text style={[styles.text, {fontFamily: 'monospace'}]}>{timeString}</Text>
+        <>
+          <View style={[styles.rowObject, {alignItems: 'center'}]}>
+            <Text style={[styles.text, {fontFamily: 'monospace'}]}>{timeString}</Text>
+          </View>
+          <View style={[styles.rowObject, {alignItems: 'flex-end'}]}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => setShowFinishOptions(true)}
+            >
+              <Text style={styles.text}>finish</Text>
+            </TouchableOpacity>
+          </View>
+        </>
       }
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showFinishOptions}
+        onRequestClose={() => setShowFinishOptions(false)}
+      >
+        <WorkoutFinishOptions onPress={() => setShowFinishOptions(false)}/>
+      </Modal>
     </View>
   )
 }
@@ -46,6 +71,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    alignItems: 'center'
-  }
+    alignItems: 'center',
+  },
+  rowObject: {
+    width: '30%',
+    justifyContent: 'center',
+  },
+  button: {
+    padding: 1,
+    borderRadius: 2,
+    borderWidth: 2,
+    borderColor: 'green',
+    alignItems: 'center',
+    width: 80
+  },
 })
