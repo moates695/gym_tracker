@@ -43,8 +43,7 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
             </TouchableOpacity>
           </View>
           <Text style={styles.text}>Muscle target: {Object.entries(exercise.targets).map(([key, value]) => `${key} (${value})`).join(', ')}</Text>
-
-          <Text style={styles.text}>Bodyweight?: {exercise.is_body_weight ? "true": "false"}</Text>
+          <Text style={styles.text}>Bodyweight: {exercise.is_body_weight ? "true": "false"}</Text>
         </View>
         :
         <View style={styles.row}>
@@ -66,7 +65,7 @@ const styles = StyleSheet.create({
   box: {
     backgroundColor: 'black',
     padding: 10,
-    marginVertical: 5,
+    marginVertical: 2,
     borderRadius: 8,
     width: '100%',
     borderColor: 'red',

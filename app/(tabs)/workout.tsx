@@ -83,7 +83,7 @@ export default function Workout() {
           </TouchableOpacity>
           <Modal
             animationType="slide"
-            transparent={false}
+            transparent={true}
             visible={chooseNewExercise}
             onRequestClose={() => setChooseNewExercise(false)}
           >

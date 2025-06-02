@@ -52,19 +52,22 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
 const styles = StyleSheet.create({
   modalBackground: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center'
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'flex-end',
+    width: '100%',
   },
   modalContainer: {
-    margin: 20,
+    // marginTop: 50,
     backgroundColor: 'black',
     borderRadius: 10,
-    padding: 10,
+    paddingTop: 10,
+    paddingBottom: 10,
     alignItems: 'center',
     elevation: 5,
-    borderColor: 'red',
+    // borderColor: 'red',
     borderWidth: 2,
-    maxHeight: '80%'
+    maxHeight: '95%',
+    width: '100%'
   },
   modalText: {
     marginBottom: 15,
@@ -73,6 +76,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     marginVertical: 10,
-    width: '100%'
+    width: '100%',
+    // backgroundColor: 'purple'
   }
 });
