@@ -1,3 +1,4 @@
+import { fetchWrapper } from "@/middleware/helpers";
 import { emptyExerciseHistoricalData, exercisesHistoricalDataAtom, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
 import { useAtom } from "jotai";
 import React, { useState } from "react"
@@ -5,11 +6,11 @@ import { Text, StyleSheet, View, TouchableOpacity } from "react-native"
 
 interface ChooseExerciseDataProps {
   exercise: WorkoutExercise
-  onPress: () => void
+  onChoose: () => void
 }
 
 export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
-  const { exercise, onPress } = props;
+  const { exercise, onChoose: onPress } = props;
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [workoutExercises, setWorkoutExercisesAtom] = useAtom(workoutExercisesAtom);
   const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
@@ -29,8 +30,18 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
       ...prev,
       [exerciseCopy.id]: emptyExerciseHistoricalData
     }))
+    fetchExerciseHistoricalData(exercise.id);
 
     onPress();
+
+  };
+
+  const fetchExerciseHistoricalData = async (id: string) => {
+    const data = await fetchWrapper('exercise/history', 'GET', {id: id}, undefined)
+    setExercisesHistoricalData(prev => ({
+      ...prev,
+      [id]: data
+    }))
   };
 
   return (
@@ -53,31 +64,6 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
           <Text style={styles.text}>Bodyweight: {exercise.is_body_weight ? "true": "false"}</Text>
         </>
       }
-      {/* {isExpanded ? 
-        <View>
-          <View style={styles.row}>
-            <Text style={styles.text}>{exercise.name}</Text>
-            <TouchableOpacity 
-              onPress={handleAddExercise}
-              style={styles.addButton}
-            >
-              <Text style={styles.text}>add</Text> 
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.text}>Muscle target: {Object.entries(exercise.targets).map(([key, value]) => `${key} (${value})`).join(', ')}</Text>
-          <Text style={styles.text}>Bodyweight: {exercise.is_body_weight ? "true": "false"}</Text>
-        </View>
-        :
-        <View style={styles.row}>
-          <Text style={styles.text}>{exercise.name}</Text>
-          <TouchableOpacity 
-            onPress={handleAddExercise}
-            style={styles.addButton}
-          >
-            <Text style={styles.text}>add</Text> 
-          </TouchableOpacity>
-        </View>
-      } */}
     </TouchableOpacity>
   )
 }

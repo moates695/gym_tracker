@@ -1,21 +1,22 @@
 import React from "react";
 import { TouchableOpacity, View, Text, StyleSheet, ScrollView } from "react-native";
 
-import { fetchExercises } from "@/middleware/helpers";
+import { fetchExercises, fetchWrapper } from "@/middleware/helpers";
 import { useAtom } from "jotai";
 import { exerciseListAtom } from "@/store/general";
 import ChooseExerciseData from "./ChooseExerciseItem";
 
 interface ChooseExerciseProps {
-  onPress: () => void
+  onChoose: () => void
 }
 
 export default function ChooseExercise(props: ChooseExerciseProps) {
-  const { onPress } = props;
+  const { onChoose: onPress } = props;
   const [exercises, setExercises] = useAtom(exerciseListAtom);
   
   const handleExercisesRefresh = async () => {
-    await fetchExercises(setExercises);
+    const data = await fetchWrapper('exercises/list/all', 'GET');
+    setExercises(data.exercises);
   };
 
   // search bar
@@ -34,7 +35,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
         <ScrollView style={styles.scrollView}>
           {exercises.map((exercise, i) => {
             return (
-              <ChooseExerciseData key={i} exercise={exercise} onPress={onPress}/>
+              <ChooseExerciseData key={i} exercise={exercise} onChoose={onPress}/>
             )
           })}
         </ScrollView>

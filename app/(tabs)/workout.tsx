@@ -114,7 +114,7 @@ export default function Workout() {
             visible={chooseNewExercise}
             onRequestClose={() => setChooseNewExercise(false)}
           >
-            <ChooseExercise onPress={() => setChooseNewExercise(false)}/>
+            <ChooseExercise onChoose={() => setChooseNewExercise(false)}/>
           </Modal>
           <Modal
             animationType="slide"
