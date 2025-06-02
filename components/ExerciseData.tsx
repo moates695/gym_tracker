@@ -2,7 +2,7 @@ import * as React from 'react';
 import { View, StyleSheet, Text, Platform, TouchableOpacity } from "react-native"
 import { Picker } from '@react-native-picker/picker';
 import DropDownPicker from 'react-native-dropdown-picker';
-import { exercisesHistoricalDataAtom, WorkoutExercise } from "@/store/general"
+import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData } from "@/store/general"
 
 // on select exercise, load in user data (async)
 // allow refresh in case of errors
@@ -68,15 +68,15 @@ export default function ExerciseData(props: ExerciseDataProps) {
   const {exercise, exerciseIndex} = props;
 
   const [exercisesHistoricalData, setExercisesHistoricalDataAtom] = useAtom(exercisesHistoricalDataAtom);
-  const exerciseData = (exercisesHistoricalData as any)[exercise.id];
+  const exerciseData = exercisesHistoricalData[exercise.id];
 
-  const [selectedIdx, setSelectedIdx] = useState<number>(0);
+  const [dataOptionIdx, setSelectedIdx] = useState<number>(0);
   const dataOptions = [
     { label: 'n rep max', value: 'n_rep_max' },
     { label: 'reps x sets x weight', value: 'reps_sets_weight' },
     { label: 'volume per workout', value: 'volume_per_workout' },
   ]
-  const selectedDataOption = dataOptions[selectedIdx].value;
+  const dataOption = dataOptions[dataOptionIdx].value;
 
   const [nRepMaxIdx, setNRepMaxIdx] = useState<number>(0);
   const nRepMaxOptions = [
@@ -91,8 +91,8 @@ export default function ExerciseData(props: ExerciseDataProps) {
     nRepMaxHistoryOptions.push({
       label: key, value: key
     })
-  }
-  const nRepMaxHistoryOption = nRepMaxHistoryOptions[nRepMaxHistoryIdx].value;
+  } 
+  const nRepMaxHistoryOption: string | null = nRepMaxHistoryOptions[nRepMaxHistoryIdx]?.value ?? null;
 
   const [timeSpanIdx, setTimeSpanIdx] = useState<number>(0);
   const timeSpanOptions = [
@@ -113,7 +113,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
     'year': 365 * 24 * 60 * 60 * 1000,
     'all': 0,
   }
-  const cutoff = Date.now() - (timeSpanToMs as any)[timeSpanOptions[timeSpanIdx].value];
+  // const cutoff = Date.now() - (timeSpanToMs as any)[timeSpanOptions[timeSpanIdx].value];
 
   const [dataVisual, setDataVisual] = useState<DataVisual>('graph');
 
@@ -133,7 +133,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
   }
 
   const getPoints = (): LineGraphPoint[] => {
-    if (selectedDataOption === 'n_rep_max') {
+    if (dataOption === 'n_rep_max') {
       return getNRepMaxPoints();
     }
     return [];
@@ -150,6 +150,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
       }
       return points;
     } else if (nRepMaxOption === 'history') {
+      if (nRepMaxHistoryOption === null) return [];
       const points: any[] = [];
       for (const point of exerciseData['n_rep_max']['history'][nRepMaxHistoryOption]) {
         points.push({
@@ -162,29 +163,19 @@ export default function ExerciseData(props: ExerciseDataProps) {
     return [];
   };
 
-  const points = [];
-  for (const point of exerciseData['n_rep_max']['history']["1"]) {
-    points.push({
-      "x": parseInt((point as any)["timestamp"]),
-      "y": parseFloat((point as any)["weight"]),
-    })
-  }
-
   return (
     <View>
-      {/* <ThreeDPlot /> */}
       <View>
         <Text style={styles.text}>Choose a data type:</Text>
-        <Dropdown selectedIdx={selectedIdx} setSelectedIdx={setSelectedIdx} options={dataOptions}/>
+        <Dropdown selectedIdx={dataOptionIdx} setSelectedIdx={setSelectedIdx} options={dataOptions}/>
       </View>
-      {dataOptions[selectedIdx].value === 'n_rep_max' &&
+      {dataOptions[dataOptionIdx].value === 'n_rep_max' &&
         <>
           <View>
             <Text style={styles.text}>Choose a view:</Text>
             <Dropdown selectedIdx={nRepMaxIdx} setSelectedIdx={setNRepMaxIdx} options={nRepMaxOptions}/>
           </View>
-          {/* <TimeSeriesChart points={dummyPoints}/> */}
-          {nRepMaxOption === 'history' &&
+          {(nRepMaxOption === 'history' && nRepMaxHistoryOption !== null) &&
             <>
               <View>
                 <Text style={styles.text}>Choose a rep number:</Text>

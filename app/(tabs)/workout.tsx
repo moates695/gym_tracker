@@ -4,7 +4,7 @@ import { useAtom } from "jotai";
 import { StatusBar } from 'expo-status-bar';
 
 import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom } from "@/store/general";
-import ChooseExercise from "@/components/ChooseExercise";
+import ChooseExercise from "@/components/ChooseExerciseModal";
 import { fetchExercises } from "@/middleware/helpers";
 import WorkoutExercise from "@/components/WorkoutExercise";
 import WorkoutOverview from "@/components/WorkoutOverview";

@@ -4,7 +4,7 @@ import { TouchableOpacity, View, Text, StyleSheet, ScrollView } from "react-nati
 import { fetchExercises } from "@/middleware/helpers";
 import { useAtom } from "jotai";
 import { exerciseListAtom } from "@/store/general";
-import ChooseExerciseData from "./ChooseExerciseData";
+import ChooseExerciseData from "./ChooseExerciseItem";
 
 interface ChooseExerciseProps {
   onPress: () => void

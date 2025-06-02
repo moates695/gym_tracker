@@ -1,10 +1,10 @@
-import { WorkoutExercise, workoutExercisesAtom } from "@/store/general";
+import { emptyExerciseHistoricalData, exercisesHistoricalDataAtom, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
 import { useAtom } from "jotai";
 import React, { useState } from "react"
 import { Text, StyleSheet, View, TouchableOpacity } from "react-native"
 
 interface ChooseExerciseDataProps {
-  exercise: any
+  exercise: WorkoutExercise
   onPress: () => void
 }
 
@@ -12,9 +12,10 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
   const { exercise, onPress } = props;
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [workoutExercises, setWorkoutExercisesAtom] = useAtom(workoutExercisesAtom);
+  const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
 
   const handleAddExercise = () => {
-    const exerciseCopy = JSON.parse(JSON.stringify(exercise));
+    const exerciseCopy: WorkoutExercise = JSON.parse(JSON.stringify(exercise));
     exerciseCopy.set_data = [
       {
         "reps": null,
@@ -23,6 +24,12 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
       }
     ];
     setWorkoutExercisesAtom(prev => [...prev, exerciseCopy]);
+
+    setExercisesHistoricalData(prev => ({
+      ...prev,
+      [exerciseCopy.id]: emptyExerciseHistoricalData
+    }))
+
     onPress();
   };
 
@@ -31,7 +38,22 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
       style={styles.box}
       onPress={() => setIsExpanded(!isExpanded)}
     >
-      {isExpanded ? 
+      <View style={styles.row}>
+        <Text style={styles.text}>{exercise.name}</Text>
+        <TouchableOpacity 
+          onPress={handleAddExercise}
+          style={styles.addButton}
+        >
+          <Text style={styles.text}>add</Text> 
+        </TouchableOpacity>
+      </View>
+      {isExpanded &&
+        <>
+          <Text style={styles.text}>Muscle target: {Object.entries(exercise.targets).map(([key, value]) => `${key} (${value})`).join(', ')}</Text>
+          <Text style={styles.text}>Bodyweight: {exercise.is_body_weight ? "true": "false"}</Text>
+        </>
+      }
+      {/* {isExpanded ? 
         <View>
           <View style={styles.row}>
             <Text style={styles.text}>{exercise.name}</Text>
@@ -55,8 +77,7 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
             <Text style={styles.text}>add</Text> 
           </TouchableOpacity>
         </View>
-      }
-      
+      } */}
     </TouchableOpacity>
   )
 }

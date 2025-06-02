@@ -57,19 +57,26 @@ export const showWorkoutStartOptionsAtom = atom<boolean>(true);
 
 export const exerciseListAtom = atomWithStorage('exerciseListAtom', [])
 
-interface WeightTimestamp {
+export interface WeightTimestamp {
   weight: number
   timestamp: number
 }
 
-interface NRepMaxData {
+export interface NRepMaxData {
   all_time: Record<string, WeightTimestamp>
   history: Record<string, WeightTimestamp[]>
 }
 
-interface ExerciseHistoricalData {
+export interface ExerciseHistoricalData {
   n_rep_max: NRepMaxData
   // reps_sets: any
+}
+
+export const emptyExerciseHistoricalData: ExerciseHistoricalData = {
+  "n_rep_max": {
+    "all_time": {},
+    "history": {}
+  }
 }
 
 const now = Date.now();
@@ -156,10 +163,5 @@ export const exercisesHistoricalDataAtom = atom<Record<string, ExerciseHistorica
       }
     }
   },
-  "001": {
-    "n_rep_max": {
-      "all_time": {},
-      "history": {},
-    }
-  }
+  "001": emptyExerciseHistoricalData
 });
