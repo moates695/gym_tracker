@@ -13,6 +13,8 @@ export default function WorkoutHeader() {
 
 
   useEffect(() => {
+    if (workoutStartTime === null) return;
+
     const updateTime = () => {
       const timeDelta = Math.floor((Date.now() - workoutStartTime) / 1000);
       const hours = String(Math.floor(timeDelta / 3600)).padStart(2, '0');

@@ -51,7 +51,7 @@ export const workoutExercisesAtom = atomWithStorage<WorkoutExercise[]>('workoutE
   },
 ]);
 
-export const workoutStartTimeAtom = atomWithStorage<number>('workoutStartTimeAtom', Date.now());
+export const workoutStartTimeAtom = atomWithStorage<number | null>('workoutStartTimeAtom', Date.now());
 
 export const showWorkoutStartOptionsAtom = atom<boolean>(true);
 

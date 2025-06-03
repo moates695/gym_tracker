@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
 import ConfirmationModal from "./ConfirmationModal";
+import { useAtom } from "jotai";
+import { showWorkoutStartOptionsAtom, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
+import { useRouter } from "expo-router";
+import { fetchWrapper } from "@/middleware/helpers";
 
 interface WorkoutFinishOptionsProps {
   onPress: () => void
@@ -17,6 +21,12 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
   const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
   const [confirmationType, setConfirmationType] = useState<ConfirmationType | null>(null);
   
+  const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom)
+  const [workoutStartTime, setWorkoutStartTime] = useAtom(workoutStartTimeAtom)
+  const [showWorkoutStartOptions, setShowWorkoutStartOptions] = useAtom(showWorkoutStartOptionsAtom)
+
+  const router = useRouter();
+  
   const handleSavePress = () => {
     setModalMessage('Save this workout?');
     setConfirmationType('save');
@@ -30,7 +40,7 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
   };
 
   const handleFinishOption = (option: 'save' | 'discard') => {
-    console.log(`${option} confirmed`)
+    option === 'save' ? saveWorkout() : discardWorkout();
   };
 
   const handleOptionPress = async (option: 'save' | 'discard') => {
@@ -54,31 +64,30 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
     setShowConfirmation(false);
   };
 
+  const saveWorkout = async () => {
+    const body = {
+      "exercises": workoutExercises,
+      "start_time": workoutStartTime
+    };
+    await fetchWrapper('workout/save', 'POST', undefined, body);
+    
+    setShowWorkoutStartOptions(true);
+    onPress();
+    router.replace('/(tabs)/workout'); //? go to recap screen?
+  };
+
+  const discardWorkout = () => {
+    setWorkoutExercises([]);
+    setWorkoutStartTime(null);
+    setShowWorkoutStartOptions(true);
+    onPress();
+    router.replace('/(tabs)/workout');
+  };  
 
   return (
     <View style={styles.modalBackground}>
       <View style={styles.modalContainer}>
-        {showConfirmation ? 
-          <>
-            <Text style={[styles.text, {marginBottom: 5}]}>
-              {modalMessage}
-            </Text>
-            <View style={styles.row}>
-              <TouchableOpacity 
-                style={[styles.button, {borderColor: confirmationType === 'save' ? 'green' : 'red'}]}
-                onPress={handleConfirm}
-              >
-                <Text style={styles.text}>yeah</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.button, {borderColor: 'grey'}]}
-                onPress={handleCancel}
-              >
-                <Text style={styles.text}>nah</Text>
-              </TouchableOpacity>
-            </View>
-          </>
-        :
+        {!showConfirmation ? 
           <>
             <Text style={[styles.text, {marginBottom: 5}]}>
               What do you want to do?
@@ -103,6 +112,26 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
             >
               <Text style={styles.text}>back</Text>
             </TouchableOpacity>
+          </>
+        :
+          <>
+            <Text style={[styles.text, {marginBottom: 5}]}>
+              {modalMessage}
+            </Text>
+            <View style={styles.row}>
+              <TouchableOpacity 
+                style={[styles.button, {borderColor: confirmationType === 'save' ? 'green' : 'red'}]}
+                onPress={handleConfirm}
+              >
+                <Text style={styles.text}>yeah</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.button, {borderColor: 'grey'}]}
+                onPress={handleCancel}
+              >
+                <Text style={styles.text}>nah</Text>
+              </TouchableOpacity>
+            </View>
           </>
         }
       </View>

@@ -213,7 +213,7 @@ export default function SignUpScreen() {
         },
         body: JSON.stringify(form_copy)
       });
-
+      
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
       router.replace({

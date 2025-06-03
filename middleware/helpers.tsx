@@ -42,6 +42,6 @@ export const fetchWrapper = async (route: string, method: string, params?: any, 
     
   } catch (error) {
     console.log(error)
-    return {};
+    return null;
   }
 }
