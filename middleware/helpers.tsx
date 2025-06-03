@@ -1,3 +1,4 @@
+import { SetData, WorkoutExercise } from "@/store/general";
 import * as SecureStore from "expo-secure-store";
 
 export const fetchExercises = async (setExercises: any) => {
@@ -30,7 +31,8 @@ export const fetchWrapper = async (route: string, method: string, params?: any, 
     const response = await fetch(url, {
       method: method,
       headers: {
-        "Authorization": `Bearer ${auth_token}`
+        "Authorization": `Bearer ${auth_token}`,
+        "Content-Type": "application/json"
       },
       ...(method === 'POST' && {body: JSON.stringify(body)})         
     });
@@ -44,4 +46,17 @@ export const fetchWrapper = async (route: string, method: string, params?: any, 
     console.log(error)
     return null;
   }
+}
+
+export const isValidSet = (set_data: SetData, is_body_weight: boolean): boolean => {
+  for (const [key, value] of Object.entries(set_data)) {
+    if (is_body_weight && key === 'weight') continue;
+    if (value !== null && value !== 0) continue;
+    return false;
+  }
+  return true;
+};
+
+export const getValidSets = (exercise: WorkoutExercise): SetData[] => {
+  return exercise.set_data.filter((data) => isValidSet(data, exercise.is_body_weight))
 }

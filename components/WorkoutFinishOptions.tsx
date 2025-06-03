@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
 import ConfirmationModal from "./ConfirmationModal";
 import { useAtom } from "jotai";
-import { showWorkoutStartOptionsAtom, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
+import { SetData, showWorkoutStartOptionsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
 import { useRouter } from "expo-router";
-import { fetchWrapper } from "@/middleware/helpers";
+import { fetchWrapper, getValidSets, isValidSet } from "@/middleware/helpers";
 
 interface WorkoutFinishOptionsProps {
   onPress: () => void
@@ -65,15 +65,43 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
   };
 
   const saveWorkout = async () => {
+    const exerciseData: any = [];
+    for (const exercise of workoutExercises) {
+      const validSets = getValidSets(exercise);
+      if (validSets.length === 0) continue;
+      exerciseData.push({
+        "id": exercise.id,
+        "set_data": validSets
+      })
+    }
+
     const body = {
-      "exercises": workoutExercises,
-      "start_time": workoutStartTime
+      "exercises": exerciseData,
+      "start_time": workoutStartTime,
+      "duration": Date.now() - workoutStartTime!
     };
+    console.log(JSON.stringify(body))
     await fetchWrapper('workout/save', 'POST', undefined, body);
-    
+    // todo handle error thrown or failed request
+
+    setWorkoutExercises([]);
+    setWorkoutStartTime(null);
     setShowWorkoutStartOptions(true);
     onPress();
     router.replace('/(tabs)/workout'); //? go to recap screen?
+  };
+
+  const formatSetData = (exercise: WorkoutExercise): SetData[] => {
+    const formatted: SetData[] = [];
+    for (const data of exercise.set_data) {
+      if (!isValidSet(data, exercise.is_body_weight)) continue;
+      formatted.push({
+        "reps": data.reps,
+        "weight": data.weight,
+        "num_sets": data.num_sets
+      })
+    }
+    return formatted;
   };
 
   const discardWorkout = () => {
@@ -84,6 +112,14 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
     router.replace('/(tabs)/workout');
   };  
 
+  const canSaveWorkout = (): boolean => {
+    for (const exercise of workoutExercises) {
+      if (getValidSets(exercise).length === 0) continue;
+      return true;
+    }
+    return false;
+  };
+
   return (
     <View style={styles.modalBackground}>
       <View style={styles.modalContainer}>
@@ -93,12 +129,14 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
               What do you want to do?
             </Text>
             <View style={styles.row}>
-              <TouchableOpacity 
-                style={[styles.button, {borderColor: 'green'}]}
-                onPress={handleSavePress}
-              >
-                <Text style={styles.text}>save</Text>
-              </TouchableOpacity>
+              {canSaveWorkout() &&
+                <TouchableOpacity 
+                  style={[styles.button, {borderColor: 'green'}]}
+                  onPress={handleSavePress}
+                >
+                  <Text style={styles.text}>save</Text>
+                </TouchableOpacity>
+              }
               <TouchableOpacity 
                 style={[styles.button, {borderColor: 'red'}]}
                 onPress={handleDiscardPress}

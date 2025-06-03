@@ -7,6 +7,7 @@ import ExerciseData from "./ExerciseData";
 import { exercisesHistoricalDataAtom, SetData, WorkoutExercise } from "@/store/general"
 import { useAtom } from "jotai";
 import { commonStyles } from "@/styles/commonStyles";
+import { getValidSets, isValidSet } from "@/middleware/helpers"
 
 interface WorkoutExerciseProps {
   exercise: WorkoutExercise
@@ -29,18 +30,11 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
   }, [isExpanded]);
 
   useEffect(() => {
-    const isValidSet = (set: SetData): boolean => {
-      for (const value of Object.values(set)) {
-        if (value !== null && value !== 0) continue;
-        return false;
-      }
-      return true;
-      // return set.reps !== null && set.weight !== null && set.num_sets !== null;
-    };
     const reducer = (sum: number, obj: SetData): number => {
       return sum + (obj.num_sets ?? 0)
     };
-    setNumSets(exercise.set_data.filter(isValidSet).reduce(reducer, 0));
+    // setNumSets(exercise.set_data.filter((data) => isValidSet(data, exercise.is_body_weight)).reduce(reducer, 0));
+    setNumSets(getValidSets(exercise).reduce(reducer, 0));
   }, [exercise.set_data]);
 
   const handleRefreshHistory = async () => {
