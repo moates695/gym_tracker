@@ -60,7 +60,7 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
       </View>
       {isExpanded &&
         <>
-          <Text style={styles.text}>Muscle target: {Object.entries(exercise.targets).map(([key, value]) => `${key} (${value})`).join(', ')}</Text>
+          {/* <Text style={styles.text}>Muscle target: {Object.entries(exercise.targets).map(([key, value]) => `${key} (${value})`).join(', ')}</Text> */}
           <Text style={styles.text}>Bodyweight: {exercise.is_body_weight ? "true": "false"}</Text>
         </>
       }

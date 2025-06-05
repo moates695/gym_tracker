@@ -69,6 +69,9 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
     for (const exercise of workoutExercises) {
       const validSets = getValidSets(exercise);
       if (validSets.length === 0) continue;
+      for (let i = 0; i < validSets.length; i++) {
+        validSets[i]["weight"] = validSets[i]["weight"] ?? 0.0;
+      }
       exerciseData.push({
         "id": exercise.id,
         "set_data": validSets
@@ -89,19 +92,6 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
     setShowWorkoutStartOptions(true);
     onPress();
     router.replace('/(tabs)/workout'); //? go to recap screen?
-  };
-
-  const formatSetData = (exercise: WorkoutExercise): SetData[] => {
-    const formatted: SetData[] = [];
-    for (const data of exercise.set_data) {
-      if (!isValidSet(data, exercise.is_body_weight)) continue;
-      formatted.push({
-        "reps": data.reps,
-        "weight": data.weight,
-        "num_sets": data.num_sets
-      })
-    }
-    return formatted;
   };
 
   const discardWorkout = () => {

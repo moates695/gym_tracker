@@ -5,10 +5,11 @@ import { StatusBar } from 'expo-status-bar';
 
 import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom } from "@/store/general";
 import ChooseExercise from "@/components/ChooseExerciseModal";
-import { fetchExercises } from "@/middleware/helpers";
+// import { fetchExercises } from "@/middleware/helpers";
 import WorkoutExercise from "@/components/WorkoutExercise";
 import WorkoutOverview from "@/components/WorkoutOverview";
 import { commonStyles } from "@/styles/commonStyles";
+import { fetchWrapper } from "@/middleware/helpers";
 
 // todo: workout overview -> allow to see muscles worked, time, sets, volume (if on plan % completed)
 
@@ -42,7 +43,13 @@ export default function Workout() {
   };
 
   useEffect(() => {
-    fetchExercises(setExerciseList);
+    const getData = async () => {
+      const data = await fetchWrapper('exercises/list/all', 'GET');
+      if (data === null) return;
+      setExerciseList(data.exercises)
+    };
+
+    getData();
   }, []);
 
   return (

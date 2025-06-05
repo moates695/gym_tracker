@@ -38,7 +38,7 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
   }, [exercise.set_data]);
 
   const handleRefreshHistory = async () => {
-    // send request to refresh all historical data from exercise.id
+    // send request to refresh all historical data from exercise.id   
     setExercisesHistoricalData(exercisesHistoricalData);
     // const data = {};
     // const temp = {...exercisesHistoricalData} as any;
