@@ -69,12 +69,10 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
     for (const exercise of workoutExercises) {
       const validSets = getValidSets(exercise);
       if (validSets.length === 0) continue;
-      for (let i = 0; i < validSets.length; i++) {
-        validSets[i]["weight"] = validSets[i]["weight"] ?? 0.0;
-      }
       exerciseData.push({
         "id": exercise.id,
-        "set_data": validSets
+        "set_data": validSets,
+        "is_body_weight": exercise.is_body_weight
       })
     }
 

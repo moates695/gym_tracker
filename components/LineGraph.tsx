@@ -20,7 +20,7 @@ interface LineGraphProps  {
 export default function LineGraph(props: LineGraphProps) {
   const {points, scale_type} = props;
 
-  const width = Dimensions.get('window').width - 80;
+  const width = Dimensions.get('window').width - 40;
   const height = 250;
   const padding = 40;
   
@@ -185,10 +185,13 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   chartContainer: {
-    backgroundColor: 'black',
     margin: 0,
+    marginLeft: 20,
     borderRadius: 0,
     padding: 0,
     elevation: 3,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
 });

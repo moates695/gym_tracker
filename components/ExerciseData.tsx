@@ -9,43 +9,40 @@ import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData } 
 
 // time periods: last week, month, 3 months, 6 months, year, all time
 
-// n rep maxes (chart or table)
-// 3D graph of reps (x), sets (y), weight (z) + can collapse into 2D views
-// 2D graphs: 
-//    volume per session vs time
-//    n rep maxes vs time
-// view last workouts for the exercise
-
-// basic would be to compare to user stats, advanced would be to allow comparison stats \
-// curves to others (gender, age, weight, height etc)
-
-// n rep max: maxes (graph | table), history per rep (graph)
-// reps x sets x weight: 3D graph
-// volume per workout: 2D graph
-
-// DATA
+// EXERCISE DATA
 // n rep max
+//    graph: max weight vs num reps
+//    graph: max weight vs time
 //    table: reps | max ever weight
-//    graph: weights vs time
 // exercise volume per workout
 //    graph: volume vs time
-// rep x sets
-//    graph: weight vs time (choose rep & set then see the weight lifted over time)
 // rep x sets x weight
-//    graph: 3D reps, sets, weight (x, y, z)
+//    2D graph: weight vs time (choose rep & set then see the weight lifted over time)
+//    3D graph: reps, sets, weight (x, y, z)
 // exercise history
 //    table: reps | weight | sets | (date?) | class? (warmup, cooldown, working)
 //      -> table grouped by workout (dividing line or something between rows)
-// muscle group volume per workout (overview data?)
-//    graph: volume vs time
 
+// WORKOUT OVERVIEW DATA
+// list of exercises in the workout
+//    volume, sets, reps
+// total workout volume
+//    graph volume vs time, with bar for current workout
+// muscle group, target volume
+//    graph: volume vs time, with bar for current workout
+// distrubution data
+//    muscle polygon of volume, sets, reps (with percentages)
+//    muscle diagram heatmap
 
-// seperate overall stats page:
-// muscle polygon of volume
-// muscle diagram heatmap
+// USER DATA (total overview)
+// distrubution data
+//    muscle polygon of volume, sets, reps (with percentages)
+//    muscle diagram heatmap
+// total volume, sets, reps
 // favourite exercises
 //    overall by sets, volume, reps
-//    per muscle by sets, volume, reps
+//    per muscle group or target by sets, volume, reps
+
 
 import ThreeDPlot from './ThreeAxisChart'
 import { useState } from "react";
