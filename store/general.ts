@@ -19,12 +19,16 @@ export interface SetData {
   num_sets: number | null
 }
 
+export type WeightType = 'free' | 'machine' | 'cable';
+
 export interface WorkoutExercise {
   id: string
   name: string
   muscle_data: MuscleData[]
   is_body_weight: boolean
   set_data: SetData[]
+  description: string
+  weight_type: WeightType
 }
 
 export const workoutExercisesAtom = atomWithStorage<WorkoutExercise[]>('workoutExercisesAtom', []);

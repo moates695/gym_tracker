@@ -5,6 +5,7 @@ import { fetchExercises, fetchWrapper } from "@/middleware/helpers";
 import { useAtom } from "jotai";
 import { exerciseListAtom } from "@/store/general";
 import ChooseExerciseData from "./ChooseExerciseItem";
+import { commonStyles } from "@/styles/commonStyles";
 
 interface ChooseExerciseProps {
   onChoose: () => void
@@ -29,6 +30,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
       <View style={styles.modalContainer}>
         <TouchableOpacity 
           onPress={handleExercisesRefresh}
+          style={commonStyles.thinTextButton}
         >
           <Text style={{ color: "white"}}>refresh exercises</Text>
         </TouchableOpacity>
@@ -43,6 +45,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
 
         <TouchableOpacity 
           onPress={onPress}
+          style={commonStyles.thinTextButton}
         >
           <Text style={{ color: "white"}}>close</Text>
         </TouchableOpacity>
