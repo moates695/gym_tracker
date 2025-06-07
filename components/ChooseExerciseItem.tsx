@@ -53,10 +53,14 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
       onPress={() => setIsExpanded(!isExpanded)}
     >
       <View style={styles.row}>
-        <Text style={styles.text}>{exercise.name}</Text>
+        <Text style={styles.text}>
+          {exercise.name}
+          {exercise.is_custom && 
+            <Text style={[styles.text, {fontSize: 10}]}> (custom)</Text>
+          }
+        </Text>
         <TouchableOpacity 
           onPress={handleAddExercise}
-          // style={styles.addButton}
         >
           <Text style={[styles.text, commonStyles.textButton]}>add</Text> 
         </TouchableOpacity>

@@ -29,6 +29,7 @@ export interface WorkoutExercise {
   set_data: SetData[]
   description: string
   weight_type: WeightType
+  is_custom: boolean
 }
 
 export const workoutExercisesAtom = atomWithStorage<WorkoutExercise[]>('workoutExercisesAtom', []);
