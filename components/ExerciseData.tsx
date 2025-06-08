@@ -51,6 +51,7 @@ import { useAtom } from "jotai";
 // import TwoAxisChart from './TwoAxisGraph';
 // import TimeSeriesChart from './TimeSeriesChart';
 import LineGraph, {LineGraphPoint} from './LineGraph';
+import { commonStyles } from '@/styles/commonStyles';
 
 interface ExerciseDataProps {
   exercise: WorkoutExercise
@@ -194,6 +195,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
           }
           <TouchableOpacity
             onPress={handleSwitchDataVisual}
+            style={commonStyles.thinTextButton}
           >
             <Text style={styles.text}>switch visual</Text>
           </TouchableOpacity>
