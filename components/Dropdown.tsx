@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import React, {StyleSheet, View, Text, TouchableOpacity} from 'react-native'
 
-interface DropdownOption {
+export interface DropdownOption {
   label: string
   value: string
 }

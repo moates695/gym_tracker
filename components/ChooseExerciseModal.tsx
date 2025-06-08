@@ -8,6 +8,7 @@ import ChooseExerciseData from "./ChooseExerciseItem";
 import { commonStyles } from "@/styles/commonStyles";
 import InputField from "./InputField";
 import workoutExercise from "./WorkoutExercise";
+import Dropdown, { DropdownOption } from "./Dropdown";
 
 interface ChooseExerciseProps {
   onChoose: () => void
@@ -21,6 +22,52 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [searchBar, setSearchBar] = useState<string>('');
   
+  const [selectedMuscleGroupIdx, setSelectedMuscleGroupIdx] = useState<number>(0);
+  const muscleGroupOptions = [
+    { label: 'muscle group', value: 'all' },
+    { label: 'arms', value: 'arms' },
+    { label: 'back', value: 'back' },
+    { label: 'chest', value: 'chest' },
+    { label: 'core', value: 'core' },
+    { label: 'legs', value: 'legs' },
+    { label: 'shoulders', value: 'shoulders' },
+  ]
+
+  const [selectedMuscleTargetIdx, setSelectedMuscleTargetIdx] = useState<number>(0);
+  const muscleTargetOptions: Record<string, any> = {
+    arms: [
+      { label: 'bicep', value: 'bicep' },
+      { label: 'tricep', value: 'tricep' },
+      { label: 'forearm', value: 'forearm' },
+    ],
+    back: [
+      { label: 'lats', value: 'lats' },
+      { label: 'upper middle', value: 'upper middle' },
+      { label: 'exterior middle', value: 'exterior middle' },
+      { label: 'traps', value: 'traps' },
+      { label: 'erectors', value: 'erectors' },
+    ],
+    chest: [
+      { label: 'upper', value: 'upper' },
+      { label: 'lower', value: 'lower' },
+    ],
+    core: [
+      { label: 'upper abs', value: 'upper abs' },
+      { label: 'lower abs', value: 'lower abs' },
+      { label: 'obliques', value: 'obliques' },
+    ],
+    legs: [
+      { label: 'calves', value: 'calves' },
+      { label: 'quads', value: 'quads' },
+      { label: 'hamstrings', value: 'hamstrings' },
+      { label: 'glutes', value: 'glutes' },
+    ],
+    shoulders: [
+      { label: 'front', value: 'front' },
+      { label: 'middle', value: 'middle' },
+      { label: 'rear', value: 'rear' },
+    ]
+  }
 
   const handleExercisesRefresh = async () => {
     const data = await fetchWrapper('exercises/list/all', 'GET');
@@ -35,6 +82,16 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
   //    is/is not custom exercise
   //    weight type
   // exercise buttons -> click to expand details
+
+  const handleToggleShowFilters =  () => {
+    if (showFilters) {
+      setDisplayedExercises(exercises);
+      setSearchBar('');
+      setSelectedMuscleGroupIdx(0);
+      setSelectedMuscleTargetIdx(0);
+    }
+    setShowFilters(!showFilters);
+  };
 
   const handleSearchBarUpdate = (text: string) => {
     setSearchBar(text);
@@ -56,17 +113,20 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
       matching = matching.concat(temp);
       matchingIds = matchingIds.concat(temp.map((exercise: WorkoutExercise) => exercise.id));
     }
-    
+
     setDisplayedExercises(matching);
   };
 
-  const handleToggleShowFilters =  () => {
-    if (showFilters) {
-      setDisplayedExercises(exercises);
-      setSearchBar('');
-    }
-    setShowFilters(!showFilters);
+  const updateSelectedMuscleGroupIdx = (index: number) => {
+    setSelectedMuscleGroupIdx(index);
+    setSelectedMuscleTargetIdx(0);
   };
+
+  const getMuscleTargetOptions = (): DropdownOption[] => {
+    const temp = muscleTargetOptions[muscleGroupOptions[selectedMuscleGroupIdx].value]
+    return [{ label: 'muscle target', value: 'all' }].concat(temp)
+  };
+
 
   return (
     <View style={styles.modalBackground}>
@@ -94,6 +154,10 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
               onChangeText={handleSearchBarUpdate} 
               style={styles.input}
             />
+            <Dropdown selectedIdx={selectedMuscleGroupIdx} setSelectedIdx={updateSelectedMuscleGroupIdx} options={muscleGroupOptions} />
+            {selectedMuscleGroupIdx !== 0 &&
+              <Dropdown selectedIdx={selectedMuscleTargetIdx} setSelectedIdx={setSelectedMuscleTargetIdx} options={getMuscleTargetOptions()} />
+            }
           </View>
         }
         <ScrollView style={styles.scrollView}>
