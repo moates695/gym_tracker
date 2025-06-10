@@ -1,9 +1,9 @@
-import React, { useState } from "react";
-import { TouchableOpacity, View, Text, StyleSheet, ScrollView, TextInput } from "react-native";
+import React, { useEffect, useState } from "react";
+import { TouchableOpacity, View, Text, StyleSheet, ScrollView, TextInput, Switch } from "react-native";
 
 import { fetchExercises, fetchWrapper } from "@/middleware/helpers";
 import { useAtom } from "jotai";
-import { exerciseListAtom, WorkoutExercise } from "@/store/general";
+import { exerciseListAtom, MuscleData, WorkoutExercise } from "@/store/general";
 import ChooseExerciseData from "./ChooseExerciseItem";
 import { commonStyles } from "@/styles/commonStyles";
 import InputField from "./InputField";
@@ -24,7 +24,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
   
   const [selectedMuscleGroupIdx, setSelectedMuscleGroupIdx] = useState<number>(0);
   const muscleGroupOptions = [
-    { label: 'muscle group', value: 'all' },
+    { label: 'muscle group (all)', value: 'all' },
     { label: 'arms', value: 'arms' },
     { label: 'back', value: 'back' },
     { label: 'chest', value: 'chest' },
@@ -69,19 +69,28 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
     ]
   }
 
+  const [selectedRatioIdx, setSelectedRatioIdx] = useState<number>(0);
+  const ratioOptions = [
+    { label: 'primary', value: '7' },
+    { label: 'secondary', value: '4' },
+    { label: 'stabiliser', value: '1' },
+  ]
+
+  const [selectedWeightTypeIdx, setSelectedWeightTypeIdx] = useState<number>(0);
+   const weightTypeOptions = [
+    { label: 'all', value: 'all' },
+    { label: 'free', value: 'free' },
+    { label: 'cable', value: 'cable' },
+    { label: 'machine', value: 'machine' },
+  ]
+
+  const [customOnly, setCustomOnly] = useState<boolean>(false);
+
   const handleExercisesRefresh = async () => {
     const data = await fetchWrapper('exercises/list/all', 'GET');
     if (data === null) return;
     setExercises(data.exercises);
   };
-
-  // search bar
-  // filters:
-  //    muscle group
-  //      muscle target
-  //    is/is not custom exercise
-  //    weight type
-  // exercise buttons -> click to expand details
 
   const handleToggleShowFilters =  () => {
     if (showFilters) {
@@ -93,40 +102,104 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
     setShowFilters(!showFilters);
   };
 
-  const handleSearchBarUpdate = (text: string) => {
-    setSearchBar(text);
-    if (text === '') {
-      setDisplayedExercises(exercises);
-    }
-
-    let parts = [text, ...text.split(' ')];
-    parts = parts.filter(part => 
-      part.trim() !== ''
-    );
-
-    let matching: WorkoutExercise[] = [];
-    let matchingIds: string[] = [];
-    for (const part of parts) {
-      const temp = exercises.filter((exercise: WorkoutExercise) => 
-        exercise.name.toLowerCase().includes(part.toLowerCase()) && !matchingIds.includes(exercise.id)
-      );
-      matching = matching.concat(temp);
-      matchingIds = matchingIds.concat(temp.map((exercise: WorkoutExercise) => exercise.id));
-    }
-
-    setDisplayedExercises(matching);
-  };
-
   const updateSelectedMuscleGroupIdx = (index: number) => {
     setSelectedMuscleGroupIdx(index);
     setSelectedMuscleTargetIdx(0);
   };
 
   const getMuscleTargetOptions = (): DropdownOption[] => {
+    if (selectedMuscleGroupIdx === 0) return [];
     const temp = muscleTargetOptions[muscleGroupOptions[selectedMuscleGroupIdx].value]
-    return [{ label: 'muscle target', value: 'all' }].concat(temp)
+    return [{ label: 'muscle target (all)', value: 'all' }].concat(temp)
   };
 
+  const searchBarFilter = (tempExercises: WorkoutExercise[]): WorkoutExercise[] => {
+    if (searchBar === '') {
+      return tempExercises;
+    }
+
+    let parts = [searchBar, ...searchBar.split(' ')];
+    parts = parts.filter(part => 
+      part.trim() !== ''
+    );
+
+    let filtered: WorkoutExercise[] = [];
+    let matchingIds: string[] = [];
+    for (const part of parts) {
+      const temp = tempExercises.filter((exercise: WorkoutExercise) => 
+        exercise.name.toLowerCase().includes(part.toLowerCase()) && !matchingIds.includes(exercise.id)
+      );
+      filtered = filtered.concat(temp);
+      matchingIds = matchingIds.concat(temp.map((exercise: WorkoutExercise) => exercise.id));
+    }
+
+    return filtered
+  };
+
+  const muscleFilter = (tempExercises: WorkoutExercise[]): WorkoutExercise[] => {
+    if (selectedMuscleGroupIdx === 0 && selectedMuscleTargetIdx === 0) return tempExercises;
+    return tempExercises.filter((exercise: WorkoutExercise) => 
+      muscleDataMatchesFilters(exercise.muscle_data)
+    );
+  };
+
+  const muscleDataMatchesFilters = (muscle_data: MuscleData[]): boolean => {
+    const groupName = muscleGroupOptions[selectedMuscleGroupIdx].value;
+    const targetName = getMuscleTargetOptions()[selectedMuscleTargetIdx].value;
+    const threshold = Number(ratioOptions[selectedRatioIdx].value);
+
+    for (const group_data of muscle_data) {
+      if (group_data.group_name !== groupName) continue
+      for (const target_data of group_data.targets) {
+        if (targetName !== 'all') {
+          if (target_data.target_name !== targetName) continue
+          return target_data.ratio >= threshold
+        }
+        if (target_data.ratio < threshold) continue
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  const weightTypeFilter = (tempExercises: WorkoutExercise[]): WorkoutExercise[] => {
+    const weightType = weightTypeOptions[selectedWeightTypeIdx].value;
+    if (weightType === 'all') return tempExercises;
+
+    return tempExercises.filter((exercise: WorkoutExercise) => 
+      exercise.weight_type === weightType
+    )
+
+  };
+
+  const customExercisesFilter = (tempExercises: WorkoutExercise[]): WorkoutExercise[] => {
+    if (!customOnly) return tempExercises;
+    return tempExercises.filter((exercise: WorkoutExercise) => 
+      exercise.is_custom
+    )
+  };
+
+  const applyFilters = () => {
+    let tempExercises: WorkoutExercise[] = [...exercises];
+    tempExercises = searchBarFilter(tempExercises);
+    tempExercises = muscleFilter(tempExercises);
+    tempExercises = weightTypeFilter(tempExercises);
+    tempExercises = customExercisesFilter(tempExercises)
+    setDisplayedExercises(tempExercises);
+  };
+
+  useEffect(() => {
+    applyFilters();
+  }, [
+    searchBar, 
+    selectedMuscleGroupIdx, 
+    selectedMuscleTargetIdx, 
+    selectedRatioIdx, 
+    selectedWeightTypeIdx,
+    customOnly,
+    exercises
+  ]);
 
   return (
     <View style={styles.modalBackground}>
@@ -136,13 +209,13 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
             onPress={handleExercisesRefresh}
             style={[commonStyles.thinTextButton, {marginBottom: 5}]}
           >
-            <Text style={{ color: "white"}}>refresh exercises</Text>
+            <Text style={styles.text}>refresh exercises</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             onPress={handleToggleShowFilters}
             style={[commonStyles.thinTextButton, {marginBottom: 5}]}
           >
-            <Text style={{ color: "white"}}>
+            <Text style={styles.text}>
               {showFilters ? 'hide filters' : 'show filters'}
             </Text>
           </TouchableOpacity>
@@ -151,14 +224,36 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
           <View>
             <TextInput 
               value={searchBar}
-              onChangeText={handleSearchBarUpdate} 
+              onChangeText={setSearchBar} 
               style={styles.input}
             />
+            <Text style={styles.text}>Muscle group:</Text>
             <Dropdown selectedIdx={selectedMuscleGroupIdx} setSelectedIdx={updateSelectedMuscleGroupIdx} options={muscleGroupOptions} />
             {selectedMuscleGroupIdx !== 0 &&
-              <Dropdown selectedIdx={selectedMuscleTargetIdx} setSelectedIdx={setSelectedMuscleTargetIdx} options={getMuscleTargetOptions()} />
+              <>
+                <Text style={styles.text}>Muscle target:</Text>
+                <Dropdown selectedIdx={selectedMuscleTargetIdx} setSelectedIdx={setSelectedMuscleTargetIdx} options={getMuscleTargetOptions()} />
+                <Text style={styles.text}>Activation threshold:</Text>
+                <Dropdown selectedIdx={selectedRatioIdx} setSelectedIdx={setSelectedRatioIdx} options={ratioOptions} />
+              </>
             }
+            <Text style={styles.text}>Weight type:</Text>
+            <Dropdown selectedIdx={selectedWeightTypeIdx} setSelectedIdx={setSelectedWeightTypeIdx} options={weightTypeOptions} />
+            <View style={styles.switchContainer}>
+              <Text style={styles.text}>Custom exercises only:</Text>
+              <Switch
+                trackColor={{true: '#b4fcac', false: '#767577'}}
+                thumbColor={customOnly ? '#1aff00' : '#f4f3f4'}
+                ios_backgroundColor="#3e3e3e"
+                value={customOnly}
+                onValueChange={setCustomOnly}
+              />
+            </View>
+            
           </View>
+        }
+        {displayedExercises.length === 0 &&
+          <Text style={styles.text}>no exercises</Text>
         }
         <ScrollView style={styles.scrollView}>
           {displayedExercises.map((exercise, i) => {
@@ -171,7 +266,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
           onPress={onChoose}
           style={commonStyles.thinTextButton}
         >
-          <Text style={{ color: "white"}}>close</Text>
+          <Text style={styles.text}>close</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -179,6 +274,9 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
 }
 
 const styles = StyleSheet.create({
+  text: {
+    color: 'white'
+  },
   modalBackground: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.8)',
@@ -223,5 +321,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     width: '100%',
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
   }
 });
