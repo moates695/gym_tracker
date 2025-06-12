@@ -20,6 +20,14 @@ interface LineGraphProps  {
 export default function LineGraph(props: LineGraphProps) {
   const {points, scale_type} = props;
 
+  if (points.length === 0) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.text}>no data</Text>
+      </View>
+    )
+  }
+
   const width = Dimensions.get('window').width - 40;
   const height = 250;
   const padding = 40;
@@ -62,7 +70,7 @@ export default function LineGraph(props: LineGraphProps) {
 
   return (
      <View style={styles.container}>
-      {points.length > 0 ?      
+      {points.length >= 2 ?      
         <View style={styles.chartContainer}>
           <Svg width={width} height={height}>
             {/* Grid lines */}
@@ -159,9 +167,19 @@ export default function LineGraph(props: LineGraphProps) {
           </Svg>
         </View>
       :
-        <View>
-          <Text style={styles.text}>no data</Text>
-        </View>
+        <>
+          {points.length > 0 ?
+            <View>
+              <Text style={styles.text}>not enough data to graph</Text>
+            </View>
+          :
+            <View>
+              <Text style={styles.text}>no data</Text>
+            </View>
+          }
+        </>
+        
+        
       }
     </View>
   );

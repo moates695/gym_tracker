@@ -161,6 +161,8 @@ export default function ExerciseData(props: ExerciseDataProps) {
     return [];
   };
 
+  const points = getPoints();
+
   return (
     <View>
       <View>
@@ -187,7 +189,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
           }
 
           {dataVisual === 'graph' && 
-            <LineGraph points={getPoints()} scale_type={nRepMaxOption === 'all_time' ? 'value' : 'time'}/>
+            <LineGraph points={points} scale_type={nRepMaxOption === 'all_time' ? 'value' : 'time'}/>
           }
           {dataVisual === 'table' && 
             <>
@@ -195,7 +197,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
           }
           <TouchableOpacity
             onPress={handleSwitchDataVisual}
-            style={commonStyles.thinTextButton}
+            style={[commonStyles.thinTextButton, {width: 100}]}
           >
             <Text style={styles.text}>switch visual</Text>
           </TouchableOpacity>

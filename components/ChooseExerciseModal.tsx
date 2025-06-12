@@ -108,9 +108,18 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
   };
 
   const getMuscleTargetOptions = (): DropdownOption[] => {
-    if (selectedMuscleGroupIdx === 0) return [];
+    if (selectedMuscleGroupIdx === 0) return [
+      { label: 'disabled', value: 'disabled' },
+    ];
     const temp = muscleTargetOptions[muscleGroupOptions[selectedMuscleGroupIdx].value]
     return [{ label: 'muscle target (all)', value: 'all' }].concat(temp)
+  };
+
+  const getActivationThreshold = (): DropdownOption[] => {
+    if (selectedMuscleGroupIdx === 0) return [
+      { label: 'disabled', value: 'disabled' },
+    ];
+    return ratioOptions;
   };
 
   const searchBarFilter = (tempExercises: WorkoutExercise[]): WorkoutExercise[] => {
@@ -221,35 +230,56 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
           </TouchableOpacity>
         </View>
         {showFilters &&
-          <View>
-            <TextInput 
-              value={searchBar}
-              onChangeText={setSearchBar} 
-              style={styles.input}
-            />
-            <Text style={styles.text}>Muscle group:</Text>
-            <Dropdown selectedIdx={selectedMuscleGroupIdx} setSelectedIdx={updateSelectedMuscleGroupIdx} options={muscleGroupOptions} />
-            {selectedMuscleGroupIdx !== 0 &&
-              <>
-                <Text style={styles.text}>Muscle target:</Text>
-                <Dropdown selectedIdx={selectedMuscleTargetIdx} setSelectedIdx={setSelectedMuscleTargetIdx} options={getMuscleTargetOptions()} />
-                <Text style={styles.text}>Activation threshold:</Text>
-                <Dropdown selectedIdx={selectedRatioIdx} setSelectedIdx={setSelectedRatioIdx} options={ratioOptions} />
-              </>
-            }
-            <Text style={styles.text}>Weight type:</Text>
-            <Dropdown selectedIdx={selectedWeightTypeIdx} setSelectedIdx={setSelectedWeightTypeIdx} options={weightTypeOptions} />
-            <View style={styles.switchContainer}>
-              <Text style={styles.text}>Custom exercises only:</Text>
-              <Switch
-                trackColor={{true: '#b4fcac', false: '#767577'}}
-                thumbColor={customOnly ? '#1aff00' : '#f4f3f4'}
-                ios_backgroundColor="#3e3e3e"
-                value={customOnly}
-                onValueChange={setCustomOnly}
+          <View style={styles.filterContainer}>
+            <View style={styles.filterInnerContainer}>
+              <TextInput 
+                value={searchBar}
+                onChangeText={setSearchBar} 
+                style={styles.input}
               />
+              <Text style={styles.text}>Weight type:</Text>
+              <Dropdown selectedIdx={selectedWeightTypeIdx} setSelectedIdx={setSelectedWeightTypeIdx} options={weightTypeOptions} />
+              <View style={styles.switchContainer}>
+                <Text style={styles.text}>Custom exercises only:</Text>
+                <Switch
+                  trackColor={{true: '#b4fcac', false: '#767577'}}
+                  thumbColor={customOnly ? '#1aff00' : '#f4f3f4'}
+                  ios_backgroundColor="#3e3e3e"
+                  value={customOnly}
+                  onValueChange={setCustomOnly}
+                />
+              </View>
             </View>
-            
+            <View style={styles.filterInnerContainer}>
+              <Text style={styles.text}>Muscle group:</Text>
+              <Dropdown 
+                selectedIdx={selectedMuscleGroupIdx} 
+                setSelectedIdx={updateSelectedMuscleGroupIdx} 
+                options={muscleGroupOptions} 
+              />
+              <Text style={styles.text}>Muscle target:</Text>
+              <Dropdown 
+                selectedIdx={selectedMuscleTargetIdx} 
+                setSelectedIdx={setSelectedMuscleTargetIdx} 
+                options={getMuscleTargetOptions()} 
+                disabled={selectedMuscleGroupIdx === 0}
+              />
+              <Text style={styles.text}>Activation threshold:</Text>
+              <Dropdown 
+                selectedIdx={selectedRatioIdx} 
+                setSelectedIdx={setSelectedRatioIdx} 
+                options={getActivationThreshold()} 
+                disabled={selectedMuscleGroupIdx === 0}
+              />
+              {/* {selectedMuscleGroupIdx !== 0 &&
+                <>
+                  <Text style={styles.text}>Muscle target:</Text>
+                  <Dropdown selectedIdx={selectedMuscleTargetIdx} setSelectedIdx={setSelectedMuscleTargetIdx} options={getMuscleTargetOptions()} />
+                  <Text style={styles.text}>Activation threshold:</Text>
+                  <Dropdown selectedIdx={selectedRatioIdx} setSelectedIdx={setSelectedRatioIdx} options={ratioOptions} />
+                </>
+              } */}
+            </View>
           </View>
         }
         {displayedExercises.length === 0 &&
@@ -326,5 +356,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    width: '100%',
+    paddingTop: 5,
+  },
+  filterInnerContainer: {
+    justifyContent: 'center',
   }
 });

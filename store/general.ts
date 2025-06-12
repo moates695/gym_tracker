@@ -21,6 +21,11 @@ export interface SetData {
 
 export type WeightType = 'free' | 'machine' | 'cable';
 
+export interface ExerciseFrequencyData {
+  days_past: number,
+  volume: number
+}
+
 export interface WorkoutExercise {
   id: string
   name: string
@@ -30,6 +35,8 @@ export interface WorkoutExercise {
   description: string
   weight_type: WeightType
   is_custom: boolean
+  // frequency: ExerciseFrequencyData[]
+  frequency: Record<number, number>
 }
 
 export const workoutExercisesAtom = atomWithStorage<WorkoutExercise[]>('workoutExercisesAtom', []);

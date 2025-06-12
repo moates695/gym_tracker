@@ -4,6 +4,7 @@ import { commonStyles } from "@/styles/commonStyles";
 import { useAtom } from "jotai";
 import React, { useState } from "react"
 import { Text, StyleSheet, View, TouchableOpacity } from "react-native"
+import FrequencyCalendar from "./FrequencyCalendar";
 
 interface ChooseExerciseDataProps {
   exercise: WorkoutExercise
@@ -85,6 +86,8 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
               </View>
             )
           })}
+          {/* <Text style={styles.text}>Frequency: {exercise.frequency.length}</Text> */}
+          <FrequencyCalendar frequencyData={exercise.frequency} />
         </>
       }
     </TouchableOpacity>

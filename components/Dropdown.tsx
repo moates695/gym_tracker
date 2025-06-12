@@ -10,10 +10,11 @@ interface DropdownProps {
   selectedIdx: number
   setSelectedIdx: (index: number) => void
   options: DropdownOption[]
+  disabled?: boolean
 }
 
 export default function Dropdown(props: DropdownProps) {
-  const {selectedIdx, setSelectedIdx, options} = props;
+  const {selectedIdx, setSelectedIdx, options, disabled = false} = props;
 
   const [isOpen, setIsOpen] = useState<Boolean>(false);
 
@@ -34,8 +35,9 @@ export default function Dropdown(props: DropdownProps) {
       <TouchableOpacity
         onPress={() => setIsOpen(!isOpen)}
         style={[styles.optionContainer, {'padding': 5}]}
+        disabled={disabled}
       >
-        <Text style={styles.text}>{options[selectedIdx].label}</Text>
+        <Text style={disabled ? styles.disabledText : styles.text}>{options[selectedIdx].label}</Text>
       </TouchableOpacity>
       {isOpen && 
         <View 
@@ -68,6 +70,9 @@ export default function Dropdown(props: DropdownProps) {
 const styles = StyleSheet.create({
   text: {
     color: 'white'
+  },
+  disabledText: {
+    color: 'red'
   },
   container: {
     flex: 0,
