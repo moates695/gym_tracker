@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, StyleSheet, Text, Platform, TouchableOpacity } from "react-native"
+import { View, StyleSheet, Text, Platform, TouchableOpacity, ScrollView } from "react-native"
 import { Picker } from '@react-native-picker/picker';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData } from "@/store/general"
@@ -52,6 +52,7 @@ import { useAtom } from "jotai";
 // import TimeSeriesChart from './TimeSeriesChart';
 import LineGraph, {LineGraphPoint} from './LineGraph';
 import { commonStyles } from '@/styles/commonStyles';
+import { Col, Row, Grid } from "react-native-easy-grid";
 
 interface ExerciseDataProps {
   exercise: WorkoutExercise
@@ -163,6 +164,83 @@ export default function ExerciseData(props: ExerciseDataProps) {
 
   const points = getPoints();
 
+  const getTable = (): JSX.Element => {
+    if (nRepMaxOption === "all_time") {
+      return getNRepMaxAllTimeTable();
+    }
+    return getNRepMaxHistoryTable();
+  };
+
+  const getNRepMaxAllTimeTable = (): JSX.Element => {
+    return (
+      <Grid>
+        <Row>
+          <Col>
+            <Text style={styles.gridText}>Reps</Text>
+          </Col>
+          <Col>            
+            <Text style={styles.gridText}>Weight</Text>
+          </Col>
+        </Row>
+        {Object.entries(exerciseData['n_rep_max']['all_time']).map(([reps, value], index) => {
+          return (
+            <Row key={index}>
+              <Col>
+                <Text style={styles.gridText}>{reps}</Text>
+              </Col>
+              <Col>
+                <Text style={styles.gridText}>{value.weight}</Text>
+              </Col>
+            </Row>
+          )
+        })}
+      </Grid>
+    )
+  };
+
+  const getNRepMaxHistoryTable = (): JSX.Element => {
+    if (nRepMaxHistoryOption === null) {
+      return (
+        <></>
+      )
+    }
+
+    return (
+      <Grid>
+        <Row>
+          <Col>
+            <Text style={styles.gridText}>Weight</Text>
+          </Col>
+          <Col>            
+            <Text style={styles.gridText}>Date</Text>
+          </Col>
+        </Row>
+        {Object.values(exerciseData['n_rep_max']['history'][nRepMaxHistoryOption]).map((value, index) => {
+          return (
+            <Row key={index}>
+              <Col>
+                <Text style={styles.gridText}>{value.weight}</Text>
+              </Col>
+              <Col>
+                <Text style={styles.gridText}>{timestampToDateStr(value.timestamp)}</Text>
+              </Col>
+            </Row>
+          )
+        })}
+      </Grid>
+    )
+  };
+
+  const timestampToDateStr = (timestamp: number): string => {
+    const localDate = new Date(timestamp);
+
+    const day = localDate.getDate().toString().padStart(2, '0');
+    const month = (localDate.getMonth() + 1).toString().padStart(2, '0');
+    const year = localDate.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  };
+
   return (
     <View>
       <View>
@@ -181,10 +259,13 @@ export default function ExerciseData(props: ExerciseDataProps) {
                 <Text style={styles.text}>Choose a rep number:</Text>
                 <Dropdown selectedIdx={nRepMaxHistoryIdx} setSelectedIdx={setNRepMaxHistoryIdx} options={nRepMaxHistoryOptions}/>
               </View>
-              <View>
-                <Text style={styles.text}>Choose a lookback:</Text>
-                <Dropdown selectedIdx={timeSpanIdx} setSelectedIdx={setTimeSpanIdx} options={timeSpanOptions}/>
-              </View>
+              {dataVisual === 'graph' &&
+                <View>
+                  <Text style={styles.text}>Choose a lookback:</Text>
+                  <Dropdown selectedIdx={timeSpanIdx} setSelectedIdx={setTimeSpanIdx} options={timeSpanOptions}/>
+                </View>
+              }
+              
             </>
           }
 
@@ -192,8 +273,11 @@ export default function ExerciseData(props: ExerciseDataProps) {
             <LineGraph points={points} scale_type={nRepMaxOption === 'all_time' ? 'value' : 'time'}/>
           }
           {dataVisual === 'table' && 
-            <>
-            </>
+            <View style={styles.tableContainer}>
+              <ScrollView>
+                {getTable()}
+              </ScrollView>
+            </View>
           }
           <TouchableOpacity
             onPress={handleSwitchDataVisual}
@@ -216,5 +300,14 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-around'
+  },
+  tableContainer: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    maxHeight: 200,
+  },
+  gridText: {
+    color: 'white',
+    textAlign: 'center',
   }
 });
