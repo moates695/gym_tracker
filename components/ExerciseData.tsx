@@ -61,10 +61,25 @@ interface ExerciseDataProps {
   exerciseIndex: number
 }
 
-// type TimeSpan = 'week' | 'month' | '3-months' | '6 months' | 'year' | 'all'
-
 type DataVisual = 'graph' | 'table';
+
+type TimeSpanOption = 'week' | 'month' | '3_months' | '6_months' | 'year' | 'all'
+interface TimeSpanOptionObject {
+  label: string
+  value: TimeSpanOption
+}
+
 type DataOption = 'n_rep_max' | 'reps_sets_weight' | 'volume_per_workout';
+interface DataOptionObject {
+  label: string
+  value: DataOption
+}
+
+type NRepMaxDataOption = 'all_time' | 'history';
+interface NRepMaxDataOptionObject {
+  label: string
+  value: NRepMaxDataOption
+}
 
 export default function ExerciseData(props: ExerciseDataProps) {
   const {exercise, exerciseIndex} = props;
@@ -72,32 +87,28 @@ export default function ExerciseData(props: ExerciseDataProps) {
   const [exercisesHistoricalData, setExercisesHistoricalDataAtom] = useAtom(exercisesHistoricalDataAtom);
   const exerciseData = exercisesHistoricalData[exercise.id];
 
-  const dataOptions = [
+  const dataOptions: DataOptionObject[] = [
     { label: 'n rep max', value: 'n_rep_max' },
     { label: 'reps x sets x weight', value: 'reps_sets_weight' },
     { label: 'volume per workout', value: 'volume_per_workout' },
   ]
-  const dataOption = dataOptions[0].value;
   const [dataOptionValue, setDataOptionValue] = useState<DataOption>('n_rep_max');
 
-  const [nRepMaxIdx, setNRepMaxIdx] = useState<number>(0);
-  const nRepMaxOptions = [
+  const nRepMaxOptions: NRepMaxDataOptionObject[] = [
     { label: 'all time maxes', value: 'all_time' },
     { label: 'rep max history', value: 'history' },
   ]
-  const nRepMaxOption = nRepMaxOptions[nRepMaxIdx].value;
+  const [nRepMaxOptionValue, setNRepMaxOptionValue] = useState<NRepMaxDataOption>('all_time');
 
-  const [nRepMaxHistoryIdx, setNRepMaxHistoryIdx] = useState<number>(0);
   const nRepMaxHistoryOptions = [];
   for (const key in exerciseData['n_rep_max']['history']) {
     nRepMaxHistoryOptions.push({
       label: key, value: key
     })
   } 
-  const nRepMaxHistoryOption: string | null = nRepMaxHistoryOptions[nRepMaxHistoryIdx]?.value ?? null;
+  const [nRepMaxHistoryOptionValue, setNRepMaxHistoryOptionValue] = useState<string | null>(nRepMaxHistoryOptions[0]?.value ?? null);
 
-  const [timeSpanIdx, setTimeSpanIdx] = useState<number>(0);
-  const timeSpanOptions = [
+  const timeSpanOptions: TimeSpanOptionObject[] = [
     { label: 'week', value: 'week' },
     { label: 'month', value: 'month' },
     { label: '3 months', value: '3_months' },
@@ -105,9 +116,9 @@ export default function ExerciseData(props: ExerciseDataProps) {
     { label: 'year', value: 'year' },
     { label: 'all', value: 'all' },
   ]
-  const timeSpanOption = timeSpanOptions[timeSpanIdx].value;
+  const [timeSpanOptionValue, setTimeSpanOptionValue] = useState<TimeSpanOption>('month');
 
-  const timeSpanToMs: Record<string, number> = {
+  const timeSpanToMs: Record<TimeSpanOption, number> = {
     'week': 7 * 24 * 60 * 60 * 1000,
     'month': 30 * 24 * 60 * 60 * 1000,
     '3_months': 3 * 30 * 24 * 60 * 60 * 1000,
@@ -115,7 +126,6 @@ export default function ExerciseData(props: ExerciseDataProps) {
     'year': 365 * 24 * 60 * 60 * 1000,
     'all': 0,
   }
-  // const cutoff = Date.now() - (timeSpanToMs as any)[timeSpanOptions[timeSpanIdx].value];
 
   const [dataVisual, setDataVisual] = useState<DataVisual>('graph');
 
@@ -128,21 +138,21 @@ export default function ExerciseData(props: ExerciseDataProps) {
   }
 
   const filterTimeSeries = (points: LineGraphPoint[]) => {
-    if (timeSpanOption === 'all') return points;
+    if (timeSpanOptionValue === 'all') return points;
     return points.filter(point => {
-      return point.x >= (Date.now() - timeSpanToMs[timeSpanOption])
+      return point.x >= (Date.now() - timeSpanToMs[timeSpanOptionValue])
     });
   }
 
   const getPoints = (): LineGraphPoint[] => {
-    if (dataOption === 'n_rep_max') {
+    if (dataOptionValue === 'n_rep_max') {
       return getNRepMaxPoints();
     }
     return [];
   };
 
   const getNRepMaxPoints = (): LineGraphPoint[] => {
-    if (nRepMaxOption === 'all_time') {
+    if (nRepMaxOptionValue === 'all_time') {
       const points: any[] = [];
       for (const [key, obj] of Object.entries(exerciseData['n_rep_max']['all_time'])) {
         points.push({
@@ -151,10 +161,10 @@ export default function ExerciseData(props: ExerciseDataProps) {
         })
       }
       return points;
-    } else if (nRepMaxOption === 'history') {
-      if (nRepMaxHistoryOption === null) return [];
+    } else if (nRepMaxOptionValue === 'history') {
+      if (nRepMaxHistoryOptionValue === null) return [];
       const points: any[] = [];
-      for (const point of exerciseData['n_rep_max']['history'][nRepMaxHistoryOption]) {
+      for (const point of exerciseData['n_rep_max']['history'][nRepMaxHistoryOptionValue]) {
         points.push({
           "x": parseInt((point as any)["timestamp"]),
           "y": parseFloat((point as any)["weight"]),
@@ -168,32 +178,11 @@ export default function ExerciseData(props: ExerciseDataProps) {
   const points = getPoints();
 
   const getTable = (): JSX.Element => {
-    if (nRepMaxOption === "all_time") {
+    if (nRepMaxOptionValue === "all_time") {
       return getNRepMaxAllTimeTable();
     }
     return getNRepMaxHistoryTable();
   };
-
-  // const tempData = [
-  //   { label: 'week', value: 'week' },
-  //   { label: 'month', value: 'month' },
-  //   { label: '3 months', value: '3_months' },
-  //   { label: '6 months', value: '6_months' },
-  //   { label: 'year', value: 'year' },
-  //   { label: 'all', value: 'all' },
-  //   { label: 'week', value: 'week' },
-  //   { label: 'month', value: 'month' },
-  //   { label: '3 months', value: '3_months' },
-  //   { label: '6 months', value: '6_months' },
-  //   { label: 'year', value: 'year' },
-  //   { label: 'all', value: 'all' },
-  //   { label: 'week', value: 'week' },
-  //   { label: 'month', value: 'month' },
-  //   { label: '3 months', value: '3_months' },
-  //   { label: '6 months', value: '6_months' },
-  //   { label: 'year', value: 'year' },
-  //   { label: 'all', value: 'all' }
-  // ]
 
   const getNRepMaxAllTimeTable = (): JSX.Element => {
     return (
@@ -229,7 +218,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
   };
 
   const getNRepMaxHistoryTable = (): JSX.Element => {
-    if (nRepMaxHistoryOption === null) {
+    if (nRepMaxHistoryOptionValue === null) {
       return (
         <></>
       )
@@ -245,7 +234,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
             <Text style={styles.gridText}>Date</Text>
           </Col>
         </Row>
-        {Object.values(exerciseData['n_rep_max']['history'][nRepMaxHistoryOption]).map((value, index) => {
+        {Object.values(exerciseData['n_rep_max']['history'][nRepMaxHistoryOptionValue]).map((value, index) => {
           return (
             <Row key={index}>
               <Col>
@@ -271,11 +260,25 @@ export default function ExerciseData(props: ExerciseDataProps) {
     return `${day}/${month}/${year}`;
   };
 
+  const renderItem = (item: any, selected: any): JSX.Element => {
+    return (
+      <View
+        style={{
+          padding: 10,
+          borderWidth: selected ? 1 : 0,
+          borderColor: selected ? 'red' : 'transparent',
+          backgroundColor: 'black',
+        }}
+      >
+        <Text style={{ color: selected ? 'red' : 'white' }}>{item.label}</Text>
+      </View>
+    )
+  };
+
   return (
     <View>
       <View>
         <Text style={styles.text}>Choose a data type:</Text>
-        {/* <Dropdown selectedIdx={dataOptionIdx} setSelectedIdx={setSelectedIdx} options={dataOptions}/> */}
         <Dropdown 
           data={dataOptions}
           value={dataOptionValue}
@@ -284,39 +287,57 @@ export default function ExerciseData(props: ExerciseDataProps) {
           onChange={item => {setDataOptionValue(item.value)}}
           style={styles.dropdownButton}
           selectedTextStyle={styles.dropdownText}
-          containerStyle={{backgroundColor: 'black'}}
-          renderItem={(item, selected) => (
-            <View
-              style={{
-                padding: 10,
-                borderWidth: selected ? 1 : 0,
-                borderColor: selected ? 'red' : 'transparent',
-                backgroundColor: 'black',
-              }}
-            >
-              <Text style={{ color: selected ? 'red' : 'white' }}>{item.label}</Text>
-            </View>
-        )}
+          containerStyle={styles.dropdownContainerStyle}
+          renderItem={(item, selected) => renderItem(item, selected)}
         />
 
       </View>
-      {/* {dataOptions[dataOptionIdx].value === 'n_rep_max' && */}
-      {dataOptions[0].value === 'n_rep_max' &&
+      {dataOptionValue === 'n_rep_max' &&
         <>
           <View>
             <Text style={styles.text}>Choose a view:</Text>
-            {/* <Dropdown selectedIdx={nRepMaxIdx} setSelectedIdx={setNRepMaxIdx} options={nRepMaxOptions}/> */}
+            <Dropdown 
+              data={nRepMaxOptions}
+              value={nRepMaxOptionValue}
+              labelField="label"
+              valueField="value"
+              onChange={item => {setNRepMaxOptionValue(item.value)}}
+              style={styles.dropdownButton}
+              selectedTextStyle={styles.dropdownText}
+              containerStyle={styles.dropdownContainerStyle}
+              renderItem={(item, selected) => renderItem(item, selected)}
+            />
           </View>
-          {(nRepMaxOption === 'history' && nRepMaxHistoryOption !== null) &&
+          {(nRepMaxOptionValue === 'history' && nRepMaxHistoryOptionValue !== null) &&
             <>
               <View>
                 <Text style={styles.text}>Choose a rep number:</Text>
-                {/* <Dropdown selectedIdx={nRepMaxHistoryIdx} setSelectedIdx={setNRepMaxHistoryIdx} options={nRepMaxHistoryOptions}/> */}
+                <Dropdown
+                  data={nRepMaxHistoryOptions}
+                  value={nRepMaxHistoryOptionValue}
+                  labelField="label"
+                  valueField="value"
+                  onChange={item => {setNRepMaxHistoryOptionValue(item.value)}}
+                  style={styles.dropdownButton}
+                  selectedTextStyle={styles.dropdownText}
+                  containerStyle={styles.dropdownContainerStyle}
+                  renderItem={(item, selected) => renderItem(item, selected)}
+                />
               </View>
               {dataVisual === 'graph' &&
                 <View>
                   <Text style={styles.text}>Choose a lookback:</Text>
-                  {/* <Dropdown selectedIdx={timeSpanIdx} setSelectedIdx={setTimeSpanIdx} options={timeSpanOptions}/> */}
+                  <Dropdown
+                    data={timeSpanOptions}
+                    value={timeSpanOptionValue}
+                    labelField="label"
+                    valueField="value"
+                    onChange={item => {setTimeSpanOptionValue(item.value)}}
+                    style={styles.dropdownButton}
+                    selectedTextStyle={styles.dropdownText}
+                    containerStyle={styles.dropdownContainerStyle}
+                    renderItem={(item, selected) => renderItem(item, selected)}
+                  />
                 </View>
               }
               
@@ -324,7 +345,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
           }
 
           {dataVisual === 'graph' && 
-            <LineGraph points={points} scale_type={nRepMaxOption === 'all_time' ? 'value' : 'time'}/>
+            <LineGraph points={points} scale_type={nRepMaxOptionValue === 'all_time' ? 'value' : 'time'}/>
           }
           {dataVisual === 'table' && 
             <View style={styles.tableContainer}>
@@ -366,13 +387,16 @@ const styles = StyleSheet.create({
   },
   dropdownButton: {
     backgroundColor: 'black',
-    maxHeight: 150,
     width: 200,
     paddingLeft: 10,
     paddingTop: 5,
     paddingBottom: 5,
     borderWidth: 1,
     borderColor: '#ccc'
+  },
+  dropdownContainerStyle: {
+    backgroundColor: 'black',
+    maxHeight: 250,
   },
   dropdownText: {
     color: 'white',
