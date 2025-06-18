@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { View, StyleSheet, Text, Platform, TouchableOpacity, ScrollView } from "react-native"
-import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData } from "@/store/general"
+import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData, TimestampValue } from "@/store/general"
 
 // on select exercise, load in user data (async)
 // allow refresh in case of errors
@@ -43,7 +43,6 @@ import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData } 
 // favourite exercises
 //    overall by sets, volume, reps
 //    per muscle group or target by sets, volume, reps
-
 
 import ThreeDPlot from './ThreeAxisChart'
 import { useState } from "react";
@@ -89,8 +88,8 @@ export default function ExerciseData(props: ExerciseDataProps) {
 
   const dataOptions: DataOptionObject[] = [
     { label: 'n rep max', value: 'n_rep_max' },
-    { label: 'reps x sets x weight', value: 'reps_sets_weight' },
     { label: 'volume per workout', value: 'volume_per_workout' },
+    { label: 'reps x sets x weight', value: 'reps_sets_weight' },
   ]
   const [dataOptionValue, setDataOptionValue] = useState<DataOption>('n_rep_max');
 
@@ -147,13 +146,15 @@ export default function ExerciseData(props: ExerciseDataProps) {
   const getPoints = (): LineGraphPoint[] => {
     if (dataOptionValue === 'n_rep_max') {
       return getNRepMaxPoints();
+    } else if (dataOptionValue === 'volume_per_workout') {
+      return getVolumePerWorkoutPoints();
     }
     return [];
   };
 
   const getNRepMaxPoints = (): LineGraphPoint[] => {
     if (nRepMaxOptionValue === 'all_time') {
-      const points: any[] = [];
+      const points: LineGraphPoint[] = [];
       for (const [key, obj] of Object.entries(exerciseData['n_rep_max']['all_time'])) {
         points.push({
           'x': parseInt(key),
@@ -173,6 +174,17 @@ export default function ExerciseData(props: ExerciseDataProps) {
       return filterTimeSeries(points);
     }
     return [];
+  };
+
+  const getVolumePerWorkoutPoints = (): LineGraphPoint[] => {
+    const points: LineGraphPoint[] = [];
+    for (const point of exerciseData["volume"]) {
+      points.push({
+        "x": Math.floor((point as TimestampValue)["timestamp"]),
+        "y": (point as TimestampValue)["value"]
+      })
+    }
+    return filterTimeSeries(points);
   };
 
   const points = getPoints();
@@ -275,6 +287,23 @@ export default function ExerciseData(props: ExerciseDataProps) {
     )
   };
 
+  const lookback = (
+    <>
+      <Text style={styles.text}>Choose a lookback:</Text>
+      <Dropdown
+        data={timeSpanOptions}
+        value={timeSpanOptionValue}
+        labelField="label"
+        valueField="value"
+        onChange={item => {setTimeSpanOptionValue(item.value)}}
+        style={styles.dropdownButton}
+        selectedTextStyle={styles.dropdownText}
+        containerStyle={styles.dropdownContainerStyle}
+        renderItem={(item, selected) => renderItem(item, selected)}
+      />
+    </>
+  );
+
   return (
     <View>
       <View>
@@ -325,22 +354,10 @@ export default function ExerciseData(props: ExerciseDataProps) {
                 />
               </View>
               {dataVisual === 'graph' &&
-                <View>
-                  <Text style={styles.text}>Choose a lookback:</Text>
-                  <Dropdown
-                    data={timeSpanOptions}
-                    value={timeSpanOptionValue}
-                    labelField="label"
-                    valueField="value"
-                    onChange={item => {setTimeSpanOptionValue(item.value)}}
-                    style={styles.dropdownButton}
-                    selectedTextStyle={styles.dropdownText}
-                    containerStyle={styles.dropdownContainerStyle}
-                    renderItem={(item, selected) => renderItem(item, selected)}
-                  />
-                </View>
-              }
-              
+                <>
+                  {lookback}
+                </>
+              } 
             </>
           }
 
@@ -360,6 +377,14 @@ export default function ExerciseData(props: ExerciseDataProps) {
           >
             <Text style={styles.text}>switch visual</Text>
           </TouchableOpacity>
+        </>
+      }
+      {dataOptionValue === 'volume_per_workout' &&
+        <>
+          {lookback}
+          {dataVisual === 'graph' && 
+            <LineGraph points={points} scale_type={'time'}/>
+          }
         </>
       }
     </View>
