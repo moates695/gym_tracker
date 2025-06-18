@@ -1,7 +1,5 @@
 import * as React from 'react';
 import { View, StyleSheet, Text, Platform, TouchableOpacity, ScrollView } from "react-native"
-import { Picker } from '@react-native-picker/picker';
-import DropDownPicker from 'react-native-dropdown-picker';
 import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData } from "@/store/general"
 
 // on select exercise, load in user data (async)
@@ -15,7 +13,10 @@ import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData } 
 //    graph: max weight vs time
 //    table: reps | max ever weight
 // exercise volume per workout
-//    graph: volume vs time
+//    graph: volume per date
+// exercise volume per timespan //???
+//    graph: volume vs timespan (week, month, 3 month, 6 month, year)
+//    table: volume vs span ???
 // rep x sets x weight
 //    2D graph: weight vs time (choose rep & set then see the weight lifted over time)
 //    3D graph: reps, sets, weight (x, y, z)
@@ -46,13 +47,14 @@ import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData } 
 
 import ThreeDPlot from './ThreeAxisChart'
 import { useState } from "react";
-import Dropdown from "./Dropdown";
+// import Dropdown from "./Dropdown";
 import { useAtom } from "jotai";
 // import TwoAxisChart from './TwoAxisGraph';
 // import TimeSeriesChart from './TimeSeriesChart';
 import LineGraph, {LineGraphPoint} from './LineGraph';
 import { commonStyles } from '@/styles/commonStyles';
 import { Col, Row, Grid } from "react-native-easy-grid";
+import { Dropdown } from 'react-native-element-dropdown';
 
 interface ExerciseDataProps {
   exercise: WorkoutExercise
@@ -62,6 +64,7 @@ interface ExerciseDataProps {
 // type TimeSpan = 'week' | 'month' | '3-months' | '6 months' | 'year' | 'all'
 
 type DataVisual = 'graph' | 'table';
+type DataOption = 'n_rep_max' | 'reps_sets_weight' | 'volume_per_workout';
 
 export default function ExerciseData(props: ExerciseDataProps) {
   const {exercise, exerciseIndex} = props;
@@ -69,13 +72,13 @@ export default function ExerciseData(props: ExerciseDataProps) {
   const [exercisesHistoricalData, setExercisesHistoricalDataAtom] = useAtom(exercisesHistoricalDataAtom);
   const exerciseData = exercisesHistoricalData[exercise.id];
 
-  const [dataOptionIdx, setSelectedIdx] = useState<number>(0);
   const dataOptions = [
     { label: 'n rep max', value: 'n_rep_max' },
     { label: 'reps x sets x weight', value: 'reps_sets_weight' },
     { label: 'volume per workout', value: 'volume_per_workout' },
   ]
-  const dataOption = dataOptions[dataOptionIdx].value;
+  const dataOption = dataOptions[0].value;
+  const [dataOptionValue, setDataOptionValue] = useState<DataOption>('n_rep_max');
 
   const [nRepMaxIdx, setNRepMaxIdx] = useState<number>(0);
   const nRepMaxOptions = [
@@ -171,6 +174,27 @@ export default function ExerciseData(props: ExerciseDataProps) {
     return getNRepMaxHistoryTable();
   };
 
+  // const tempData = [
+  //   { label: 'week', value: 'week' },
+  //   { label: 'month', value: 'month' },
+  //   { label: '3 months', value: '3_months' },
+  //   { label: '6 months', value: '6_months' },
+  //   { label: 'year', value: 'year' },
+  //   { label: 'all', value: 'all' },
+  //   { label: 'week', value: 'week' },
+  //   { label: 'month', value: 'month' },
+  //   { label: '3 months', value: '3_months' },
+  //   { label: '6 months', value: '6_months' },
+  //   { label: 'year', value: 'year' },
+  //   { label: 'all', value: 'all' },
+  //   { label: 'week', value: 'week' },
+  //   { label: 'month', value: 'month' },
+  //   { label: '3 months', value: '3_months' },
+  //   { label: '6 months', value: '6_months' },
+  //   { label: 'year', value: 'year' },
+  //   { label: 'all', value: 'all' }
+  // ]
+
   const getNRepMaxAllTimeTable = (): JSX.Element => {
     return (
       <Grid>
@@ -181,6 +205,9 @@ export default function ExerciseData(props: ExerciseDataProps) {
           <Col>            
             <Text style={styles.gridText}>Weight</Text>
           </Col>
+          <Col>            
+            <Text style={styles.gridText}>Date</Text>
+          </Col>
         </Row>
         {Object.entries(exerciseData['n_rep_max']['all_time']).map(([reps, value], index) => {
           return (
@@ -190,6 +217,9 @@ export default function ExerciseData(props: ExerciseDataProps) {
               </Col>
               <Col>
                 <Text style={styles.gridText}>{value.weight}</Text>
+              </Col>
+              <Col>
+                <Text style={styles.gridText}>{timestampToDateStr(value.timestamp)}</Text>
               </Col>
             </Row>
           )
@@ -245,24 +275,48 @@ export default function ExerciseData(props: ExerciseDataProps) {
     <View>
       <View>
         <Text style={styles.text}>Choose a data type:</Text>
-        <Dropdown selectedIdx={dataOptionIdx} setSelectedIdx={setSelectedIdx} options={dataOptions}/>
+        {/* <Dropdown selectedIdx={dataOptionIdx} setSelectedIdx={setSelectedIdx} options={dataOptions}/> */}
+        <Dropdown 
+          data={dataOptions}
+          value={dataOptionValue}
+          labelField="label"
+          valueField="value"
+          onChange={item => {setDataOptionValue(item.value)}}
+          style={styles.dropdownButton}
+          selectedTextStyle={styles.dropdownText}
+          containerStyle={{backgroundColor: 'black'}}
+          renderItem={(item, selected) => (
+            <View
+              style={{
+                padding: 10,
+                borderWidth: selected ? 1 : 0,
+                borderColor: selected ? 'red' : 'transparent',
+                backgroundColor: 'black',
+              }}
+            >
+              <Text style={{ color: selected ? 'red' : 'white' }}>{item.label}</Text>
+            </View>
+        )}
+        />
+
       </View>
-      {dataOptions[dataOptionIdx].value === 'n_rep_max' &&
+      {/* {dataOptions[dataOptionIdx].value === 'n_rep_max' && */}
+      {dataOptions[0].value === 'n_rep_max' &&
         <>
           <View>
             <Text style={styles.text}>Choose a view:</Text>
-            <Dropdown selectedIdx={nRepMaxIdx} setSelectedIdx={setNRepMaxIdx} options={nRepMaxOptions}/>
+            {/* <Dropdown selectedIdx={nRepMaxIdx} setSelectedIdx={setNRepMaxIdx} options={nRepMaxOptions}/> */}
           </View>
           {(nRepMaxOption === 'history' && nRepMaxHistoryOption !== null) &&
             <>
               <View>
                 <Text style={styles.text}>Choose a rep number:</Text>
-                <Dropdown selectedIdx={nRepMaxHistoryIdx} setSelectedIdx={setNRepMaxHistoryIdx} options={nRepMaxHistoryOptions}/>
+                {/* <Dropdown selectedIdx={nRepMaxHistoryIdx} setSelectedIdx={setNRepMaxHistoryIdx} options={nRepMaxHistoryOptions}/> */}
               </View>
               {dataVisual === 'graph' &&
                 <View>
                   <Text style={styles.text}>Choose a lookback:</Text>
-                  <Dropdown selectedIdx={timeSpanIdx} setSelectedIdx={setTimeSpanIdx} options={timeSpanOptions}/>
+                  {/* <Dropdown selectedIdx={timeSpanIdx} setSelectedIdx={setTimeSpanIdx} options={timeSpanOptions}/> */}
                 </View>
               }
               
@@ -309,5 +363,19 @@ const styles = StyleSheet.create({
   gridText: {
     color: 'white',
     textAlign: 'center',
+  },
+  dropdownButton: {
+    backgroundColor: 'black',
+    maxHeight: 150,
+    width: 200,
+    paddingLeft: 10,
+    paddingTop: 5,
+    paddingBottom: 5,
+    borderWidth: 1,
+    borderColor: '#ccc'
+  },
+  dropdownText: {
+    color: 'white',
+    fontSize: 14
   }
 });

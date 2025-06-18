@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import React, {StyleSheet, View, Text, TouchableOpacity} from 'react-native'
+import React, {StyleSheet, View, Text, TouchableOpacity, ScrollView, FlatList} from 'react-native'
 
 export interface DropdownOption {
   label: string
@@ -40,27 +40,44 @@ export default function Dropdown(props: DropdownProps) {
         <Text style={disabled ? styles.disabledText : styles.text}>{options[selectedIdx].label}</Text>
       </TouchableOpacity>
       {isOpen && 
+        // <View style={styles.dropdownList}>
+        //   <FlatList
+        //     data={options}
+        //     keyExtractor={(item) => item.value}
+        //     renderItem={({ item }) => (
+        //       <TouchableOpacity style={styles.option} onPress={() => {}}>
+        //         <Text>{item.label}</Text>
+        //       </TouchableOpacity>
+        //     )}
+        //   />
+        // </View>
         <View 
-          style={[styles.optionContainer, styles.dropdownContainer]}>
-          {options.map((option, index) => (
-            <View key={index}>
-              {index !== selectedIdx &&
-                <View
-                  style={[
-                    styles.dropdownOption,
-                    !isLastOption(index) && styles.optionDivider,
-                    {padding: 5}
-                  ]}
-                >
-                  <TouchableOpacity 
-                    onPress={() => handleSelectOption(index)}
+          style={[styles.optionContainer, styles.dropdownContainer]}
+        >
+          <ScrollView
+            style={{ maxHeight: 200 }} // This is key
+            contentContainerStyle={{ flexGrow: 1 }}
+          >
+            {options.map((option, index) => (
+              <View key={index}>
+                {index !== selectedIdx &&
+                  <View
+                    style={[
+                      styles.dropdownOption,
+                      !isLastOption(index) && styles.optionDivider,
+                      {padding: 5}
+                    ]}
                   >
-                    <Text style={styles.text}>{option.label}</Text>
-                  </TouchableOpacity>
-                </View>
-              }
-            </View>
-          ))}
+                    <TouchableOpacity 
+                      onPress={() => handleSelectOption(index)}
+                    >
+                      <Text style={styles.text}>{option.label}</Text>
+                    </TouchableOpacity>
+                  </View>
+                }
+              </View>
+            ))}
+          </ScrollView>
         </View>
       }
     </View>
@@ -87,17 +104,25 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderWidth: 1,
     borderRadius: 2,
-    // padding: 5,
     justifyContent: 'center',
   },
   dropdownContainer: {
     zIndex: 999,
-    top: 28,
+    top: 30,
     backgroundColor: 'black',
     position: 'absolute',
     width: 150,
+    // overflow: 'visible',
+    maxHeight: 200,
   },
   dropdownOption: {
     padding: 3,
+  },
+  scrollView: {
+    maxHeight: 100,
+    backgroundColor: 'red'
+  },
+  scrollViewContent: {
+    flexGrow: 1
   }
 })
