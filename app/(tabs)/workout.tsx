@@ -152,6 +152,7 @@ const styles = StyleSheet.create({
   scrollViewContainer: {
     alignItems: 'center',
     justifyContent: 'flex-start',
+    paddingBottom: 100
   },
   workoutContainer: {
     height: '100%',

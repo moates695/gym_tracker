@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { View, StyleSheet, Text, Platform, TouchableOpacity, ScrollView } from "react-native"
-import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData, TimestampValue } from "@/store/general"
+import { View, StyleSheet, Text, Platform, TouchableOpacity, ScrollView, FlatList } from "react-native"
+import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData, TimestampValue, ExerciseHistory } from "@/store/general"
 
 // on select exercise, load in user data (async)
 // allow refresh in case of errors
@@ -21,7 +21,7 @@ import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData, T
 //    2D graph: weight vs time (choose rep & set then see the weight lifted over time)
 //    3D graph: reps, sets, weight (x, y, z)
 // exercise history
-//    table: reps | weight | sets | (date?) | class? (warmup, cooldown, working)
+//    table: reps | weight | sets | date ?
 //      -> table grouped by workout (dividing line or something between rows)
 
 // WORKOUT OVERVIEW DATA
@@ -45,7 +45,7 @@ import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData, T
 //    per muscle group or target by sets, volume, reps
 
 import ThreeDPlot from './ThreeAxisChart'
-import { useState } from "react";
+import { useRef, useState } from "react";
 // import Dropdown from "./Dropdown";
 import { useAtom } from "jotai";
 // import TwoAxisChart from './TwoAxisGraph';
@@ -68,7 +68,7 @@ interface TimeSpanOptionObject {
   value: TimeSpanOption
 }
 
-type DataOption = 'n_rep_max' | 'reps_sets_weight' | 'volume_per_workout';
+type DataOption = 'n_rep_max' | 'reps_sets_weight' | 'volume_per_workout' | 'history';
 interface DataOptionObject {
   label: string
   value: DataOption
@@ -89,6 +89,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
   const dataOptions: DataOptionObject[] = [
     { label: 'n rep max', value: 'n_rep_max' },
     { label: 'volume per workout', value: 'volume_per_workout' },
+    { label: 'history', value: 'history' },
     { label: 'reps x sets x weight', value: 'reps_sets_weight' },
   ]
   const [dataOptionValue, setDataOptionValue] = useState<DataOption>('n_rep_max');
@@ -127,6 +128,8 @@ export default function ExerciseData(props: ExerciseDataProps) {
   }
 
   const [dataVisual, setDataVisual] = useState<DataVisual>('graph');
+
+  const [historyListIndex, setHistoryListIndex] = useState<number>(0);
 
   const handleSwitchDataVisual = () => {
     if (dataVisual === 'graph') {
@@ -340,6 +343,54 @@ export default function ExerciseData(props: ExerciseDataProps) {
     </>
   );
 
+  const updateHistoryListIndex = (newIndex: number) => {
+    if (newIndex < 0 || newIndex >= exerciseData["history"].length) return;
+    setHistoryListIndex(newIndex);
+  };
+
+  const getHistoryTable = (): JSX.Element => {
+    const data = exerciseData["history"][historyListIndex];
+    if (data === undefined) return (<></>);
+
+    return (
+      <View style={styles.historyTableContainer}>
+        <Text style={styles.text}>Workout on {timestampToDateStr(data.timestamp)}</Text>
+        <ScrollView>
+          <Grid>
+            <Row>
+              <Col>
+                <Text style={styles.gridText}>Reps</Text>
+              </Col>
+              <Col>
+                <Text style={styles.gridText}>Weight</Text>
+              </Col>
+              <Col>
+                <Text style={styles.gridText}>Sets</Text>
+              </Col>
+            </Row>
+            {data["set_data"].map((set_data, index) => {
+              return (
+                <Row key={index}>
+                  <Col>
+                    <Text style={styles.gridText}>{set_data.reps}</Text>
+                  </Col>
+                  <Col>
+                    <Text style={styles.gridText}>{set_data.weight}</Text>
+                  </Col>
+                  <Col>
+                    <Text style={styles.gridText}>{set_data.num_sets}</Text>
+                  </Col>
+                </Row>
+              )
+            })}
+          </Grid>
+        </ScrollView>
+      </View>
+    )
+  };
+
+  // todo graph for workout history, switch between graphs for each workout/day
+
   return (
     <View>
       <View>
@@ -418,18 +469,37 @@ export default function ExerciseData(props: ExerciseDataProps) {
           {dataVisual === 'table' && 
             <View style={styles.tableContainer}>
               <ScrollView>
-                {getTable()}
+                {getVolumePerWorkoutTable()}
               </ScrollView>
             </View>
           }
         </>
       }
-      <TouchableOpacity
-        onPress={handleSwitchDataVisual}
-        style={[commonStyles.thinTextButton, {width: 100}]}
-      >
-        <Text style={styles.text}>switch visual</Text>
-      </TouchableOpacity>
+      {dataOptionValue === 'history' && 
+        <View style={styles.historyContainer}>
+          <TouchableOpacity
+            onPress={() => updateHistoryListIndex(historyListIndex - 1)}
+            style={[commonStyles.thinTextButton, {width: 50, alignSelf: 'flex-start', marginTop: 40}]}
+          >
+            <Text style={styles.text}>newer</Text>
+          </TouchableOpacity>
+          {getHistoryTable()}
+          <TouchableOpacity
+            onPress={() => updateHistoryListIndex(historyListIndex + 1)}
+            style={[commonStyles.thinTextButton, {width: 50, alignSelf: 'flex-start', marginTop: 40}]}
+          >
+            <Text style={styles.text}>older</Text>
+          </TouchableOpacity>
+        </View>
+      }
+      {dataOptionValue !== "history" &&
+        <TouchableOpacity
+          onPress={handleSwitchDataVisual}
+          style={[commonStyles.thinTextButton, {width: 100}]}
+        >
+          <Text style={styles.text}>switch visual</Text>
+        </TouchableOpacity>
+      }
     </View>
   )
 }
@@ -469,5 +539,16 @@ const styles = StyleSheet.create({
   dropdownText: {
     color: 'white',
     fontSize: 14
+  },
+  historyContainer: {
+    width: '100%',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  historyTableContainer: {
+    width: 200,
+    minHeight: 100,
+    justifyContent: 'center',
   }
 });
