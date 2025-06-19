@@ -179,6 +179,8 @@ export default function ExerciseData(props: ExerciseDataProps) {
     return [];
   };
 
+  // const getNRepMaxAllTimePoints
+
   const getVolumePerWorkoutPoints = (): LineGraphPoint[] => {
     const points: LineGraphPoint[] = [];
     for (const point of exerciseData["volume"]) {
@@ -311,6 +313,33 @@ export default function ExerciseData(props: ExerciseDataProps) {
     return `${day}/${month}/${year}`;
   };
 
+  const useDropdown = (options: any, value: any, setter: any): JSX.Element => {
+    return (
+      <Dropdown 
+        data={options}
+        value={value}
+        labelField="label"
+        valueField="value"
+        onChange={item => {setter(item.value)}}
+        style={styles.dropdownButton}
+        selectedTextStyle={styles.dropdownText}
+        containerStyle={styles.dropdownContainerStyle}
+        renderItem={(item, selected) => (
+          <View
+            style={{
+              padding: 10,
+              borderWidth: selected ? 1 : 0,
+              borderColor: selected ? 'red' : 'transparent',
+              backgroundColor: 'black',
+            }}
+          >
+            <Text style={{ color: selected ? 'red' : 'white' }}>{item.label}</Text>
+          </View>
+        )}
+      />
+    )
+  };
+
   const renderItem = (item: any, selected: any): JSX.Element => {
     return (
       <View
@@ -410,116 +439,99 @@ export default function ExerciseData(props: ExerciseDataProps) {
     return points;
   };
 
+  
+
+  const nRepMaxComponent = (
+    <>
+      <View>
+        <Text style={styles.text}>Choose a view:</Text>
+        {useDropdown(nRepMaxOptions, nRepMaxOptionValue, setNRepMaxOptionValue)}
+      </View>
+      {(nRepMaxOptionValue === 'history' && nRepMaxHistoryOptionValue !== null) &&
+        <>
+          <View>
+            <Text style={styles.text}>Choose a rep number:</Text>
+            {useDropdown(nRepMaxHistoryOptions, nRepMaxHistoryOptionValue, setNRepMaxHistoryOptionValue)}
+          </View>
+          {dataVisual === 'graph' &&
+            <>
+              {lookback}
+            </>
+          } 
+        </>
+      }
+      {dataVisual === 'table' && 
+        <View style={styles.tableContainer}>
+          <ScrollView>
+            {getTable()}
+          </ScrollView>
+        </View>
+      }
+    </>
+  )
+
+  const volumePerWorkoutComponent = (
+    <>
+      {lookback}
+      {dataVisual === 'table' && 
+        <View style={styles.tableContainer}>
+          <ScrollView>
+            {getVolumePerWorkoutTable()}
+          </ScrollView>
+        </View>
+      }
+    </>
+  )
+
+  const historyComponent = (
+    <>
+      <TouchableOpacity
+        onPress={() => updateHistoryListIndex(historyListIndex - 1)}
+        style={[commonStyles.thinTextButton, {width: 50}]}
+      >
+        <Text style={styles.text}>newer</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+          onPress={() => updateHistoryListIndex(historyListIndex + 1)}
+          style={[commonStyles.thinTextButton, {width: 50}]}
+        >
+          <Text style={styles.text}>older</Text>
+        </TouchableOpacity>
+      {dataVisual === 'graph' && 
+        <>
+          <LineGraph points={getHistoryPoints()} scale_type={'value'}/>
+        </>
+      }
+      {dataVisual === 'table' && 
+        <View style={styles.historyContainer}>
+          {getHistoryTable()}
+        </View>
+      }
+    </>
+  )
+
+  const componentMap: Record<DataOption, JSX.Element> = {
+    'n_rep_max': nRepMaxComponent,
+    'volume_per_workout': volumePerWorkoutComponent,
+    'history': historyComponent,
+    'reps_sets_weight': <></>
+  }
+
+  const dataVisualMap: Record<DataVisual, JSX.Element> = {
+    'graph': <LineGraph points={getPoints()} scale_type={'value'}/>,
+    'table': <></> // todo
+  }
+
+  // todo: switch all tables to horizontal carousel style
+
   return (
     <View>
       <View>
         <Text style={styles.text}>Choose a data type:</Text>
-        <Dropdown 
-          data={dataOptions}
-          value={dataOptionValue}
-          labelField="label"
-          valueField="value"
-          onChange={item => {setDataOptionValue(item.value)}}
-          style={styles.dropdownButton}
-          selectedTextStyle={styles.dropdownText}
-          containerStyle={styles.dropdownContainerStyle}
-          renderItem={(item, selected) => renderItem(item, selected)}
-        />
-
+        {useDropdown(dataOptions, dataOptionValue, setDataOptionValue)}
       </View>
-      {dataOptionValue === 'n_rep_max' &&
-        <>
-          <View>
-            <Text style={styles.text}>Choose a view:</Text>
-            <Dropdown 
-              data={nRepMaxOptions}
-              value={nRepMaxOptionValue}
-              labelField="label"
-              valueField="value"
-              onChange={item => {setNRepMaxOptionValue(item.value)}}
-              style={styles.dropdownButton}
-              selectedTextStyle={styles.dropdownText}
-              containerStyle={styles.dropdownContainerStyle}
-              renderItem={(item, selected) => renderItem(item, selected)}
-            />
-          </View>
-          {(nRepMaxOptionValue === 'history' && nRepMaxHistoryOptionValue !== null) &&
-            <>
-              <View>
-                <Text style={styles.text}>Choose a rep number:</Text>
-                <Dropdown
-                  data={nRepMaxHistoryOptions}
-                  value={nRepMaxHistoryOptionValue}
-                  labelField="label"
-                  valueField="value"
-                  onChange={item => {setNRepMaxHistoryOptionValue(item.value)}}
-                  style={styles.dropdownButton}
-                  selectedTextStyle={styles.dropdownText}
-                  containerStyle={styles.dropdownContainerStyle}
-                  renderItem={(item, selected) => renderItem(item, selected)}
-                />
-              </View>
-              {dataVisual === 'graph' &&
-                <>
-                  {lookback}
-                </>
-              } 
-            </>
-          }
-
-          {dataVisual === 'graph' && 
-            <LineGraph points={points} scale_type={nRepMaxOptionValue === 'all_time' ? 'value' : 'time'}/>
-          }
-          {dataVisual === 'table' && 
-            <View style={styles.tableContainer}>
-              <ScrollView>
-                {getTable()}
-              </ScrollView>
-            </View>
-          }
-        </>
-      }
-      {dataOptionValue === 'volume_per_workout' &&
-        <>
-          {lookback}
-          {dataVisual === 'graph' && 
-            <LineGraph points={points} scale_type={'time'}/>
-          }
-          {dataVisual === 'table' && 
-            <View style={styles.tableContainer}>
-              <ScrollView>
-                {getVolumePerWorkoutTable()}
-              </ScrollView>
-            </View>
-          }
-        </>
-      }
-      {dataOptionValue === 'history' && 
-        <>
-          <TouchableOpacity
-            onPress={() => updateHistoryListIndex(historyListIndex - 1)}
-            style={[commonStyles.thinTextButton, {width: 50}]}
-          >
-            <Text style={styles.text}>newer</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-              onPress={() => updateHistoryListIndex(historyListIndex + 1)}
-              style={[commonStyles.thinTextButton, {width: 50}]}
-            >
-              <Text style={styles.text}>older</Text>
-            </TouchableOpacity>
-          {dataVisual === 'graph' && 
-            <>
-              <LineGraph points={getHistoryPoints()} scale_type={'value'}/>
-            </>
-          }
-          {dataVisual === 'table' && 
-            <View style={styles.historyContainer}>
-              {getHistoryTable()}
-            </View>
-          }
-        </>
-      }
+      {componentMap[dataOptionValue]}
+      {dataVisualMap[dataVisual]}
       <TouchableOpacity
         onPress={handleSwitchDataVisual}
         style={[commonStyles.thinTextButton, {width: 100}]}
