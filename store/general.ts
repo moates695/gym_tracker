@@ -61,8 +61,14 @@ export interface TimestampValue {
   timestamp: number
 }
 
+export interface HistorySetData {
+  reps: number
+  weight: number
+  num_sets: number
+}
+
 export interface ExerciseHistory {
-  set_data: SetData[],
+  set_data: HistorySetData[],
   timestamp: number
 }
 

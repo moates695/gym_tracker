@@ -391,6 +391,25 @@ export default function ExerciseData(props: ExerciseDataProps) {
 
   // todo graph for workout history, switch between graphs for each workout/day
 
+  const getHistoryPoints = (): LineGraphPoint[] => {
+    const data = exerciseData["history"][historyListIndex];
+    if (data === undefined) return [];
+    
+    const points: LineGraphPoint[] = [];
+    let set_num = 1;
+    data.set_data.map(set_data => {
+      for (let i = 0; i < set_data.num_sets; i++) {
+        points.push({
+          "x": set_num,
+          "y": set_data.weight
+        })
+        set_num++;
+      }
+    });
+
+    return points;
+  };
+
   return (
     <View>
       <View>
@@ -476,30 +495,37 @@ export default function ExerciseData(props: ExerciseDataProps) {
         </>
       }
       {dataOptionValue === 'history' && 
-        <View style={styles.historyContainer}>
+        <>
           <TouchableOpacity
             onPress={() => updateHistoryListIndex(historyListIndex - 1)}
-            style={[commonStyles.thinTextButton, {width: 50, alignSelf: 'flex-start', marginTop: 40}]}
+            style={[commonStyles.thinTextButton, {width: 50}]}
           >
             <Text style={styles.text}>newer</Text>
           </TouchableOpacity>
-          {getHistoryTable()}
           <TouchableOpacity
-            onPress={() => updateHistoryListIndex(historyListIndex + 1)}
-            style={[commonStyles.thinTextButton, {width: 50, alignSelf: 'flex-start', marginTop: 40}]}
-          >
-            <Text style={styles.text}>older</Text>
-          </TouchableOpacity>
-        </View>
+              onPress={() => updateHistoryListIndex(historyListIndex + 1)}
+              style={[commonStyles.thinTextButton, {width: 50}]}
+            >
+              <Text style={styles.text}>older</Text>
+            </TouchableOpacity>
+          {dataVisual === 'graph' && 
+            <>
+              <LineGraph points={getHistoryPoints()} scale_type={'value'}/>
+            </>
+          }
+          {dataVisual === 'table' && 
+            <View style={styles.historyContainer}>
+              {getHistoryTable()}
+            </View>
+          }
+        </>
       }
-      {dataOptionValue !== "history" &&
-        <TouchableOpacity
-          onPress={handleSwitchDataVisual}
-          style={[commonStyles.thinTextButton, {width: 100}]}
-        >
-          <Text style={styles.text}>switch visual</Text>
-        </TouchableOpacity>
-      }
+      <TouchableOpacity
+        onPress={handleSwitchDataVisual}
+        style={[commonStyles.thinTextButton, {width: 100}]}
+      >
+        <Text style={styles.text}>switch visual</Text>
+      </TouchableOpacity>
     </View>
   )
 }
