@@ -147,15 +147,24 @@ export default function ExerciseData(props: ExerciseDataProps) {
   }
 
   const getPoints = (): LineGraphPoint[] => {
-    if (dataOptionValue === 'n_rep_max') {
-      return getNRepMaxPoints();
-    } else if (dataOptionValue === 'volume_per_workout') {
-      return getVolumePerWorkoutPoints();
+    switch (dataOptionValue) {
+      case 'n_rep_max':
+        return getNRepMaxPoints();
+      case 'volume_per_workout':
+        return getVolumePerWorkoutPoints();
+      default:
+        return [];
     }
-    return [];
   };
 
   const getNRepMaxPoints = (): LineGraphPoint[] => {
+    switch (nRepMaxOptionValue) {
+      case 'all_time':
+        return getNRepMaxAllTimePoints();
+      case 'history':
+        return getNRepMaxHistoryPoints();
+    }
+
     if (nRepMaxOptionValue === 'all_time') {
       const points: LineGraphPoint[] = [];
       for (const [key, obj] of Object.entries(exerciseData['n_rep_max']['all_time'])) {
@@ -177,6 +186,29 @@ export default function ExerciseData(props: ExerciseDataProps) {
       return filterTimeSeries(points);
     }
     return [];
+  };
+
+  const getNRepMaxAllTimePoints = (): LineGraphPoint[] => {
+    const points: LineGraphPoint[] = [];
+    for (const [key, obj] of Object.entries(exerciseData['n_rep_max']['all_time'])) {
+      points.push({
+        'x': parseInt(key),
+        'y': parseFloat((obj as any).weight)
+      })
+    }
+    return points;
+  };
+
+  const getNRepMaxHistoryPoints = (): LineGraphPoint[] => {
+    if (nRepMaxHistoryOptionValue === null) return [];
+      const points: any[] = [];
+      for (const point of exerciseData['n_rep_max']['history'][nRepMaxHistoryOptionValue]) {
+        points.push({
+          "x": parseInt((point as any)["timestamp"]),
+          "y": parseFloat((point as any)["weight"]),
+        })
+      }
+      return filterTimeSeries(points);
   };
 
   // const getNRepMaxAllTimePoints
