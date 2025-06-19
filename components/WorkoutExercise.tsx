@@ -67,6 +67,7 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
             {isDataExpanded && 
               <TouchableOpacity
                 onPress={handleRefreshHistory}
+                style={commonStyles.thinTextButton}
               >
                 <Text style={styles.text}>refresh data</Text>
               </TouchableOpacity>

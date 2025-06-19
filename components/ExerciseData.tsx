@@ -190,10 +190,21 @@ export default function ExerciseData(props: ExerciseDataProps) {
   const points = getPoints();
 
   const getTable = (): JSX.Element => {
+    if (dataOptionValue === "n_rep_max") {
+      return getNRepMaxTable();
+    } else if (dataOptionValue === "volume_per_workout") {
+      return getVolumePerWorkoutTable();
+    }
+    return (<></>);
+  };
+
+  const getNRepMaxTable = (): JSX.Element => {
     if (nRepMaxOptionValue === "all_time") {
       return getNRepMaxAllTimeTable();
+    } else if (nRepMaxOptionValue === "history") {
+      return getNRepMaxHistoryTable();
     }
-    return getNRepMaxHistoryTable();
+    return (<></>);
   };
 
   const getNRepMaxAllTimeTable = (): JSX.Element => {
@@ -231,9 +242,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
 
   const getNRepMaxHistoryTable = (): JSX.Element => {
     if (nRepMaxHistoryOptionValue === null) {
-      return (
-        <></>
-      )
+      return (<></>);
     }
 
     return (
@@ -254,6 +263,33 @@ export default function ExerciseData(props: ExerciseDataProps) {
               </Col>
               <Col>
                 <Text style={styles.gridText}>{timestampToDateStr(value.timestamp)}</Text>
+              </Col>
+            </Row>
+          )
+        })}
+      </Grid>
+    )
+  };
+
+  const getVolumePerWorkoutTable = (): JSX.Element => {
+    return (
+      <Grid>
+        <Row>
+          <Col>
+            <Text style={styles.gridText}>Volume</Text>
+          </Col>
+          <Col>
+            <Text style={styles.gridText}>Date</Text>
+          </Col>
+        </Row>
+        {exerciseData["volume"].map((data, index) => {
+          return (
+            <Row key={index}>
+              <Col>
+                <Text style={styles.gridText}>{data.value}</Text>
+              </Col>
+              <Col>
+                <Text style={styles.gridText}>{timestampToDateStr(data.timestamp)}</Text>
               </Col>
             </Row>
           )
@@ -371,12 +407,6 @@ export default function ExerciseData(props: ExerciseDataProps) {
               </ScrollView>
             </View>
           }
-          <TouchableOpacity
-            onPress={handleSwitchDataVisual}
-            style={[commonStyles.thinTextButton, {width: 100}]}
-          >
-            <Text style={styles.text}>switch visual</Text>
-          </TouchableOpacity>
         </>
       }
       {dataOptionValue === 'volume_per_workout' &&
@@ -385,8 +415,21 @@ export default function ExerciseData(props: ExerciseDataProps) {
           {dataVisual === 'graph' && 
             <LineGraph points={points} scale_type={'time'}/>
           }
+          {dataVisual === 'table' && 
+            <View style={styles.tableContainer}>
+              <ScrollView>
+                {getTable()}
+              </ScrollView>
+            </View>
+          }
         </>
       }
+      <TouchableOpacity
+        onPress={handleSwitchDataVisual}
+        style={[commonStyles.thinTextButton, {width: 100}]}
+      >
+        <Text style={styles.text}>switch visual</Text>
+      </TouchableOpacity>
     </View>
   )
 }
