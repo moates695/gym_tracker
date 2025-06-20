@@ -2,22 +2,23 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons"
 import React, { useState } from "react"
 import { TouchableOpacity, View, StyleSheet } from "react-native"
 import WorkoutExerciseComponent from "./WorkoutExercise"
-import { WorkoutExercise, workoutExercisesAtom } from "@/store/general"
+import { editWorkoutExercisesAtom, WorkoutExercise, workoutExercisesAtom } from "@/store/general"
 import Ionicons from "@expo/vector-icons/Ionicons"
 import { useAtom } from "jotai"
 import ConfirmationModal from "./ConfirmationModal"
-
+import cloneDeep from 'lodash/cloneDeep';
 
 interface WorkoutExerciseRowProps {
   exercise: WorkoutExercise
   exerciseIndex: number
-  editExercises: boolean
+  // editExercises: boolean
 }
 
 export default function WorkoutExerciseRow(props: WorkoutExerciseRowProps) {
-  const {exercise, exerciseIndex, editExercises} = props;
+  const {exercise, exerciseIndex} = props;
   
   const [exercises, setExercises] = useAtom(workoutExercisesAtom);
+  const [editExercises, _] = useAtom(editWorkoutExercisesAtom);
 
   const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false);
   const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
@@ -52,6 +53,13 @@ export default function WorkoutExerciseRow(props: WorkoutExerciseRowProps) {
     setDeleteModalVisible(false);
   };
 
+  const handleCopyExercise = () => {
+    const tempExercises = [...exercises];
+    const copy = cloneDeep(exercises[exerciseIndex]);
+    tempExercises.splice(exerciseIndex, 0, copy);
+    setExercises(tempExercises);
+  };
+
   return (
     <>
       <View style={styles.workoutRow}>
@@ -71,7 +79,7 @@ export default function WorkoutExerciseRow(props: WorkoutExerciseRowProps) {
         </View>
         {editExercises && 
           <TouchableOpacity
-            onPress={() => {}}
+            onPress={() => handleCopyExercise()}
             onPressIn={() => setCopyPressed(true)}
             onPressOut={() =>  setCopyPressed(false)}
             activeOpacity={1}

@@ -4,7 +4,7 @@ import { Text, StyleSheet } from "react-native"
 import ExerciseSets from "./ExerciseSets";
 import React from 'react-native'
 import ExerciseData from "./ExerciseData";
-import { exercisesHistoricalDataAtom, SetData, WorkoutExercise } from "@/store/general"
+import { editWorkoutExercisesAtom, exercisesHistoricalDataAtom, SetData, WorkoutExercise } from "@/store/general"
 import { useAtom } from "jotai";
 import { commonStyles } from "@/styles/commonStyles";
 import { fetchWrapper, getValidSets, isValidSet } from "@/middleware/helpers"
@@ -18,6 +18,7 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
   const { exercise, exerciseIndex } = props; 
 
   const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
+  const [editExercises, _] = useAtom(editWorkoutExercisesAtom);
 
   const [numSets, setNumSets] = useState<number>(0);
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
@@ -33,7 +34,6 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
     const reducer = (sum: number, obj: SetData): number => {
       return sum + (obj.num_sets ?? 0)
     };
-    // setNumSets(exercise.set_data.filter((data) => isValidSet(data, exercise.is_body_weight)).reduce(reducer, 0));
     setNumSets(getValidSets(exercise).reduce(reducer, 0));
   }, [exercise.set_data]);
 
@@ -44,6 +44,16 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
       [exercise.id]: data
     }))
   }
+
+  const handleDateExpanded = () => {
+    if (editExercises) return;
+    setIsDataExpanded(!isDataExpanded)
+  };
+
+  useEffect(() => {
+    if (!editExercises) return;
+    setIsDataExpanded(false);
+  }, [editExercises])
 
   return (
     <View style={styles.box}>
@@ -59,7 +69,7 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
           <View style={styles.rowThin}>
             <TouchableOpacity
               style={styles.thinTextButton}
-              onPress={() => setIsDataExpanded(!isDataExpanded)}
+              onPress={handleDateExpanded}
             >
               <Text style={styles.text}>{isDataExpanded ? 'close data': 'open data'}</Text>
             </TouchableOpacity>

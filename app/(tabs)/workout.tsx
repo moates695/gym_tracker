@@ -3,17 +3,12 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollVi
 import { useAtom } from "jotai";
 import { StatusBar } from 'expo-status-bar';
 
-import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom } from "@/store/general";
+import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom, editWorkoutExercisesAtom } from "@/store/general";
 import ChooseExercise from "@/components/ChooseExerciseModal";
-// import { fetchExercises } from "@/middleware/helpers";
-import WorkoutExercise from "@/components/WorkoutExercise";
 import WorkoutOverview from "@/components/WorkoutOverview";
 import { commonStyles } from "@/styles/commonStyles";
 import { fetchWrapper } from "@/middleware/helpers";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import WorkoutExerciseRow from "@/components/WorkoutExerciseRow";
-
-// todo: workout overview -> allow to see muscles worked, time, sets, volume (if on plan % completed)
 
 export default function Workout() {
   const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom);
@@ -21,10 +16,10 @@ export default function Workout() {
   const [exerciseList, setExerciseList] = useAtom(exerciseListAtom);
   const [exercises, _] = useAtom(workoutExercisesAtom);
   const [showStartOptions, setShowStartOptions] = useAtom(showWorkoutStartOptionsAtom);
+  const [editExercises, setEditExercises] = useAtom(editWorkoutExercisesAtom);
 
   const [chooseNewExercise, setChooseNewExercise] = useState<boolean>(false);
   const [showOverview, setShowOverview] = useState<boolean>(false);
-  const [editExercises, setEditExercises] = useState<boolean>(false);
 
   const createNewWorkout = () => {
     setWorkoutExercises([]);
@@ -57,7 +52,7 @@ export default function Workout() {
   useEffect(() => {
     if (exercises.length > 0) return;
     setEditExercises(false);
-  }, [exercises.length])
+  }, [exercises.length, editExercises])
 
   return (
     <SafeAreaView style={styles.container}> 
@@ -95,8 +90,7 @@ export default function Workout() {
                   <WorkoutExerciseRow 
                     key={i}
                     exercise={exercise} 
-                    exerciseIndex={i} 
-                    editExercises={editExercises} 
+                    exerciseIndex={i}
                   />
                 )
               })}

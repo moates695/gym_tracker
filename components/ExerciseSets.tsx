@@ -135,7 +135,7 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
     handleDeleteSet(index);
   };
 
-   const handleConfirm = () => {
+  const handleConfirm = () => {
     resolver?.(true);
     setDeleteModalVisible(false);
   };
