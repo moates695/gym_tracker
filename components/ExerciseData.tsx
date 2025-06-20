@@ -2,7 +2,7 @@ import * as React from 'react';
 import { View, StyleSheet, Text, Platform, TouchableOpacity, ScrollView, FlatList } from "react-native"
 import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData, TimestampValue, ExerciseHistory } from "@/store/general"
 import ThreeDPlot from './ThreeAxisChart'
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 // import Dropdown from "./Dropdown";
 import { useAtom } from "jotai";
 // import TwoAxisChart from './TwoAxisGraph';
@@ -12,6 +12,7 @@ import { commonStyles } from '@/styles/commonStyles';
 import { Col, Row, Grid } from "react-native-easy-grid";
 import { Dropdown } from 'react-native-element-dropdown';
 import DataTable from './DataTable';
+import CarouselDataTable from './CarouselDataTable';
 
 // on select exercise, load in user data (async)
 // allow refresh in case of errors
@@ -149,6 +150,8 @@ export default function ExerciseData(props: ExerciseDataProps) {
         return getNRepMaxPoints();
       case 'volume_per_workout':
         return getVolumePerWorkoutPoints();
+      case 'history':
+        return getHistoryPoints();
       default:
         return [];
     }
@@ -197,6 +200,25 @@ export default function ExerciseData(props: ExerciseDataProps) {
     return filterTimeSeries(points);
   };
 
+  const getHistoryPoints = (): LineGraphPoint[] => {
+    const data = exerciseData["history"][historyListIndex];
+    if (data === undefined) return [];
+    
+    const points: LineGraphPoint[] = [];
+    let set_num = 1;
+    data.set_data.map(set_data => {
+      for (let i = 0; i < set_data.num_sets; i++) {
+        points.push({
+          "x": set_num,
+          "y": set_data.weight
+        })
+        set_num++;
+      }
+    });
+
+    return points;
+  };
+
   const getTable = (): JSX.Element => {
     let headers = [];
     let rows = [];
@@ -216,7 +238,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
     }
 
     return (
-      <DataTable 
+      <CarouselDataTable 
         headers={headers}
         rows={rows}
       />
@@ -256,7 +278,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
     for (const value of Object.values(exerciseData['n_rep_max']['history'][nRepMaxHistoryOptionValue])) {
       rows.push([
         value.weight,
-        value.timestamp
+        timestampToDateStr(value.timestamp)
       ])
     }
 
@@ -369,30 +391,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
     setHistoryListIndex(newIndex);
   };
 
-  
-
   // todo graph for workout history, switch between graphs for each workout/day
-
-  const getHistoryPoints = (): LineGraphPoint[] => {
-    const data = exerciseData["history"][historyListIndex];
-    if (data === undefined) return [];
-    
-    const points: LineGraphPoint[] = [];
-    let set_num = 1;
-    data.set_data.map(set_data => {
-      for (let i = 0; i < set_data.num_sets; i++) {
-        points.push({
-          "x": set_num,
-          "y": set_data.weight
-        })
-        set_num++;
-      }
-    });
-
-    return points;
-  };
-
-  
 
   const nRepMaxComponent = (
     <>
@@ -413,13 +412,6 @@ export default function ExerciseData(props: ExerciseDataProps) {
           } 
         </>
       }
-      {dataVisual === 'table' && 
-        <View style={styles.tableContainer}>
-          <ScrollView>
-            {getTable()}
-          </ScrollView>
-        </View>
-      }
     </>
   )
 
@@ -431,28 +423,25 @@ export default function ExerciseData(props: ExerciseDataProps) {
 
   const historyComponent = (
     <>
-      <TouchableOpacity
-        onPress={() => updateHistoryListIndex(historyListIndex - 1)}
-        style={[commonStyles.thinTextButton, {width: 50}]}
-      >
-        <Text style={styles.text}>newer</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
+      <View style={[styles.row, {marginTop: 10}]}>
+        <TouchableOpacity
+          onPress={() => updateHistoryListIndex(historyListIndex - 1)}
+          style={[commonStyles.thinTextButton, {width: 50}]}
+        >
+          <Text style={styles.text}>newer</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
           onPress={() => updateHistoryListIndex(historyListIndex + 1)}
           style={[commonStyles.thinTextButton, {width: 50}]}
         >
           <Text style={styles.text}>older</Text>
         </TouchableOpacity>
-      {dataVisual === 'graph' && 
-        <>
-          <LineGraph points={getHistoryPoints()} scale_type={'value'}/>
-        </>
-      }
-      {dataVisual === 'table' && 
-        <View style={styles.historyContainer}>
-          {getHistoryTable()}
-        </View>
-      }
+      </View>
+      <Text 
+        style={[styles.text, {alignSelf: 'center', margin: 5}]}
+      >
+        Workout on {timestampToDateStr(exerciseData["history"][historyListIndex].timestamp)}
+      </Text>
     </>
   )
 
@@ -466,12 +455,22 @@ export default function ExerciseData(props: ExerciseDataProps) {
   // todo, implement this (useEffect?)
   const [graphScale, setGraphScale] = useState<LineGraphScale>('time');
 
+  useEffect(() => {
+    if (dataOptionValue === 'n_rep_max') {
+      if (nRepMaxOptionValue === 'all_time') {
+        setGraphScale('time');
+      } else {
+
+      }
+    } else if (dataOptionValue === 'history') {
+
+    }
+  }, [dataOptionValue]);
+
   const dataVisualMap: Record<DataVisual, JSX.Element> = {
     'graph': <LineGraph points={getPoints()} scale_type={graphScale}/>,
-    'table': <></> // todo
+    'table': <>{getTable()}</>
   }
-
-  // todo: switch all tables to horizontal carousel style
 
   return (
     <View>
@@ -504,7 +503,6 @@ const styles = StyleSheet.create({
   tableContainer: {
     flexDirection: 'column',
     justifyContent: 'center',
-    maxHeight: 200,
   },
   gridText: {
     color: 'white',

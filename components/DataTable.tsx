@@ -13,7 +13,7 @@ export default function DataTable(props: DataTableProps) {
 
   return (
     <Grid>
-      <Row>
+      <Row style={styles.gridRow}>
         {headers.map((header, index) => {
           return (
             <Col key={index}>
@@ -24,7 +24,7 @@ export default function DataTable(props: DataTableProps) {
       </Row>
       {rows.map((row, rowIndex) => {
         return (
-          <Row key={rowIndex}>
+          <Row key={rowIndex} style={styles.gridRow}>
             {row.map((col, colIndex) => {
               return (
                 <Col key={colIndex}>
@@ -41,6 +41,10 @@ export default function DataTable(props: DataTableProps) {
 
 const styles = StyleSheet.create({
   text: {
-    color: 'white'
+    color: 'white',
+    textAlign: 'center',
   },
+  gridRow: {
+    height: 20
+  }
 })
