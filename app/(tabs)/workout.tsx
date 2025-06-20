@@ -36,7 +36,13 @@ export default function Workout() {
   };
 
   const handleAddNewExercise = () => {
+    setEditExercises(false);
     setChooseNewExercise(true);
+  };
+
+  const handleShowOverview = () => {
+    setEditExercises(false);
+    setShowOverview(true)
   };
 
   useEffect(() => {
@@ -107,7 +113,7 @@ export default function Workout() {
             <View style={styles.textContainer}>
               <TouchableOpacity 
                 style={commonStyles.textButton}
-                onPress={() => setShowOverview(true)}
+                onPress={handleShowOverview}
               >
                 <Text style={{ color: "white"}}>overview</Text>
               </TouchableOpacity>

@@ -2,44 +2,99 @@ import React, { useState } from "react";
 import { View, StyleSheet, Text, TouchableOpacity, Modal } from "react-native";
 import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
+import { useAtom } from "jotai";
+import { WorkoutExercise, workoutExercisesAtom } from "@/store/general";
+import { getValidSets } from "@/middleware/helpers";
 
 interface WorkoutOverviewProps {
   onPress: () => void
 }
 
 // todo: add workout stats
-// show total volume, sets, reps, number of exercises
-// show volume, sets, reps per muscle group
-// show comparison to historical data for muscle group?
-// add finish (save, continue later, discard, cancel options)
+// show which muscle groups have been worked
+// compare muscle groups have been worked based on ratio & volume
+// show volume ratios per muscle group?
+// show comparison to historical data for muscle group (how does volume from this chest day compare to previous)?
 
 export default function WorkoutOverview(props: WorkoutOverviewProps) {
   const { onPress } = props;
 
+  const [exercises, _] = useAtom(workoutExercisesAtom);
+
   const [showFinishOptions, setShowFinishOptions] = useState<boolean>(false);
   
+  const getBodyWeight = (exercise: WorkoutExercise): number => {
+    return 18.25;
+  };
+
+  const getTotalStats = () => {
+    let volume = 0;
+    let reps = 0;
+    let sets = 0;
+    let validExercises = 0;
+
+    for (const exercise of exercises) {
+      const validSets = getValidSets(exercise);
+      if (validSets.length > 0) validExercises++;
+
+      for (const set_data of validSets) {
+        const weight = exercise.is_body_weight ? getBodyWeight(exercise) : (set_data.weight ?? 0);
+        const tempReps = (set_data.reps ?? 0);
+        const tempSets = (set_data.num_sets ?? 0);
+
+        volume += tempReps * weight * tempSets;
+        reps += tempReps;
+        sets += tempSets;
+      }
+    }
+
+    return {
+      totalVolume: volume, 
+      totalReps: reps, 
+      totalSets: sets,
+      numExercises: validExercises,
+    };
+  };
+
+  const {
+    totalVolume, 
+    totalReps, 
+    totalSets, 
+    numExercises
+  } = getTotalStats();
+
+  const getMuscleStats = () => {
+    const largestMuscleTargets: Record<string, number> = {};
+
+    for (const exercise of exercises) {
+      const validSets = getValidSets(exercise);
+      if (validSets.length === 0) continue;
+
+      for (const muscleData of exercise.muscle_data) {
+        for (const targetData of muscleData.targets) {
+          if (!largestMuscleTargets.hasOwnProperty(targetData.target_id)) {
+            largestMuscleTargets[targetData.target_id] = targetData.ratio;
+          } else if (largestMuscleTargets[targetData.target_id] < targetData.ratio) {
+            largestMuscleTargets[targetData.target_id] = targetData.ratio
+          }
+        }
+      }
+    }
+
+    console.log(largestMuscleTargets);
+  };
+
+  getMuscleStats();
+
   return (
     <View style={styles.modalBackground}>
       <View style={styles.modalContainer}>
-        <View style={styles.headerRow}>
-          <Text style={commonStyles.boldText}>Overview</Text>
-          {/* <TouchableOpacity
-            style={[commonStyles.button, {borderColor: 'green'}]}
-            onPress={() => setShowFinishOptions(true)}
-          >
-            <Text style={styles.text}>finish</Text>
-          </TouchableOpacity> */}
-        </View>
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={showFinishOptions}
-          onRequestClose={() => setShowFinishOptions(false)}
-        >
-          <WorkoutFinishOptions onPress={() => setShowFinishOptions(false)}/>
-        </Modal>
+        <Text style={commonStyles.boldText}>Overview</Text>
         <View style={styles.dataContainer}>
-          
+          <Text style={styles.text}>Total volume: {totalVolume} kg</Text>
+          <Text style={styles.text}>Reps: {totalReps}</Text>
+          <Text style={styles.text}>Sets: {totalSets}</Text>
+          <Text style={styles.text}>Exercises: {numExercises}</Text>
         </View>
         <TouchableOpacity 
           style={[commonStyles.thinTextButton, {width: 50, alignSelf: 'center'}]}
