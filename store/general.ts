@@ -76,6 +76,7 @@ export interface ExerciseHistoricalData {
   n_rep_max: NRepMaxData
   volume: TimestampValue[]
   history: ExerciseHistory[]
+  reps_sets_weight: HistorySetData[]
 }
 
 export const emptyExerciseHistoricalData: ExerciseHistoricalData = {
@@ -85,6 +86,7 @@ export const emptyExerciseHistoricalData: ExerciseHistoricalData = {
   },
   "volume": [],
   "history": [],
+  "reps_sets_weight": []
 }
 
 export const exercisesHistoricalDataAtom = atom<Record<string, ExerciseHistoricalData>>({})

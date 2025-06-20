@@ -105,7 +105,7 @@ export default function LineGraph(props: LineGraphProps) {
             })}
             
             {/* X-axis labels */}
-            {scale_type === 'value' && 
+            {/* {scale_type === 'value' && 
               points.map((point, index) => {
                 const label = point.x.toFixed(0);
                 return (
@@ -118,6 +118,23 @@ export default function LineGraph(props: LineGraphProps) {
                     textAnchor="end"
                   >
                     {label}
+                  </SvgText>
+                );
+              })
+            } */}
+            {scale_type === 'value' && 
+              [0, 0.2, 0.4, 0.6, 0.8, 1].map((ratio, index) => {
+                const value = xMax - ratio * (xMax - xMin);
+                return (
+                  <SvgText
+                    key={`x-label-${index}`}
+                    x={getXPosition(value) + padding / 2 - 15}
+                    y={height - 10}
+                    fontSize="12"
+                    fill="#999"
+                    textAnchor="end"
+                  >
+                    {Math.round(value)}
                   </SvgText>
                 );
               })

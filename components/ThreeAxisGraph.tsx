@@ -4,27 +4,22 @@ import { GLView } from 'expo-gl';
 import { Renderer } from 'expo-three';
 import * as THREE from 'three';
 
-type Point = { x: number; y: number; z: number };
+export type Point3D = { x: number; y: number; z: number };
 
-const ThreeDPlot = () => {
+interface ThreeAxisGraphProps {
+  points: Point3D[]
+}
+
+export default function ThreeAxisGraph(props: ThreeAxisGraphProps) {
+  const { points } = props;
+  
   // const rotationRef = useRef({ x: 0, y: 0 });
   
   const normMax = 100;
   const rotationPoint = normMax / 2;
   const rotationRef = useRef({ x: rotationPoint, y: rotationPoint });
 
-  const points = [
-    { x: 12, y: 30, z: 3 },
-    { x: 12, y: 70, z: 2 },
-    { x: 10, y: 72, z: 5 },
-    { x: 8, y: 81, z: 3 },
-    { x: 9, y: 78, z: 2 },
-    { x: 12, y: 60, z: 1 },
-    { x: 11, y: 75, z: 3 },
-    { x: 10, y: 72, z: 3 }
-  ];
-
-  const getMinMax = (points: Point[]) => {
+  const getMinMax = (points: Point3D[]) => {
     const xs = points.map(p => p.x);
     const ys = points.map(p => p.y);
     const zs = points.map(p => p.z);
@@ -36,7 +31,7 @@ const ThreeDPlot = () => {
     };
   };
 
-  const normalizePoints = (points: Point[]): Point[] => {
+  const normalizePoints = (points: Point3D[]): Point3D[] => {
     const { x, y, z } = getMinMax(points);
 
     const normalize = (val: number, min: number, max: number) =>
@@ -50,9 +45,7 @@ const ThreeDPlot = () => {
   };
 
   const normalizedPoints = normalizePoints(points);
-  normalizedPoints.push({ x: normMax, y: normMax, z: normMax })
-
-  console.log(normalizedPoints)
+  // const normalizedPoints = points;
 
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: () => true,
@@ -142,5 +135,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-
-export default ThreeDPlot;

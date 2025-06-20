@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { View, StyleSheet, Text, Platform, TouchableOpacity, ScrollView, FlatList } from "react-native"
 import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData, TimestampValue, ExerciseHistory } from "@/store/general"
-import ThreeDPlot from './ThreeAxisChart'
+import ThreeAxisGraph, { Point3D } from './ThreeAxisGraph'
 import { useEffect, useRef, useState } from "react";
 // import Dropdown from "./Dropdown";
 import { useAtom } from "jotai";
@@ -26,11 +26,10 @@ import CarouselDataTable from './CarouselDataTable';
 //    table: reps | max ever weight
 // exercise volume per workout
 //    graph: volume per date
-// exercise volume per timespan //???
+// exercise volume per timespan (timespan is bucket) //???
 //    graph: volume vs timespan (week, month, 3 month, 6 month, year)
 //    table: volume vs span ???
 // rep x sets x weight
-//    2D graph: weight vs time (choose rep & set then see the weight lifted over time)
 //    3D graph: reps, sets, weight (x, y, z)
 // exercise history
 //    table: reps | weight | sets | date ?
@@ -83,6 +82,12 @@ interface NRepMaxDataOptionObject {
   value: NRepMaxDataOption
 }
 
+type RepsSetsWeightOption = '2d' | '3d'
+interface RepsSetsWeightOptionObject {
+  label: string
+  value: RepsSetsWeightOption
+}
+
 export default function ExerciseData(props: ExerciseDataProps) {
   const {exercise, exerciseIndex} = props;
 
@@ -110,6 +115,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
     })
   } 
   const [nRepMaxHistoryOptionValue, setNRepMaxHistoryOptionValue] = useState<string | null>(nRepMaxHistoryOptions[0]?.value ?? null);
+
   const timeSpanOptions: TimeSpanOptionObject[] = [
     { label: 'week', value: 'week' },
     { label: 'month', value: 'month' },
@@ -236,6 +242,8 @@ export default function ExerciseData(props: ExerciseDataProps) {
       default:
         return (<></>); 
     }
+
+    rows = rows.slice().reverse();
 
     return (
       <CarouselDataTable 
@@ -417,7 +425,11 @@ export default function ExerciseData(props: ExerciseDataProps) {
 
   const volumePerWorkoutComponent = (
     <>
-      {lookbackComponent}
+      {dataVisual === 'graph' &&
+        <>
+          {lookbackComponent}
+        </>
+      }
     </>
   )
 
@@ -445,31 +457,62 @@ export default function ExerciseData(props: ExerciseDataProps) {
     </>
   )
 
+  const get3DGraphPoints = (): Point3D[] => {
+    const points: Point3D[] = [];
+    for (const data of exerciseData["reps_sets_weight"]) {
+      points.push({
+        x: data.num_sets,
+        y: data.weight,
+        z: data.reps
+      })
+    }
+    return points;
+  };
+
+  const points3D = get3DGraphPoints();
+  const repsSetsWeightComponent = (
+    <>
+      <View style={styles.row}>
+        <Text style={{color: 'blue'}}>reps</Text>
+        <Text style={{color: 'orange'}}>sets</Text>
+        <Text style={{color: 'green'}}>weight</Text>
+      </View>
+      <Text style={styles.text}>data is normalised</Text>
+      {points3D.length < 0 ? 
+        <Text style={styles.text}>not enough data</Text>
+      :
+        <View style={{height: 350}}>
+          <ThreeAxisGraph points={get3DGraphPoints()}/>
+        </View>
+      }
+    </>
+  )
+
   const componentMap: Record<DataOption, JSX.Element> = {
     'n_rep_max': nRepMaxComponent,
     'volume_per_workout': volumePerWorkoutComponent,
     'history': historyComponent,
-    'reps_sets_weight': <></>
+    'reps_sets_weight': repsSetsWeightComponent
   }
 
   // todo, implement this (useEffect?)
   const [graphScale, setGraphScale] = useState<LineGraphScale>('time');
 
   useEffect(() => {
-    if (dataOptionValue === 'n_rep_max') {
-      if (nRepMaxOptionValue === 'all_time') {
-        setGraphScale('time');
-      } else {
-
-      }
+    if (dataOptionValue === 'n_rep_max') {      
+      setGraphScale(nRepMaxOptionValue === 'all_time' ? 'value' : 'time');
     } else if (dataOptionValue === 'history') {
+      setGraphScale('value');
+    } else if (dataOptionValue === 'volume_per_workout') {
+      setGraphScale('time')
+    } else if (dataOptionValue === 'reps_sets_weight') {
 
     }
-  }, [dataOptionValue]);
+  }, [dataOptionValue, nRepMaxOptionValue]);
 
   const dataVisualMap: Record<DataVisual, JSX.Element> = {
     'graph': <LineGraph points={getPoints()} scale_type={graphScale}/>,
-    'table': <>{getTable()}</>
+    'table': getTable()
   }
 
   return (
@@ -479,13 +522,19 @@ export default function ExerciseData(props: ExerciseDataProps) {
         {useDropdown(dataOptions, dataOptionValue, setDataOptionValue)}
       </View>
       {componentMap[dataOptionValue]}
-      {dataVisualMap[dataVisual]}
-      <TouchableOpacity
-        onPress={handleSwitchDataVisual}
-        style={[commonStyles.thinTextButton, {width: 100}]}
-      >
-        <Text style={styles.text}>switch visual</Text>
-      </TouchableOpacity>
+      {dataOptionValue !== 'reps_sets_weight' &&
+        <>
+          {dataVisualMap[dataVisual]}
+          <TouchableOpacity
+            onPress={handleSwitchDataVisual}
+            style={[commonStyles.thinTextButton, {width: 100}]}
+          >
+            <Text style={styles.text}>switch visual</Text>
+          </TouchableOpacity>
+        </>
+        
+      }
+      
     </View>
   )
 }
