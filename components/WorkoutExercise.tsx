@@ -7,7 +7,7 @@ import ExerciseData from "./ExerciseData";
 import { exercisesHistoricalDataAtom, SetData, WorkoutExercise } from "@/store/general"
 import { useAtom } from "jotai";
 import { commonStyles } from "@/styles/commonStyles";
-import { getValidSets, isValidSet } from "@/middleware/helpers"
+import { fetchWrapper, getValidSets, isValidSet } from "@/middleware/helpers"
 
 interface WorkoutExerciseProps {
   exercise: WorkoutExercise
@@ -38,12 +38,11 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
   }, [exercise.set_data]);
 
   const handleRefreshHistory = async () => {
-    // send request to refresh all historical data from exercise.id   
-    setExercisesHistoricalData(exercisesHistoricalData);
-    // const data = {};
-    // const temp = {...exercisesHistoricalData} as any;
-    // temp[exercise.id] = data;
-    // setExercisesHistoricalDataAtom(temp);
+    const data = await fetchWrapper('exercise/history', 'GET', {id: exercise.id}, undefined)
+    setExercisesHistoricalData(prev => ({
+      ...prev,
+      [exercise.id]: data
+    }))
   }
 
   return (
@@ -90,7 +89,7 @@ const styles = StyleSheet.create({
     color: 'white'
   },
   box: {
-    width: '100%',
+    width: 'auto',
     padding: 10,
     margin: 2,
     borderColor: 'red',

@@ -10,6 +10,8 @@ import WorkoutExercise from "@/components/WorkoutExercise";
 import WorkoutOverview from "@/components/WorkoutOverview";
 import { commonStyles } from "@/styles/commonStyles";
 import { fetchWrapper } from "@/middleware/helpers";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import WorkoutExerciseRow from "@/components/WorkoutExerciseRow";
 
 // todo: workout overview -> allow to see muscles worked, time, sets, volume (if on plan % completed)
 
@@ -17,7 +19,7 @@ export default function Workout() {
   const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom);
   const [workoutStartTime, setWorkoutStartTime] = useAtom(workoutStartTimeAtom);
   const [exerciseList, setExerciseList] = useAtom(exerciseListAtom);
-
+  const [exercises, _] = useAtom(workoutExercisesAtom);
   const [showStartOptions, setShowStartOptions] = useAtom(showWorkoutStartOptionsAtom);
 
   const [chooseNewExercise, setChooseNewExercise] = useState<boolean>(false);
@@ -52,6 +54,11 @@ export default function Workout() {
     getData();
   }, []);
 
+  useEffect(() => {
+    if (exercises.length > 0) return;
+    setEditExercises(false);
+  }, [exercises.length])
+
   return (
     <SafeAreaView style={styles.container}> 
       {Platform.OS == 'android' &&
@@ -83,11 +90,16 @@ export default function Workout() {
             style={styles.scrollView}
             contentContainerStyle={styles.scrollViewContainer}
           >
-            {workoutExercises.map((exercise, i) => {
-              return (
-                <WorkoutExercise key={i} exercise={exercise} exerciseIndex={i}/>
-              )
-            })}
+              {workoutExercises.map((exercise, i) => {
+                return (
+                  <WorkoutExerciseRow 
+                    key={i}
+                    exercise={exercise} 
+                    exerciseIndex={i} 
+                    editExercises={editExercises} 
+                  />
+                )
+              })}
           </ScrollView>
           <View style={styles.row}>
             <View style={styles.textContainer}>
@@ -108,8 +120,8 @@ export default function Workout() {
             </View>
             <View style={styles.textContainer}>
               <TouchableOpacity 
-                style={commonStyles.textButton}
-                onPress={() => {}}
+                style={[commonStyles.textButton, editExercises && {borderColor: 'green', backgroundColor: 'green'}]}
+                onPress={() => setEditExercises(!editExercises)}
               >
                 <Text style={{ color: "white"}}>edit exercises</Text>
               </TouchableOpacity>
