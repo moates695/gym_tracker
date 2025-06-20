@@ -7,7 +7,7 @@ export interface LineGraphPoint {
   y: number
 }
 
-type LineGraphScale = 'time' | 'value'
+export type LineGraphScale = 'time' | 'value'
 
 interface LineGraphProps  {
   points: LineGraphPoint[]
