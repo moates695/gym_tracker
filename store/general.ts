@@ -42,6 +42,9 @@ export const workoutExercisesAtom = atomWithStorage<WorkoutExercise[]>('workoutE
 
 export const workoutStartTimeAtom = atomWithStorage<number | null>('workoutStartTimeAtom', Date.now());
 
+export const muscleGroupToTargetsAtom = atom<Record<string, string[]>>({});
+export const muscleTargetoGroupAtom = atom<Record<string, string>>({});
+
 export const showWorkoutStartOptionsAtom = atom<boolean>(true);
 
 export const exerciseListAtom = atomWithStorage('exerciseListAtom', [])

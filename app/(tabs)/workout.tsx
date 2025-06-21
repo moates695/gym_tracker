@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollVi
 import { useAtom } from "jotai";
 import { StatusBar } from 'expo-status-bar';
 
-import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom, editWorkoutExercisesAtom } from "@/store/general";
+import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom, editWorkoutExercisesAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom } from "@/store/general";
 import ChooseExercise from "@/components/ChooseExerciseModal";
 import WorkoutOverview from "@/components/WorkoutOverview";
 import { commonStyles } from "@/styles/commonStyles";
@@ -18,12 +18,20 @@ export default function Workout() {
   const [showStartOptions, setShowStartOptions] = useAtom(showWorkoutStartOptionsAtom);
   const [editExercises, setEditExercises] = useAtom(editWorkoutExercisesAtom);
 
+  const [groupToTargets, setGroupToTargets] = useAtom(muscleGroupToTargetsAtom);
+  const [targetoGroup, setTargetoGroup] = useAtom(muscleTargetoGroupAtom);
+
   const [chooseNewExercise, setChooseNewExercise] = useState<boolean>(false);
   const [showOverview, setShowOverview] = useState<boolean>(false);
 
-  const createNewWorkout = () => {
+  const createNewWorkout = async () => {
     setWorkoutExercises([]);
     setWorkoutStartTime(Date.now());
+
+    const data = await fetchWrapper('muscles/get_maps', 'GET');
+    if (data === null) return;
+    setGroupToTargets(data.group_to_targets);
+    setTargetoGroup(data.target_to_group);
   };
 
   const handleContinueWorkout = () => {
