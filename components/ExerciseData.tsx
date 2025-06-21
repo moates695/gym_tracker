@@ -66,6 +66,33 @@ interface VolumeTimespanObject {
   value: VolumeTimespan
 }
 
+export const useDropdown = (options: any, value: any, setter: any): JSX.Element => {
+  return (
+    <Dropdown 
+      data={options}
+      value={value}
+      labelField="label"
+      valueField="value"
+      onChange={item => {setter(item.value)}}
+      style={styles.dropdownButton}
+      selectedTextStyle={styles.dropdownText}
+      containerStyle={styles.dropdownContainerStyle}
+      renderItem={(item, selected) => (
+        <View
+          style={{
+            padding: 10,
+            borderWidth: selected ? 1 : 0,
+            borderColor: selected ? 'red' : 'transparent',
+            backgroundColor: 'black',
+          }}
+        >
+          <Text style={{ color: selected ? 'red' : 'white' }}>{item.label}</Text>
+        </View>
+      )}
+    />
+  )
+};
+
 export default function ExerciseData(props: ExerciseDataProps) {
   const {exercise, exerciseIndex} = props;
 
@@ -398,32 +425,32 @@ export default function ExerciseData(props: ExerciseDataProps) {
     return `${day}/${month}/${year}`;
   };
 
-  const useDropdown = (options: any, value: any, setter: any): JSX.Element => {
-    return (
-      <Dropdown 
-        data={options}
-        value={value}
-        labelField="label"
-        valueField="value"
-        onChange={item => {setter(item.value)}}
-        style={styles.dropdownButton}
-        selectedTextStyle={styles.dropdownText}
-        containerStyle={styles.dropdownContainerStyle}
-        renderItem={(item, selected) => (
-          <View
-            style={{
-              padding: 10,
-              borderWidth: selected ? 1 : 0,
-              borderColor: selected ? 'red' : 'transparent',
-              backgroundColor: 'black',
-            }}
-          >
-            <Text style={{ color: selected ? 'red' : 'white' }}>{item.label}</Text>
-          </View>
-        )}
-      />
-    )
-  };
+  // const useDropdown = (options: any, value: any, setter: any): JSX.Element => {
+  //   return (
+  //     <Dropdown 
+  //       data={options}
+  //       value={value}
+  //       labelField="label"
+  //       valueField="value"
+  //       onChange={item => {setter(item.value)}}
+  //       style={styles.dropdownButton}
+  //       selectedTextStyle={styles.dropdownText}
+  //       containerStyle={styles.dropdownContainerStyle}
+  //       renderItem={(item, selected) => (
+  //         <View
+  //           style={{
+  //             padding: 10,
+  //             borderWidth: selected ? 1 : 0,
+  //             borderColor: selected ? 'red' : 'transparent',
+  //             backgroundColor: 'black',
+  //           }}
+  //         >
+  //           <Text style={{ color: selected ? 'red' : 'white' }}>{item.label}</Text>
+  //         </View>
+  //       )}
+  //     />
+  //   )
+  // };
 
   const renderItem = (item: any, selected: any): JSX.Element => {
     return (
