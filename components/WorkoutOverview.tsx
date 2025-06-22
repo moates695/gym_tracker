@@ -42,17 +42,17 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
   //   const [volumeOptionValue, setVolumeOptionValue]= useState<VolumeOption>('workout');
 
   const muscleTypeOptions: MuscleTypeOption[] = [
-    { label: 'workout', value: 'target' },
-    { label: 'group', value: 'group' },
+    { label: 'muscle heads', value: 'target' },
+    { label: 'muscle groups', value: 'group' },
   ]
   const [muscleTypeValue, setMuscleTypeValue] = useState<MuscleType>('target');
 
   const contributionTypeOptions: ContributionTypeOption[] = [
+    { label: 'volume', value: 'volume' },
     { label: 'maximal', value: 'maximal' },
     { label: 'cumulative', value: 'cumulative' },
-    { label: 'volume', value: 'volume' },
   ]
-  const [contributionTypeValue, setContributionTypeValue] = useState<ContributionType>('maximal');
+  const [contributionTypeValue, setContributionTypeValue] = useState<ContributionType>('volume');
 
   const getBodyWeight = (exercise: WorkoutExercise): number => {
     // send request or do locally?
@@ -120,15 +120,9 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
           muscleRatios[groupName] = {
             "targets": {}
           };
-        }
-
-        if (!cumulativeMuscleRatios.hasOwnProperty(groupName)) {
           cumulativeMuscleRatios[groupName] = {
             "targets": {}
           };
-        }
-
-        if (!volumeMuscleRatios.hasOwnProperty(groupName)) {
           volumeMuscleRatios[groupName] = {
             "targets": {}
           };
@@ -183,19 +177,39 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
     }
   };
 
-  const {
-    muscleRatios,
-    cumulativeMuscleRatios,
-    volumeMuscleRatios
-  } = getMuscleStats();
+ 
 
   // todo: change return value based on options choices (useEffect?)
 
-  const valueMap: Record<string, number> = {};
-  for (const [group, object] of Object.entries(volumeMuscleRatios) as [string, { value: number }][]) {
-    valueMap[group] = object["value"];
-  }
-  console.log(valueMap);
+  const getValueMap = (): Record<string, number> => {
+    const {
+      muscleRatios,
+      cumulativeMuscleRatios,
+      volumeMuscleRatios
+    } = getMuscleStats();
+
+    const ratiosMap: Record<ContributionType, any> = {
+      'maximal': muscleRatios,
+      'cumulative': cumulativeMuscleRatios,
+      'volume': volumeMuscleRatios
+    }
+    const ratios = ratiosMap[contributionTypeValue] ?? {};
+
+    const valueMap: Record<string, number> = {};
+    if (muscleTypeValue === 'group') {
+      for (const [group, groupData] of Object.entries(ratios) as [string, { value: number }][]) {
+        valueMap[group] = groupData["value"];
+      }
+    } else {
+      for (const [group, groupData] of Object.entries(ratios) as [string, {targets: any}][]) {
+        for (const [target, value] of Object.entries(groupData["targets"]) as [string, number][]) {
+          valueMap[`${group}/${target}`] = value;
+        }
+      }
+    }
+
+    return valueMap;
+  };
 
   return (
     <View style={styles.modalBackground}>
@@ -207,13 +221,13 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
           <Text style={styles.text}>Sets: {totalSets}</Text>
           <Text style={styles.text}>Exercises: {numExercises}</Text>
 
-          <Text style={styles.text}>Choose a muscle level: {numExercises}</Text>
+          <Text style={styles.text}>Choose a muscle level:</Text>
           {useDropdown(muscleTypeOptions, muscleTypeValue, setMuscleTypeValue)}
 
-          <Text style={styles.text}>Choose a contribution type: {numExercises}</Text>
+          <Text style={styles.text}>Choose a contribution type:</Text>
           {useDropdown(contributionTypeOptions, contributionTypeValue, setContributionTypeValue)}
           
-          <MuscleGroupSvg valueMap={valueMap}/>
+          <MuscleGroupSvg valueMap={getValueMap()} showGroups={muscleTypeValue === 'group'}/>
         </View>
         <TouchableOpacity 
           style={[commonStyles.thinTextButton, {width: 50, alignSelf: 'center'}]}

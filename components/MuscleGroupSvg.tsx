@@ -1,14 +1,15 @@
 import * as React from "react";
 import Svg, { Path } from "react-native-svg";
 import { LinearGradient } from 'expo-linear-gradient';
-import { View } from "react-native";
+import { View, StyleSheet, Text } from "react-native";
 
 interface MuscleGroupSvgProps {
   valueMap: Record<string, number>
+  showGroups: boolean
 }
 
 export default function MuscleGroupSvg(props: MuscleGroupSvgProps) {
-  const {valueMap} = props;
+  const {valueMap, showGroups} = props;
 
   const normalize = (valueMap: Record<string, number>): Record<string, number> => {
     const normalizedMap: Record<string, number> = {};
@@ -22,7 +23,7 @@ export default function MuscleGroupSvg(props: MuscleGroupSvgProps) {
   }
 
   const normalizedMap = normalize(valueMap);
-  console.log(normalizedMap)
+  // console.log(normalizedMap);
 
   const numToRgbString = (num: number): string => {
     if (num < 0 || num > 1) return "none";
@@ -56,42 +57,85 @@ export default function MuscleGroupSvg(props: MuscleGroupSvgProps) {
     return `rgb(${r}, ${g}, ${b})`;
   };
 
+  const getValue = (group: string, target: string): number => {
+    if (showGroups) {
+      return normalizedMap[group] ?? -1;
+    } else {
+      return normalizedMap[`${group}/${target}`] ?? -1;
+    }
+  };
+
   return (
     <View>
       <Svg
-        // width={544}
-        // height={468}
-        width={272}
-        height={234}
-        viewBox="0 0 544 468"
+        width={250}
+        height={296}
+        viewBox="0 0 500 592"
         fill="none"
         {...props}
       >
-        <Path fill={numToRgbString(normalizedMap["arms"] ?? -1)} d="M0 0H220V225H0z" />
-        <Path fill={numToRgbString(normalizedMap["back"] ?? -1)} d="M267 0H544V225H267z" />
-        <Path fill={numToRgbString(normalizedMap["core"] ?? -1)} d="M0 263H399V468H0z" />
-        <Path fill={numToRgbString(normalizedMap["legs"] ?? -1)} d="M423 263H544V468H423z" />
+        <Path fill={numToRgbString(getValue('arms', 'bicep'))} d="M242 184H279V316H242z" />
+        <Path
+          d="M19 248L34.47 5 218 227.68 19 248z"
+          fill={numToRgbString(getValue('arms', 'tricep'))}
+          stroke="#fff"
+        />
+        <Path fill={numToRgbString(getValue('arms', 'forearm'))} d="M157 0H279V130H157z" />
+        <Path fill={numToRgbString(getValue('legs', 'calves'))} d="M303 0H367V398H303z" />
+        <Path fill={numToRgbString(getValue('legs', 'quads'))} d="M386 0H500V240H386z" />
+        <Path fill={numToRgbString(getValue('legs', 'hamstrings'))} d="M386 258H500V398H386z" />
+        <Path fill={numToRgbString(getValue('legs', 'glutes'))} d="M205 408H500V476H205z" />
+        <Path fill={numToRgbString(getValue('chest', 'upper'))} d="M335 492H500V592H335z" />
+        <Path fill={numToRgbString(getValue('chest', 'lower'))} d="M72 492H316V592H72z" />
+        <Path fill={numToRgbString(getValue('back', 'lats'))} d="M72 408H194V476H72z" />
+        <Path fill={numToRgbString(getValue('back', 'traps'))} d="M72 328H175V398H72z" />
+        <Path fill={numToRgbString(getValue('back', 'erectors'))} d="M0 328H57V442H0z" />
+        <Path fill={numToRgbString(getValue('back', 'upper middle'))} d="M0 455H57V518H0z" />
+        <Path fill={numToRgbString(getValue('back', 'exterior middle'))} d="M0 532H57V592H0z" />
+        <Path fill={numToRgbString(getValue('shoulders', 'front'))} d="M194 328H290V398H194z" />
+        <Path fill={numToRgbString(getValue('shoulders', 'middle'))} d="M0 258H57V316H0z" />
+        <Path fill={numToRgbString(getValue('shoulders', 'rear'))} d="M72 258H118V316H72z" />
+        <Path fill={numToRgbString(getValue('core', 'lower abs'))} d="M133 258H175V316H133z" />
+        <Path fill={numToRgbString(getValue('core', 'upper abs'))} d="M95 0H148V55H95z" />
+        <Path fill={numToRgbString(getValue('core', 'obliques'))} d="M186 138H279V172H186z" />
+        {/* <Path fill="#D9D9D9" d="M242 184H279V316H242z" /> */}
+        {/* <Path fill="#D9D9D9" d="M186 240H232V316H186z" /> */}
       </Svg>
 
-      <LinearGradient
-        colors={[
-          'rgb(0,0,255)',
-          'rgb(0,255,255)',
-          'rgb(0,255,0)',
-          'rgb(255,255,0)',
-          'rgb(255,0,0)',
-        ]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={{
-          height: 10,
-          width: 200,
-          borderWidth: 1,
-          borderColor: '#000',
-          borderRadius: 0,
-          marginTop: 10, 
-        }}
-      />
+      <View style={styles.row}>
+        <Text style={styles.text}>min</Text>
+        <LinearGradient
+          colors={[
+            'rgb(0,0,255)',
+            'rgb(0,255,255)',
+            'rgb(0,255,0)',
+            'rgb(255,255,0)',
+            'rgb(255,0,0)',
+          ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={{
+            height: 10,
+            width: 200,
+            borderWidth: 1,
+            borderColor: '#000',
+            borderRadius: 0,
+            marginTop: 10, 
+          }}
+        />
+        <Text style={styles.text}>max</Text>
+      </View>
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  text: {
+    color: 'white'
+  },
+  row: {
+    flexDirection: 'row',
+    // justifyContent: 'center',
+    alignItems: 'center'
+  }
+})
