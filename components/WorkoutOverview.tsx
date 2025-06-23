@@ -20,6 +20,8 @@ import { useDropdown } from "./ExerciseData";
 //    compare total workout volume
 //    see what i did in that previous workout (similar to the stats page overview)
 
+// todo implement histories
+
 interface WorkoutOverviewProps {
   onPress: () => void
 }
