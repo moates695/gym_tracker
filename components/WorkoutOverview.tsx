@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Text, TouchableOpacity, Modal } from "react-native";
+import { View, StyleSheet, Text, TouchableOpacity, Modal, Switch } from "react-native";
 import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
 import { useAtom } from "jotai";
@@ -8,14 +8,26 @@ import { fetchWrapper, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
 import { useDropdown } from "./ExerciseData";
 
-// todo: add workout stats
-// show which muscle groups have been worked
-// compare muscle groups have been worked based on ratio & volume
-// show volume ratios per muscle group?
-// show comparison to historical data for muscle group (how does volume from this chest day compare to previous)?
+// get historical data when workout is started
+// for all previous workouts get
+//    graphing data
+//      volume, sets, reps per group/target
+//      total volume (implicit), number of exercises
+//    comparison data
+//      paginated previous workouts?
+// i want to be able to
+//    compare the volume (+ other data) of muscle groups/targets of current to previous
+//    compare total workout volume
+//    see what i did in that previous workout (similar to the stats page overview)
 
 interface WorkoutOverviewProps {
   onPress: () => void
+}
+
+type DisplayedDataType = 'current' | 'history';
+interface DisplayedDataOption {
+  label: string
+  value: DisplayedDataType
 }
 
 type MuscleType = 'group' | 'target';
@@ -35,11 +47,11 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
 
   const [exercises, _] = useAtom(workoutExercisesAtom);
 
-  // const volumeOptions: VolumeOptionObject[] = [
-  //     { label: 'workout', value: 'workout' },
-  //     { label: 'timespan', value: 'timespan' },
-  //   ]
-  //   const [volumeOptionValue, setVolumeOptionValue]= useState<VolumeOption>('workout');
+  const displayedDataOptions: DisplayedDataOption[] = [
+    { label: 'current workout', value: 'current' },
+    { label: 'workout history', value: 'history' },
+  ]
+  const [displayedDataValue, setDisplayedDataValue] = useState<DisplayedDataType>('current');
 
   const muscleTypeOptions: MuscleTypeOption[] = [
     { label: 'muscle heads', value: 'target' },
@@ -53,6 +65,8 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
     { label: 'cumulative', value: 'cumulative' },
   ]
   const [contributionTypeValue, setContributionTypeValue] = useState<ContributionType>('volume');
+
+  // const [evenDistrbution, setEvenDistrbution] = useState<boolean>(false);
 
   const getBodyWeight = (exercise: WorkoutExercise): number => {
     // send request or do locally?
@@ -177,10 +191,6 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
     }
   };
 
- 
-
-  // todo: change return value based on options choices (useEffect?)
-
   const getValueMap = (): Record<string, number> => {
     const {
       muscleRatios,
@@ -211,23 +221,55 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
     return valueMap;
   };
 
+  const currentData = (
+    <>
+      <Text style={styles.text}>Total volume: {totalVolume} kg</Text>
+      <Text style={styles.text}>Reps: {totalReps}</Text>
+      <Text style={styles.text}>Sets: {totalSets}</Text>
+      <Text style={styles.text}>Exercises: {numExercises}</Text>
+
+      <Text style={styles.text}>Choose a muscle level:</Text>
+      {useDropdown(muscleTypeOptions, muscleTypeValue, setMuscleTypeValue)}
+      <Text style={styles.text}>Choose a contribution type:</Text>
+      {useDropdown(contributionTypeOptions, contributionTypeValue, setContributionTypeValue)}
+    
+      <MuscleGroupSvg
+        valueMap={getValueMap()} 
+        showGroups={muscleTypeValue === 'group'}
+      />
+    </>
+  )
+
+  const historyData = (
+    <></>
+  )
+
+  const displayDataMap: Record<DisplayedDataType, JSX.Element> = {
+    'current': currentData,
+    'history': historyData
+  }
+
   return (
     <View style={styles.modalBackground}>
       <View style={styles.modalContainer}>
         <Text style={commonStyles.boldText}>Overview</Text>
         <View style={styles.dataContainer}>
-          <Text style={styles.text}>Total volume: {totalVolume} kg</Text>
-          <Text style={styles.text}>Reps: {totalReps}</Text>
-          <Text style={styles.text}>Sets: {totalSets}</Text>
-          <Text style={styles.text}>Exercises: {numExercises}</Text>
-
-          <Text style={styles.text}>Choose a muscle level:</Text>
-          {useDropdown(muscleTypeOptions, muscleTypeValue, setMuscleTypeValue)}
-
-          <Text style={styles.text}>Choose a contribution type:</Text>
-          {useDropdown(contributionTypeOptions, contributionTypeValue, setContributionTypeValue)}
+          <Text style={styles.text}>Choose display data:</Text>
+          {useDropdown(displayedDataOptions, displayedDataValue, setDisplayedDataValue)}
+          {displayDataMap[displayedDataValue]}
           
-          <MuscleGroupSvg valueMap={getValueMap()} showGroups={muscleTypeValue === 'group'}/>
+          {/* <View style={styles.switchContainer}>
+            <Text style={styles.text}>Evenly distribute:</Text>
+            <Switch
+              trackColor={{true: '#b4fcac', false: '#767577'}}
+              thumbColor={evenDistrbution ? '#1aff00' : '#f4f3f4'}
+              ios_backgroundColor="#3e3e3e"
+              value={evenDistrbution}
+              onValueChange={setEvenDistrbution}
+            />
+          </View> */}
+
+          
         </View>
         <TouchableOpacity 
           style={[commonStyles.thinTextButton, {width: 50, alignSelf: 'center'}]}
@@ -275,5 +317,10 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     textAlign: 'center',
     alignItems: 'center'
-  }
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    // justifyContent: 'center',
+    alignItems: 'center',
+  },
 })

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollVi
 import { useAtom } from "jotai";
 import { StatusBar } from 'expo-status-bar';
 
-import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom, editWorkoutExercisesAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom } from "@/store/general";
+import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom, editWorkoutExercisesAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom } from "@/store/general";
 import ChooseExercise from "@/components/ChooseExerciseModal";
 import WorkoutOverview from "@/components/WorkoutOverview";
 import { commonStyles } from "@/styles/commonStyles";
@@ -17,6 +17,7 @@ export default function Workout() {
   const [exercises, _] = useAtom(workoutExercisesAtom);
   const [showStartOptions, setShowStartOptions] = useAtom(showWorkoutStartOptionsAtom);
   const [editExercises, setEditExercises] = useAtom(editWorkoutExercisesAtom);
+  const [overviewHistoricalStats, setOverviewHistoricalStats] = useAtom(overviewHistoricalStatsAtom);
 
   const [groupToTargets, setGroupToTargets] = useAtom(muscleGroupToTargetsAtom);
   const [targetoGroup, setTargetoGroup] = useAtom(muscleTargetoGroupAtom);
@@ -24,14 +25,27 @@ export default function Workout() {
   const [chooseNewExercise, setChooseNewExercise] = useState<boolean>(false);
   const [showOverview, setShowOverview] = useState<boolean>(false);
 
-  const createNewWorkout = async () => {
-    setWorkoutExercises([]);
-    setWorkoutStartTime(Date.now());
-
+  const getMuscleMaps = async () => {
     const data = await fetchWrapper('muscles/get_maps', 'GET');
     if (data === null) return;
     setGroupToTargets(data.group_to_targets);
     setTargetoGroup(data.target_to_group);
+  };
+
+  const getOverviewStats = async () => {
+    const data = await fetchWrapper('workout/overview/stats', 'GET');
+    if (data === null) return;
+    setOverviewHistoricalStats(data.workouts);
+  };
+
+  // const getPreviousWorkouts = async () => {};
+
+  const createNewWorkout = async () => {
+    setWorkoutExercises([]);
+    setWorkoutStartTime(Date.now());
+
+    getMuscleMaps();
+    getOverviewStats();
   };
 
   const handleContinueWorkout = () => {
