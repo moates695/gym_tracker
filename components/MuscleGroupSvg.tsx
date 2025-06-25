@@ -80,24 +80,24 @@ export default function MuscleGroupSvg(props: MuscleGroupSvgProps) {
           fill={numToRgbString(getValue('arms', 'tricep'))}
           stroke="#fff"
         />
-        <Path fill={numToRgbString(getValue('arms', 'forearm'))} d="M157 0H279V130H157z" />
-        <Path fill={numToRgbString(getValue('legs', 'calves'))} d="M303 0H367V398H303z" />
-        <Path fill={numToRgbString(getValue('legs', 'quads'))} d="M386 0H500V240H386z" />
-        <Path fill={numToRgbString(getValue('legs', 'hamstrings'))} d="M386 258H500V398H386z" />
-        <Path fill={numToRgbString(getValue('legs', 'glutes'))} d="M205 408H500V476H205z" />
-        <Path fill={numToRgbString(getValue('chest', 'upper'))} d="M335 492H500V592H335z" />
-        <Path fill={numToRgbString(getValue('chest', 'lower'))} d="M72 492H316V592H72z" />
-        <Path fill={numToRgbString(getValue('back', 'lats'))} d="M72 408H194V476H72z" />
-        <Path fill={numToRgbString(getValue('back', 'traps'))} d="M72 328H175V398H72z" />
-        <Path fill={numToRgbString(getValue('back', 'erectors'))} d="M0 328H57V442H0z" />
-        <Path fill={numToRgbString(getValue('back', 'upper middle'))} d="M0 455H57V518H0z" />
-        <Path fill={numToRgbString(getValue('back', 'exterior middle'))} d="M0 532H57V592H0z" />
-        <Path fill={numToRgbString(getValue('shoulders', 'front'))} d="M194 328H290V398H194z" />
-        <Path fill={numToRgbString(getValue('shoulders', 'middle'))} d="M0 258H57V316H0z" />
-        <Path fill={numToRgbString(getValue('shoulders', 'rear'))} d="M72 258H118V316H72z" />
-        <Path fill={numToRgbString(getValue('core', 'lower abs'))} d="M133 258H175V316H133z" />
-        <Path fill={numToRgbString(getValue('core', 'upper abs'))} d="M95 0H148V55H95z" />
-        <Path fill={numToRgbString(getValue('core', 'obliques'))} d="M186 138H279V172H186z" />
+        <Path fill={numToRgbString(getValue('arms', 'forearm'))} d="M157 0H279V130H157z" stroke="#fff" />
+        <Path fill={numToRgbString(getValue('legs', 'calves'))} d="M303 0H367V398H303z" stroke="#fff" />
+        <Path fill={numToRgbString(getValue('legs', 'quads'))} d="M386 0H500V240H386z" stroke="#fff" />
+        <Path fill={numToRgbString(getValue('legs', 'hamstrings'))} d="M386 258H500V398H386z" stroke="#fff" />
+        <Path fill={numToRgbString(getValue('legs', 'glutes'))} d="M205 408H500V476H205z" stroke="#fff" />
+        <Path fill={numToRgbString(getValue('chest', 'upper'))} d="M335 492H500V592H335z" stroke="#fff" />
+        <Path fill={numToRgbString(getValue('chest', 'lower'))} d="M72 492H316V592H72z" stroke="#fff" />
+        <Path fill={numToRgbString(getValue('back', 'lats'))} d="M72 408H194V476H72z" stroke="#fff" />
+        <Path fill={numToRgbString(getValue('back', 'traps'))} d="M72 328H175V398H72z" stroke="#fff" />
+        <Path fill={numToRgbString(getValue('back', 'erectors'))} d="M0 328H57V442H0z" stroke="#fff" />
+        <Path fill={numToRgbString(getValue('back', 'upper middle'))} d="M0 455H57V518H0z" stroke="#fff" />
+        <Path fill={numToRgbString(getValue('back', 'exterior middle'))} d="M0 532H57V592H0z" stroke="#fff" />
+        <Path fill={numToRgbString(getValue('shoulders', 'front'))} d="M194 328H290V398H194z" stroke="#fff" />
+        <Path fill={numToRgbString(getValue('shoulders', 'middle'))} d="M0 258H57V316H0z" stroke="#fff" />
+        <Path fill={numToRgbString(getValue('shoulders', 'rear'))} d="M72 258H118V316H72z" stroke="#fff" />
+        <Path fill={numToRgbString(getValue('core', 'lower abs'))} d="M133 258H175V316H133z" stroke="#fff" />
+        <Path fill={numToRgbString(getValue('core', 'upper abs'))} d="M95 0H148V55H95z" stroke="#fff" />
+        <Path fill={numToRgbString(getValue('core', 'obliques'))} d="M186 138H279V172H186z" stroke="#fff" />
         {/* <Path fill="#D9D9D9" d="M242 184H279V316H242z" /> */}
         {/* <Path fill="#D9D9D9" d="M186 240H232V316H186z" /> */}
       </Svg>

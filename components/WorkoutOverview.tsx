@@ -38,7 +38,7 @@ interface MuscleTypeOption {
   value: MuscleType
 }
 
-type ContributionType = 'maximal' | 'cumulative' | 'volume';
+type ContributionType = 'volume' | 'sets' | 'reps';
 interface ContributionTypeOption {
   label: string
   value: ContributionType
@@ -63,8 +63,8 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
 
   const contributionTypeOptions: ContributionTypeOption[] = [
     { label: 'volume', value: 'volume' },
-    { label: 'maximal', value: 'maximal' },
-    { label: 'cumulative', value: 'cumulative' },
+    { label: 'sets', value: 'sets' },
+    { label: 'reps', value: 'reps' },
   ]
   const [contributionTypeValue, setContributionTypeValue] = useState<ContributionType>('volume');
 
@@ -112,100 +112,68 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
   } = getTotalStats();
 
   const getMuscleStats = () => {
-    const muscleRatios: any = {};
-    const cumulativeMuscleRatios: any = {};
-    const volumeMuscleRatios: any = {};
+    const ratios: Record<string, any> = {
+      "volume": {},
+      "sets": {},
+      "reps": {},
+    };
 
     for (const exercise of exercises) {
       const validSets = getValidSets(exercise);
       if (validSets.length === 0) continue;
 
-      let volume = 0;
+      let contributions: Record<string, number> = {
+        "volume": 0,
+        "sets": 0,
+        "reps": 0,
+      };
       for (const set_data of validSets) {
         const weight = exercise.is_body_weight ? getBodyWeight(exercise) : (set_data.weight ?? 0);
-        const reps = (set_data.reps ?? 0);
         const sets = (set_data.num_sets ?? 0);
+        const reps = (set_data.reps ?? 0);
         
-        volume += reps * weight * sets;
+        contributions["volume"] += reps * weight * sets;
+        contributions["sets"] = sets;
+        contributions["reps"] = reps;
       }
 
-      for (const muscleData of exercise.muscle_data) {
-        const groupName = muscleData.group_name;
-        
-        if (!muscleRatios.hasOwnProperty(groupName)) {
-          muscleRatios[groupName] = {
-            "targets": {}
-          };
-          cumulativeMuscleRatios[groupName] = {
-            "targets": {}
-          };
-          volumeMuscleRatios[groupName] = {
-            "targets": {}
-          };
-        }
-        
-        for (const targetData of muscleData.targets) {
-          const targetName = targetData.target_name;
-          const targets = muscleRatios[groupName]["targets"];
+      for (const [ratioKey, ratioData] of Object.entries(ratios) as [string, any][]) {
+        for (const muscleData of exercise.muscle_data) {
+          const groupName = muscleData.group_name;
 
-          const currRatio = targets[targetName] ?? 0;
-          if (currRatio < targetData.ratio) {
-            targets[targetName] = targetData.ratio;
+          if (!ratioData.hasOwnProperty(groupName)) {
+            ratioData[groupName] = {
+              "targets": {}
+            }
           }
 
-          const cumulativeTargets = cumulativeMuscleRatios[groupName]["targets"];
-          if (!cumulativeTargets.hasOwnProperty(targetName)) {
-            cumulativeTargets[targetName] = 0;
-          }
-          cumulativeTargets[targetName] += targetData.ratio;
+          for (const targetData of muscleData.targets) {
+            const targetName = targetData.target_name;
+            const targets = ratioData[groupName]["targets"];
 
-          const volumeTargets = volumeMuscleRatios[groupName]["targets"];
-          if (!volumeTargets.hasOwnProperty(targetName)) {
-            volumeTargets[targetName] = 0;
+            if (!targets.hasOwnProperty(targetName)) {
+              targets[targetName] = 0;
+            }
+            const weightFactor = ratioKey !== 'volume' ? 1 : (targetData.ratio / 10)
+            targets[targetName] += contributions[ratioKey] * weightFactor;
           }
-          volumeTargets[targetName] += volume * targetData.ratio;
-
         }
       }
     }
 
-    for (const groupData of Object.values(muscleRatios) as Record<string, any>[]) {
-      const ratio = Math.max(...Object.values(groupData["targets"] as Record<string, number>))
-      groupData["value"] = ratio;
+    for (const [ratioKey, ratioData] of Object.entries(ratios) as [string, any][]) {
+      for (const groupData of Object.values(ratioData) as Record<string, any>[]) {
+        const targetValues: number[] = Object.values(groupData["targets"]);
+        const sum: number = targetValues.reduce((a, b) => (a as number) + (b as number), 0);
+        groupData["value"] = sum / targetValues.length;
+      }
     }
 
-    for (const groupData of Object.values(cumulativeMuscleRatios) as Record<string, any>[]) {
-      const targetValues: number[] = Object.values(groupData["targets"]);
-      const sum: number = targetValues.reduce((a, b) => (a as number) + (b as number), 0);
-      groupData["value"] = sum / targetValues.length;
-    }
-
-    for (const groupData of Object.values(volumeMuscleRatios) as Record<string, any>[]) {
-      const targetValues: number[] = Object.values(groupData["targets"]);
-      const sum: number = targetValues.reduce((a, b) => (a as number) + (b as number), 0);
-      groupData["value"] = sum / targetValues.length;
-    }
-
-    return {
-      muscleRatios,
-      cumulativeMuscleRatios,
-      volumeMuscleRatios
-    }
+    return ratios;
   };
 
   const getValueMap = (): Record<string, number> => {
-    const {
-      muscleRatios,
-      cumulativeMuscleRatios,
-      volumeMuscleRatios
-    } = getMuscleStats();
-
-    const ratiosMap: Record<ContributionType, any> = {
-      'maximal': muscleRatios,
-      'cumulative': cumulativeMuscleRatios,
-      'volume': volumeMuscleRatios
-    }
-    const ratios = ratiosMap[contributionTypeValue] ?? {};
+    const ratios = getMuscleStats()[contributionTypeValue] ?? {};
 
     const valueMap: Record<string, number> = {};
     if (muscleTypeValue === 'group') {
