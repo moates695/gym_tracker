@@ -82,6 +82,10 @@ export default function Workout() {
     setEditExercises(false);
   }, [exercises.length, editExercises])
 
+  useEffect(() => {
+    getMuscleMaps();
+  }, [])
+
   return (
     <SafeAreaView style={styles.container}> 
       {Platform.OS == 'android' &&

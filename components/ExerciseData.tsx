@@ -36,8 +36,8 @@ interface ExerciseDataProps {
 
 type DataVisual = 'graph' | 'table';
 
-type TimeSpanOption = 'week' | 'month' | '3_months' | '6_months' | 'year' | 'all'
-interface TimeSpanOptionObject {
+export type TimeSpanOption = 'week' | 'month' | '3_months' | '6_months' | 'year' | 'all'
+export interface TimeSpanOptionObject {
   label: string
   value: TimeSpanOption
 }

@@ -7,6 +7,8 @@ import { muscleGroupToTargetsAtom, muscleTargetoGroupAtom, WorkoutExercise, work
 import { fetchWrapper, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
 import { useDropdown } from "./ExerciseData";
+import { TimeSpanOption, TimeSpanOptionObject } from "./ExerciseData";
+import { Dropdown } from "react-native-element-dropdown";
 
 // get historical data when workout is started
 // for all previous workouts get
@@ -19,6 +21,12 @@ import { useDropdown } from "./ExerciseData";
 //    compare the volume (+ other data) of muscle groups/targets of current to previous
 //    compare total workout volume
 //    see what i did in that previous workout (similar to the stats page overview)
+
+// for a certain lookback compare
+// total workout volume, sets, reps, duration to current
+// for a certain lookback + muscle group do the same (without the time)
+
+// 
 
 // todo implement histories
 
@@ -42,6 +50,12 @@ type ContributionType = 'volume' | 'sets' | 'reps';
 interface ContributionTypeOption {
   label: string
   value: ContributionType
+}
+
+type HistoryComparisonType = 'workout' | 'muscle_group' | 'muscle_target';
+interface HistoryComparisonOption {
+  label: string
+  value: HistoryComparisonType
 }
 
 export default function WorkoutOverview(props: WorkoutOverviewProps) {
@@ -68,7 +82,22 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
   ]
   const [contributionTypeValue, setContributionTypeValue] = useState<ContributionType>('volume');
 
-  // const [evenDistrbution, setEvenDistrbution] = useState<boolean>(false);
+  const historyComparisonOptions: HistoryComparisonOption[] = [
+    { label: 'workout totals', value: 'workout' },
+    { label: 'muscle group', value: 'muscle_group' },
+    { label: 'muscle target', value: 'muscle_target' },
+  ]
+  const [historyComparisonValue, setHistoryComparisonValue] = useState<HistoryComparisonType>('workout')
+
+  const timeSpanOptions: TimeSpanOptionObject[] = [
+    { label: 'week', value: 'week' },
+    { label: 'month', value: 'month' },
+    { label: '3 months', value: '3_months' },
+    { label: '6 months', value: '6_months' },
+    { label: 'year', value: 'year' },
+    { label: 'all', value: 'all' },
+  ]
+  const [timeSpanOptionValue, setTimeSpanOptionValue] = useState<TimeSpanOption>('month');
 
   const getBodyWeight = (exercise: WorkoutExercise): number => {
     // send request or do locally?
@@ -191,6 +220,38 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
     return valueMap;
   };
 
+  const renderItem = (item: any, selected: any): JSX.Element => {
+      return (
+        <View
+          style={{
+            padding: 10,
+            borderWidth: selected ? 1 : 0,
+            borderColor: selected ? 'red' : 'transparent',
+            backgroundColor: 'black',
+          }}
+        >
+          <Text style={{ color: selected ? 'red' : 'white' }}>{item.label}</Text>
+        </View>
+      )
+    };
+
+  const lookbackComponent = (
+    <>
+      <Text style={styles.text}>Choose a lookback:</Text>
+      <Dropdown
+        data={timeSpanOptions}
+        value={timeSpanOptionValue}
+        labelField="label"
+        valueField="value"
+        onChange={item => {setTimeSpanOptionValue(item.value)}}
+        style={styles.dropdownButton}
+        selectedTextStyle={styles.dropdownText}
+        containerStyle={styles.dropdownContainerStyle}
+        renderItem={(item, selected) => renderItem(item, selected)}
+      />
+    </>
+  );
+
   const currentData = (
     <>
       <Text style={styles.text}>Total volume: {totalVolume} kg</Text>
@@ -211,7 +272,13 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
   )
 
   const historyData = (
-    <></>
+    <>
+      <Text style={styles.text}>Choose a comparison:</Text>
+      {useDropdown(historyComparisonOptions, historyComparisonValue, setHistoryComparisonValue)}
+      <Text style={styles.text}>Choose a contribution type:</Text>
+      {useDropdown(contributionTypeOptions, contributionTypeValue, setContributionTypeValue)}
+      {lookbackComponent}
+    </>
   )
 
   const displayDataMap: Record<DisplayedDataType, JSX.Element> = {
@@ -227,19 +294,6 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
           <Text style={styles.text}>Choose display data:</Text>
           {useDropdown(displayedDataOptions, displayedDataValue, setDisplayedDataValue)}
           {displayDataMap[displayedDataValue]}
-          
-          {/* <View style={styles.switchContainer}>
-            <Text style={styles.text}>Evenly distribute:</Text>
-            <Switch
-              trackColor={{true: '#b4fcac', false: '#767577'}}
-              thumbColor={evenDistrbution ? '#1aff00' : '#f4f3f4'}
-              ios_backgroundColor="#3e3e3e"
-              value={evenDistrbution}
-              onValueChange={setEvenDistrbution}
-            />
-          </View> */}
-
-          
         </View>
         <TouchableOpacity 
           style={[commonStyles.thinTextButton, {width: 50, alignSelf: 'center'}]}
@@ -292,5 +346,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     // justifyContent: 'center',
     alignItems: 'center',
+  },
+  dropdownButton: {
+    backgroundColor: 'black',
+    width: 200,
+    paddingLeft: 10,
+    paddingTop: 5,
+    paddingBottom: 5,
+    borderWidth: 1,
+    borderColor: '#ccc'
+  },
+  dropdownContainerStyle: {
+    backgroundColor: 'black',
+    maxHeight: 250,
+  },
+  dropdownText: {
+    color: 'white',
+    fontSize: 14
   },
 })
