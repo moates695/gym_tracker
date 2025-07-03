@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { TouchableOpacity, View, Text, StyleSheet, ScrollView, TextInput, Switch } from "react-native";
 
 import { fetchExercises, fetchWrapper } from "@/middleware/helpers";
-import { useAtom } from "jotai";
-import { exerciseListAtom, MuscleData, WorkoutExercise } from "@/store/general";
+import { useAtom, useAtomValue } from "jotai";
+import { exerciseListAtom, MuscleData, muscleGroupToTargetsAtom, WorkoutExercise } from "@/store/general";
 import ChooseExerciseData from "./ChooseExerciseItem";
 import { commonStyles } from "@/styles/commonStyles";
 import InputField from "./InputField";
@@ -17,6 +17,8 @@ interface ChooseExerciseProps {
 export default function ChooseExercise(props: ChooseExerciseProps) {
   const { onChoose } = props;
   
+  const muscleGroupToTargets = useAtomValue(muscleGroupToTargetsAtom);
+
   const [exercises, setExercises] = useAtom(exerciseListAtom);
   const [displayedExercises, setDisplayedExercises] = useState<WorkoutExercise[]>(exercises); 
   const [showFilters, setShowFilters] = useState<boolean>(false);

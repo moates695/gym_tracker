@@ -9,6 +9,7 @@ import MuscleGroupSvg from "./MuscleGroupSvg";
 import { useDropdown } from "./ExerciseData";
 import { TimeSpanOption, TimeSpanOptionObject } from "./ExerciseData";
 import { Dropdown } from "react-native-element-dropdown";
+import DataTable from "./DataTable";
 
 // get historical data when workout is started
 // for all previous workouts get
@@ -52,6 +53,12 @@ interface ContributionTypeOption {
   value: ContributionType
 }
 
+type TotalsContributionType = 'volume' | 'sets' | 'reps' | 'duration' | 'num_exercises';
+interface TotalsContributionTypeOption {
+  label: string
+  value: TotalsContributionType
+}
+
 type HistoryComparisonType = 'workout' | 'muscle_group' | 'muscle_target';
 interface HistoryComparisonOption {
   label: string
@@ -88,6 +95,15 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
     { label: 'muscle target', value: 'muscle_target' },
   ]
   const [historyComparisonValue, setHistoryComparisonValue] = useState<HistoryComparisonType>('workout')
+
+  const totalsContributionTypeOptions: TotalsContributionTypeOption[] = [
+    { label: 'volume', value: 'volume' },
+    { label: 'sets', value: 'sets' },
+    { label: 'reps', value: 'reps' },
+    { label: 'duration', value: 'duration' },
+    { label: '# exercises', value: 'num_exercises' },
+  ]
+  const [totalsContributionTypeValue, setTotalsContributionTypeValue] = useState<ContributionType>('volume');
 
   const timeSpanOptions: TimeSpanOptionObject[] = [
     { label: 'week', value: 'week' },
@@ -252,13 +268,19 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
     </>
   );
 
+  const currentDataTableHeaders: string[] = ['Volume', 'Reps', 'Sets', 'Exercises'];
+  const currentDataTableRows: (number | string)[][] = [
+    [totalVolume, totalReps, totalSets, numExercises]
+  ];
+
   const currentData = (
     <>
-      <Text style={styles.text}>Total volume: {totalVolume} kg</Text>
-      <Text style={styles.text}>Reps: {totalReps}</Text>
-      <Text style={styles.text}>Sets: {totalSets}</Text>
-      <Text style={styles.text}>Exercises: {numExercises}</Text>
-
+      <View style={styles.dataTableContainer}>
+        <DataTable 
+          headers={currentDataTableHeaders}
+          rows={currentDataTableRows}
+        />
+      </View>
       <Text style={styles.text}>Choose a muscle level:</Text>
       {useDropdown(muscleTypeOptions, muscleTypeValue, setMuscleTypeValue)}
       <Text style={styles.text}>Choose a contribution type:</Text>
@@ -270,6 +292,13 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
       />
     </>
   )
+
+  const historyWorkoutTotals = (
+    <>
+    </>
+  );
+
+
 
   const historyData = (
     <>
@@ -364,4 +393,8 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14
   },
+  dataTableContainer: {
+    height: 50,
+    padding: 5,
+  }
 })

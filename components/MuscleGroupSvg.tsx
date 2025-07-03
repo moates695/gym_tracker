@@ -67,11 +67,14 @@ export default function MuscleGroupSvg(props: MuscleGroupSvgProps) {
   return (
     <View style={styles.container}>
       <Svg
-        width={441}
-        height={451}
+        // width={441}
+        // height={451}
+        width="100%"
+        height="100%"
         viewBox="0 0 882 902"
         fill="none"
         {...props}
+        style={styles.svg}
       >
         <Path
           d="M182.893 211.465l-.073 37.811c-6.334 24.642-51.746 26.655-64.351 21.283-15.341-9.226-31.483-20.77-38.469-42.919 38.924-12.585 65.537-16.175 102.893-16.175z"
@@ -470,5 +473,9 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     paddingTop: 10,
     paddingBottom: 10,
+    height: 400,
+  },
+  svg: {
+    marginLeft: 20,
   }
 })
