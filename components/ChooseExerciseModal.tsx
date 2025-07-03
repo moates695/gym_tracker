@@ -8,10 +8,16 @@ import ChooseExerciseData from "./ChooseExerciseItem";
 import { commonStyles } from "@/styles/commonStyles";
 import InputField from "./InputField";
 import workoutExercise from "./WorkoutExercise";
-import Dropdown, { DropdownOption } from "./Dropdown";
+// import Dropdown, { DropdownOption } from "./Dropdown";
+import { Dropdown } from "react-native-element-dropdown";
 
 interface ChooseExerciseProps {
   onChoose: () => void
+}
+
+interface OptionsObject {
+  label: string
+  value: string
 }
 
 export default function ChooseExercise(props: ChooseExerciseProps) {
@@ -24,55 +30,81 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [searchBar, setSearchBar] = useState<string>('');
   
-  const [selectedMuscleGroupIdx, setSelectedMuscleGroupIdx] = useState<number>(0);
-  const muscleGroupOptions = [
-    { label: 'muscle group (all)', value: 'all' },
-    { label: 'arms', value: 'arms' },
-    { label: 'back', value: 'back' },
-    { label: 'chest', value: 'chest' },
-    { label: 'core', value: 'core' },
-    { label: 'legs', value: 'legs' },
-    { label: 'shoulders', value: 'shoulders' },
-  ]
+  // const [selectedMuscleGroupIdx, setSelectedMuscleGroupIdx] = useState<number>(0);
+  // const muscleGroupOptions = [
+  //   { label: 'muscle group (all)', value: 'all' },
+  //   { label: 'arms', value: 'arms' },
+  //   { label: 'back', value: 'back' },
+  //   { label: 'chest', value: 'chest' },
+  //   { label: 'core', value: 'core' },
+  //   { label: 'legs', value: 'legs' },
+  //   { label: 'shoulders', value: 'shoulders' },
+  // ]
 
-  const [selectedMuscleTargetIdx, setSelectedMuscleTargetIdx] = useState<number>(0);
-  const muscleTargetOptions: Record<string, any> = {
-    arms: [
-      { label: 'bicep', value: 'bicep' },
-      { label: 'tricep', value: 'tricep' },
-      { label: 'forearm', value: 'forearm' },
-    ],
-    back: [
-      { label: 'lats', value: 'lats' },
-      { label: 'upper middle', value: 'upper middle' },
-      { label: 'exterior middle', value: 'exterior middle' },
-      { label: 'traps', value: 'traps' },
-      { label: 'erectors', value: 'erectors' },
-    ],
-    chest: [
-      { label: 'upper', value: 'upper' },
-      { label: 'lower', value: 'lower' },
-    ],
-    core: [
-      { label: 'upper abs', value: 'upper abs' },
-      { label: 'lower abs', value: 'lower abs' },
-      { label: 'obliques', value: 'obliques' },
-    ],
-    legs: [
-      { label: 'calves', value: 'calves' },
-      { label: 'quads', value: 'quads' },
-      { label: 'hamstrings', value: 'hamstrings' },
-      { label: 'glutes', value: 'glutes' },
-    ],
-    shoulders: [
-      { label: 'front', value: 'front' },
-      { label: 'middle', value: 'middle' },
-      { label: 'rear', value: 'rear' },
-    ]
-  }
+  // const muscleGroupOptions: OptionsObject[] = Object.keys(muscleGroupToTargets).map(group => ({
+  //   label: group,
+  //   value: group
+  // }));
 
-  const [selectedRatioIdx, setSelectedRatioIdx] = useState<number>(0);
-  const ratioOptions = [
+  const muscleGroupOptions: OptionsObject[] = ((): OptionsObject[] => {
+    const options = [{ label: 'muscle group (all)', value: 'all' }];
+    options.push(...Object.keys(muscleGroupToTargets).map(group => ({
+      label: group,
+      value: group
+    })))
+    return options;
+  })();
+  const [muscleGroupValue, setMuscleGroupValue] = useState<string>('all');
+
+  // const [selectedMuscleTargetIdx, setSelectedMuscleTargetIdx] = useState<number>(0);
+  // const muscleTargetOptions: Record<string, any> = {
+  //   arms: [
+  //     { label: 'bicep', value: 'bicep' },
+  //     { label: 'tricep', value: 'tricep' },
+  //     { label: 'forearm', value: 'forearm' },
+  //   ],
+  //   back: [
+  //     { label: 'lats', value: 'lats' },
+  //     { label: 'upper middle', value: 'upper middle' },
+  //     { label: 'exterior middle', value: 'exterior middle' },
+  //     { label: 'traps', value: 'traps' },
+  //     { label: 'erectors', value: 'erectors' },
+  //   ],
+  //   chest: [
+  //     { label: 'upper', value: 'upper' },
+  //     { label: 'lower', value: 'lower' },
+  //   ],
+  //   core: [
+  //     { label: 'upper abs', value: 'upper abs' },
+  //     { label: 'lower abs', value: 'lower abs' },
+  //     { label: 'obliques', value: 'obliques' },
+  //   ],
+  //   legs: [
+  //     { label: 'calves', value: 'calves' },
+  //     { label: 'quads', value: 'quads' },
+  //     { label: 'hamstrings', value: 'hamstrings' },
+  //     { label: 'glutes', value: 'glutes' },
+  //   ],
+  //   shoulders: [
+  //     { label: 'front', value: 'front' },
+  //     { label: 'middle', value: 'middle' },
+  //     { label: 'rear', value: 'rear' },
+  //   ]
+  // }
+
+  const muscleTargetOptions = ((): Record<string, OptionsObject[]> => {
+    const optionsMap: Record<string, OptionsObject[]> = {};
+    for (const [group, targets] of Object.entries(muscleGroupToTargets)) {
+      optionsMap[group] = targets.map(name => ({
+        label: name,
+        value: name
+      }));
+    }
+    return optionsMap;
+  })();
+
+  // const [selectedRatioIdx, setSelectedRatioIdx] = useState<number>(0);
+  const ratioOptions: OptionsObject[] = [
     { label: 'primary', value: '7' },
     { label: 'secondary', value: '4' },
     { label: 'stabiliser', value: '1' },

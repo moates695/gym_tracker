@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Text, TouchableOpacity, Modal, Switch } from "react-native";
 import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { muscleGroupToTargetsAtom, muscleTargetoGroupAtom, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
 import { fetchWrapper, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
@@ -68,7 +68,8 @@ interface HistoryComparisonOption {
 export default function WorkoutOverview(props: WorkoutOverviewProps) {
   const { onPress } = props;
 
-  const [exercises, _] = useAtom(workoutExercisesAtom);
+  const exercises = useAtomValue(workoutExercisesAtom);
+  const muscleGroupToTargets = useAtomValue(muscleGroupToTargetsAtom);
 
   const displayedDataOptions: DisplayedDataOption[] = [
     { label: 'current workout', value: 'current' },
@@ -293,17 +294,18 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
     </>
   )
 
-  const historyWorkoutTotals = (
-    <>
-    </>
-  );
-
-
-
   const historyData = (
     <>
       <Text style={styles.text}>Choose a comparison:</Text>
       {useDropdown(historyComparisonOptions, historyComparisonValue, setHistoryComparisonValue)}
+      {historyComparisonValue === 'muscle_group' &&
+        <>
+        </>
+      }
+      {historyComparisonValue === 'muscle_target' &&
+        <>
+        </>
+      }
       <Text style={styles.text}>Choose a contribution type:</Text>
       {useDropdown(contributionTypeOptions, contributionTypeValue, setContributionTypeValue)}
       {lookbackComponent}
