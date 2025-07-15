@@ -66,7 +66,7 @@ interface VolumeTimespanObject {
   value: VolumeTimespan
 }
 
-export const useDropdown = (options: any, value: any, setter: any): JSX.Element => {
+export const useDropdown = (options: any, value: any, setter: any, disabled: boolean = false): JSX.Element => {
   return (
     <Dropdown 
       data={options}
@@ -75,7 +75,7 @@ export const useDropdown = (options: any, value: any, setter: any): JSX.Element 
       valueField="value"
       onChange={item => {setter(item.value)}}
       style={styles.dropdownButton}
-      selectedTextStyle={styles.dropdownText}
+      selectedTextStyle={disabled ? {color: 'red', fontSize: 14} : styles.dropdownText}
       containerStyle={styles.dropdownContainerStyle}
       renderItem={(item, selected) => (
         <View
@@ -89,6 +89,7 @@ export const useDropdown = (options: any, value: any, setter: any): JSX.Element 
           <Text style={{ color: selected ? 'red' : 'white' }}>{item.label}</Text>
         </View>
       )}
+      disable={disabled}
     />
   )
 };
