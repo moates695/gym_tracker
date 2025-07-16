@@ -52,7 +52,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
   })();
   const [muscleTargetValue, setMuscleTargetValue] = useState<string>('disabled');
 
-  type RatioType = '7' | '4' | '1';
+  type RatioType = '7' | '4' | '1' | 'disabled';
   interface RatioTypeOption {
     label: string
     value: RatioType
@@ -63,7 +63,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
     { label: 'secondary', value: '4' },
     { label: 'stabiliser', value: '1' },
   ]
-  const [ratioOptionsValue, setRatioOptionsValue] = useState<RatioType>('7');
+  const [ratioOptionsValue, setRatioOptionsValue] = useState<RatioType>('disabled');
 
   type WeightType = 'all' | 'free' | 'cable' | 'machine';
   interface WeightTypeOption {
@@ -101,14 +101,16 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
     setMuscleGroupValue(value);
     if (value === 'all') {
       setMuscleTargetValue('disabled');
+      setRatioOptionsValue('disabled');
     } else {
       setMuscleTargetValue(muscleTargetOptions[value][0].value);
+      setRatioOptionsValue('7');
     }
   };
 
   const getMuscleTargetOptions = (): OptionsObject[] => {
     if (muscleGroupValue === 'all') {
-      return [{ label: 'disabled', value: 'disabled' }];
+      return [{ label: 'disabled (select group)', value: 'disabled' }];
     }
     const temp = muscleTargetOptions[muscleGroupValue];
     return [{ label: 'muscle target (all)', value: 'all' }].concat(temp);
@@ -120,13 +122,8 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
   };
 
   const getActivationThreshold = (): OptionsObject[] => {
-    // if (selectedMuscleGroupIdx === 0) return [
-    //   { label: 'disabled', value: 'disabled' },
-    // ];
-    // return ratioOptions;
-
     if (muscleGroupValue === 'all') {
-      return [{ label: 'disabled', value: 'disabled' }];
+      return [{ label: 'disabled (select group)', value: 'disabled' }];
     }
     return ratioOptions;
   };
@@ -180,7 +177,6 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
   };
 
   const weightTypeFilter = (tempExercises: WorkoutExercise[]): WorkoutExercise[] => {
-    // const weightType = weightTypeOptions[selectedWeightTypeIdx].value;
     const weightType = weightTypeValue;
     if (weightType === 'all') return tempExercises;
 
@@ -244,6 +240,8 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
                 value={searchBar}
                 onChangeText={setSearchBar} 
                 style={styles.input}
+                placeholder="search filter"
+                placeholderTextColor={'#ccc'}
               />
               <Text style={styles.text}>Weight type:</Text>
               {useDropdown(weightTypeOptions, weightTypeValue, setWeightTypeValue)}
@@ -264,7 +262,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
               <Text style={styles.text}>Muscle target:</Text>
               {useDropdown(getMuscleTargetOptions(), muscleTargetValue, updateSelectedMuscleTarget, muscleGroupValue==='all')}
               <Text style={styles.text}>Activation threshold:</Text>
-              {useDropdown(ratioOptions, ratioOptionsValue, setRatioOptionsValue)}
+              {useDropdown(getActivationThreshold(), ratioOptionsValue, setRatioOptionsValue, muscleGroupValue==='all')}
             </View>
           </View>
         }
