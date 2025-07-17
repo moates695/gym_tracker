@@ -3,7 +3,7 @@ import { TouchableOpacity, View, Text, StyleSheet, ScrollView, TextInput, Switch
 
 import { fetchExercises, fetchWrapper } from "@/middleware/helpers";
 import { useAtom, useAtomValue } from "jotai";
-import { exerciseListAtom, MuscleData, muscleGroupToTargetsAtom, WorkoutExercise } from "@/store/general";
+import { exerciseListAtom, MuscleData, muscleGroupToTargetsAtom, WorkoutExercise, WeightType } from "@/store/general";
 import ChooseExerciseData from "./ChooseExerciseItem";
 import { commonStyles } from "@/styles/commonStyles";
 import InputField from "./InputField";
@@ -65,10 +65,10 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
   ]
   const [ratioOptionsValue, setRatioOptionsValue] = useState<RatioType>('disabled');
 
-  type WeightType = 'all' | 'free' | 'cable' | 'machine';
+  type WeightTypeExtended = WeightType | 'all';
   interface WeightTypeOption {
     label: string
-    value: WeightType
+    value: WeightTypeExtended
   }
 
   const weightTypeOptions: WeightTypeOption[] = [
@@ -77,7 +77,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
     { label: 'cable', value: 'cable' },
     { label: 'machine', value: 'machine' },
   ]
-  const [weightTypeValue, setWeightTypeValue] = useState<WeightType>('all');
+  const [weightTypeValue, setWeightTypeValue] = useState<WeightTypeExtended>('all');
 
   const [customOnly, setCustomOnly] = useState<boolean>(false);
 

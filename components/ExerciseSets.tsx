@@ -7,6 +7,7 @@ import ShiftTextInput from "./ShiftTextInput";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { commonStyles } from "@/styles/commonStyles";
+import ExerciseSet from "./ExerciseSet";
 
 interface ExerciseSetsProps {
   exercise: WorkoutExercise
@@ -28,67 +29,11 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
   const [deletePressOn, setDeletePressOn] = useState<boolean[]>(Array(exercise.set_data.length).fill(false));
   const [copyPressOn, setCopyPressOn] = useState<boolean[]>(Array(exercise.set_data.length).fill(false));
 
-  useEffect(() => {
-    const temp: string[] = [];
-    for (const data of exercise.set_data) {
-      temp.push(formatFloatString((data.weight ?? '').toString()));
-    }
-    setDisplayWeights(temp);
-  }, []);
-
-  const handleUpdateInteger = (text: string, index: number, key: 'reps' | 'num_sets') => {
-    text = text.replace(/\D/g, '');
-    const tempSetData: SetData[] = [...exercise.set_data];
-    let num: any = parseInt(text);
-    if (isNaN(num)) num = null;
-    tempSetData[index][key] = num;
-    updateExerciseSetData(tempSetData);
-  }
-
-  const handleUpdateWeight = (text: string, index: number) => {
-    const cleanedText = text.replace(/[^0-9.]/g, '');
-    const formattedText = formatFloatString(cleanedText);
-
-    const tempDisplayWeights: string[] = [...displayWeights];
-    tempDisplayWeights[index] = formattedText;
-    setDisplayWeights(tempDisplayWeights);
-
-    let weight = null;
-    if (formattedText !== '' && formattedText !== '.') {
-      weight = Math.abs(parseFloat(formattedText) || 0);
-    }
-    const tempSetData: SetData[] = [...exercise.set_data];
-    tempSetData[index].weight = weight;
-    updateExerciseSetData(tempSetData);
-  };
-
-  const formatFloatString = (text: string): string => {
-    const parts = text.split('.');
-    let formattedText = parts[0];
-    if (parts.length > 1) {
-      formattedText += '.' + parts[1].substring(0, 3);
-    }
-    return formattedText;
-  };
-
   const updateExerciseSetData = (set_data: any) => {
     const tempExercises: WorkoutExercise[] = [...exercises];
     tempExercises[exerciseIndex].set_data = set_data;
     setExercises(tempExercises);
   };
-
-  const handleShiftSet = (index: number, increase: boolean) => {
-    const tempSetData = [...exercise.set_data];
-    let num = tempSetData[index].num_sets;
-    if (increase) {
-      num = num !== null ? ++num : 1
-    } else {
-      if (num === 0 || num === null) return;
-      tempSetData[index].num_sets = --num;
-    }
-    tempSetData[index].num_sets = num;
-    updateExerciseSetData(tempSetData);
-  }
 
   const handleCopySet = (index: number) => {
     const tempSetData = [...exercise.set_data];
@@ -189,10 +134,6 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
     setCopyPressOn(Array(exercise.set_data.length).fill(false));
   }, [exercise.set_data.length])
 
-  // useEffect(() => {
-  //   console.log(exercise.set_data)
-  // }, [exercise.set_data])
-
   return (
     <View style={styles.container}>
       <View style={[styles.row, styles.headerRow]}>
@@ -203,45 +144,7 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
         <View style={styles.button}/>
       </View>
       {exercise.set_data.map((set_data: SetData, index: number) => (
-        <View key={index} style={styles.container}>
-          <View style={styles.row}>
-            <TouchableOpacity
-              onPress={() => handleDeletePress(index)}
-              style={styles.button}
-              onPressIn={() => handleDeletePressOn(index, true)}
-              onPressOut={() =>  handleDeletePressOn(index, false)}
-              activeOpacity={1}
-            >
-              <MaterialIcons name={deletePressOn[index] ? 'delete' : "delete-outline"} size={20} color="red" />
-            </TouchableOpacity>
-            <TextInput 
-              style={styles.textInput}
-              keyboardType="number-pad"
-              onChangeText={(text) => handleUpdateInteger(text, index, 'reps')}
-              value={(set_data.reps ?? '').toString()}
-            />
-            <TextInput 
-              style={styles.textInput}
-              keyboardType="number-pad"
-              onChangeText={(text) => handleUpdateWeight(text, index)}
-              value={displayWeights[index]}
-            />
-            <ShiftTextInput
-              onChangeText={(text) => handleUpdateInteger(text, index, 'num_sets')}
-              value={(set_data.num_sets ?? '').toString()}
-              shiftPress={(increase: boolean) => handleShiftSet(index, increase)}
-            />
-            <TouchableOpacity
-              onPress={() => handleCopySet(index)}
-              style={styles.button}
-              onPressIn={() => handleCopyPressOn(index, true)}
-              onPressOut={() => handleCopyPressOn(index, false)}
-              activeOpacity={1}
-            >
-              <Ionicons name={copyPressOn[index] ? 'copy' : 'copy-outline'} color={'green'} size={20} />
-            </TouchableOpacity>
-          </View>
-        </View>
+        <ExerciseSet key={index} exercise={exercise} exerciseIndex={exerciseIndex} set_data={set_data} setIndex={index}/>
       ))}
       <View style={styles.row}>
         <TouchableOpacity
