@@ -7,24 +7,34 @@ import ShiftTextInput from "./ShiftTextInput";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { commonStyles } from "@/styles/commonStyles";
+import AntDesign from "@expo/vector-icons/AntDesign";
 
 interface ExerciseSetProps {
   exercise: WorkoutExercise
   exerciseIndex: number
   set_data: SetData
   setIndex: number
+  openOptionsList: boolean[]
+  setOpenOptionsList: (list: boolean[]) => void
 }
 
 export default function ExerciseSet(props: ExerciseSetProps) {
-  const { exercise, exerciseIndex, set_data, setIndex } = props;
+  const { exercise, exerciseIndex, set_data, setIndex, openOptionsList, setOpenOptionsList } = props;
+  const openOptions = openOptionsList[setIndex];
 
   const [exercises, setExercises] = useAtom(workoutExercisesAtom);
+  // const [openOptionsList, SetOpenOptionsList] = useAtom(openSetOptionsAtom);
+  // const openOption = openOptionsList?.[exerciseIndex]?.[setIndex] ?? false;
 
   const [displayWeight, setDisplayWeight] = useState<string>('');
-  const [openOptions, setOpenOptions] = useState<boolean>(false);
-  const [openOptionsPressOn, setOpenOptionsPressOn] = useState<boolean>(false);
+  // const [openOptions, setOpenOptions] = useState<boolean>(false);
   const [copyPressOn, setCopyPressOn] = useState<boolean>(false);
+  const [deletePressOn, setDeletePressOn] = useState<boolean>(false);
+  const [moveUpPressOn, setMoveUpPressOn] = useState<boolean>(false);
+  const [moveDownPressOn, setMoveDownPressOn] = useState<boolean>(false);
 
+  const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false);
+  const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
 
   const handleUpdateInteger = (text: string, key: 'reps' | 'num_sets') => {
     text = text.replace(/\D/g, '');
@@ -83,123 +93,157 @@ export default function ExerciseSet(props: ExerciseSetProps) {
     return formattedText;
   };
 
-  const handleOpenOptions = () => {
-    setOpenOptions(!openOptions)
-  }
+  // const handleOpenOptions = () => {
+  //   setOpenOptions(!openOptions)
+  // }
   
   const handleCopySet = () => {
     const tempSetData = [...exercise.set_data];
     const tempSet = { ...tempSetData[setIndex] };
     tempSetData.push(tempSet);
     updateExerciseSetData(tempSetData);
-    
-    // const tempDisplayWeights = [...displayWeights];
-    // tempDisplayWeights.push(tempDisplayWeights[index])
-    // setDisplayWeights(tempDisplayWeights)
+    handleUpdateOpenOptionsList(false);
   }
 
-  // const handleDeleteSet = (index: number) => {
-  //   let tempSetData = [...exercise.set_data];
-  //   if (tempSetData.length <= 1) {
-  //     tempSetData = [
-  //       {
-  //         "reps": null,
-  //         "weight": null,
-  //         "num_sets": null,
-  //       }
-  //     ]
-  //     updateExerciseSetData(tempSetData);
-  //     setDisplayWeights(['']);
-  //     return;
-  //   }
+  const handleDeleteSet = () => {
+    let tempSetData = [...exercise.set_data];
+    if (tempSetData.length <= 1) {
+      tempSetData = [
+        {
+          "reps": null,
+          "weight": null,
+          "num_sets": null,
+        }
+      ]
+      updateExerciseSetData(tempSetData);
+      handleUpdateOpenOptionsList(false);
+      return;
+    }
 
-  //   tempSetData.splice(index, 1);
-  //   updateExerciseSetData(tempSetData);
+    tempSetData.splice(setIndex, 1);
+    updateExerciseSetData(tempSetData);
+    handleUpdateOpenOptionsList(false);
+  }
 
-  //   const tempDisplayWeights = [...displayWeights];
-  //   tempDisplayWeights.splice(index, 1);
-  //   setDisplayWeights(tempDisplayWeights);
-  // }
+  const openConfirm = (): Promise<boolean> => {
+    setDeleteModalVisible(true);
+    return new Promise(resolve => setResolver(() => resolve));
+  };
 
-  // const openConfirm = (): Promise<boolean> => {
-  //   setDeleteModalVisible(true);
-  //   return new Promise(resolve => setResolver(() => resolve));
-  // };
+  const handleDeletePress = async () => {
+    const confirmed = await openConfirm();
+    if (!confirmed) return;
+    handleDeleteSet();
+  };
 
-  // const handleDeletePress = async (index: number) => {
-  //   const confirmed = await openConfirm();
-  //   if (!confirmed) return;
-  //   handleDeleteSet(index);
-  // };
+  const handleConfirm = () => {
+    resolver?.(true);
+    setDeleteModalVisible(false);
+  };
 
-  // const handleConfirm = () => {
-  //   resolver?.(true);
-  //   setDeleteModalVisible(false);
-  // };
+  const handleCancel = () => {
+    resolver?.(false);
+    setDeleteModalVisible(false);
+  };
 
-  // const handleCancel = () => {
-  //   resolver?.(false);
-  //   setDeleteModalVisible(false);
-  // };
+  const handleMoveUp = () => {
+    let tempSetData = [...exercise.set_data];
+    const temp = tempSetData[setIndex];
+    tempSetData[setIndex] = tempSetData[setIndex - 1];
+    tempSetData[setIndex - 1] = temp;
+    updateExerciseSetData(tempSetData);
+  };
+
+  const handleMoveDown = () => {
+
+  };
+
+  const handleUpdateOpenOptionsList = (isOpen: boolean) => {
+    const temp = [...openOptionsList];
+    temp[setIndex] = isOpen;
+    setOpenOptionsList(temp);
+  };
 
   return (
-    <View style={styles.row}>
-      {openOptions ?
-        <>
-          <Text style={styles.text}>{set_data.reps}</Text>
-          <Text style={styles.text}>{displayWeight}</Text>
-          <Text style={styles.text}>{set_data.num_sets}</Text>
-          {/* <TouchableOpacity
-            onPress={() => handleDeletePress(index)}
-            style={styles.button}
-            onPressIn={() => handleDeletePressOn(index, true)}
-            onPressOut={() =>  handleDeletePressOn(index, false)}
-            activeOpacity={1}
-          >
-            <MaterialIcons name={deletePressOn[index] ? 'delete' : "delete-outline"} size={20} color="red" />
-          </TouchableOpacity> */}
-          <TouchableOpacity
-            onPress={handleCopySet}
-            style={styles.button}
-            onPressIn={() => setCopyPressOn(true)}
-            onPressOut={() => setCopyPressOn(false)}
-            activeOpacity={1}
-          >
-            <Ionicons name={copyPressOn ? 'copy' : 'copy-outline'} color={'green'} size={20} />
-          </TouchableOpacity>
-        </>
-      :
-        <>
-          <TextInput 
-            style={styles.textInput}
-            keyboardType="number-pad"
-            onChangeText={(text) => handleUpdateInteger(text, 'reps')}
-            value={(set_data.reps ?? '').toString()}
-          />
-          <TextInput 
-            style={styles.textInput}
-            keyboardType="number-pad"
-            onChangeText={(text) => handleUpdateWeight(text)}
-            value={displayWeight}
-          />
-          <ShiftTextInput
-            onChangeText={(text) => handleUpdateInteger(text, 'num_sets')}
-            value={(set_data.num_sets ?? '').toString()}
-            shiftPress={(increase: boolean) => handleShiftSet(increase)}
-          />
-        </>
-      }
-      
-      
-      
-      <TouchableOpacity
-        onPress={handleOpenOptions}
-        style={styles.button}
-        activeOpacity={1}
-      >
-        <Ionicons name={openOptions ? 'options' : 'options-outline'} color={openOptions ? 'red': 'white'} size={25} />
-      </TouchableOpacity>
-    </View>
+    <>
+      <View style={styles.row}>
+        {openOptions ?
+          <>
+            <View style={styles.valueRow}>
+              <Text style={styles.text}>{set_data.reps ?? 0}</Text>
+              <Text style={styles.text}>{displayWeight !== '' ? displayWeight : '0.0'}</Text>
+              <Text style={styles.text}>{set_data.num_sets ?? 0}</Text>
+            </View>
+            <TouchableOpacity
+              onPress={handleDeletePress}
+              style={styles.button}
+              onPressIn={() => setDeletePressOn(true)}
+              onPressOut={() =>  setDeletePressOn(false)}
+              activeOpacity={1}
+            >
+              <MaterialIcons name={deletePressOn ? 'delete' : "delete-outline"} size={20} color="red" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleCopySet}
+              style={styles.button}
+              onPressIn={() => setCopyPressOn(true)}
+              onPressOut={() => setCopyPressOn(false)}
+              activeOpacity={1}
+            >
+              <Ionicons name={copyPressOn ? 'copy' : 'copy-outline'} color={'green'} size={20} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleMoveUp}
+              style={styles.button}
+              onPressIn={() => setMoveUpPressOn(true)}
+              onPressOut={() => setMoveUpPressOn(false)}
+              activeOpacity={1}
+              disabled={setIndex === 0}
+            >
+              <AntDesign name='arrowup' size={20} color={moveUpPressOn ? "cyan" : "#ccc"} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleMoveDown}
+              style={styles.button}
+              onPressIn={() => setMoveDownPressOn(true)}
+              onPressOut={() => setMoveDownPressOn(false)}
+              activeOpacity={1}
+              disabled={setIndex === exercise.set_data.length - 1}
+            >
+              <AntDesign name='arrowdown' size={20} color={moveDownPressOn ? "cyan" : "#ccc"} />
+            </TouchableOpacity>
+          </>
+        :
+          <>
+            <TextInput 
+              style={styles.textInput}
+              keyboardType="number-pad"
+              onChangeText={(text) => handleUpdateInteger(text, 'reps')}
+              value={(set_data.reps ?? '').toString()}
+            />
+            <TextInput 
+              style={styles.textInput}
+              keyboardType="number-pad"
+              onChangeText={(text) => handleUpdateWeight(text)}
+              value={displayWeight}
+            />
+            <ShiftTextInput
+              onChangeText={(text) => handleUpdateInteger(text, 'num_sets')}
+              value={(set_data.num_sets ?? '').toString()}
+              shiftPress={(increase: boolean) => handleShiftSet(increase)}
+            />
+          </>
+        }
+        <TouchableOpacity
+          onPress={() => handleUpdateOpenOptionsList(!openOptions)}
+          style={styles.button}
+          activeOpacity={1}
+        >
+          <Ionicons name={openOptions ? 'options' : 'options-outline'} color={openOptions ? 'red': 'white'} size={25} />
+        </TouchableOpacity>
+      </View>
+      <ConfirmationModal visible={deleteModalVisible} onConfirm={handleConfirm} onCancel={handleCancel} message="Delete set?" confirm_string="yeah" cancel_string="nah"/>
+    </>
   )
 }
 
@@ -241,4 +285,15 @@ const styles = StyleSheet.create({
     padding: 0,
     justifyContent: 'center',
   },
+  valueRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '30%'
+  },
+  editRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: 'green',
+    width: '100%'
+  }
 })

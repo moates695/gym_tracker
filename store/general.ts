@@ -51,6 +51,8 @@ export const exerciseListAtom = atomWithStorage('exerciseListAtom', [])
 
 export const editWorkoutExercisesAtom = atom<boolean>(false);
 
+// export const openSetOptionsAtom = atom<boolean[][]>([]);
+
 export interface WeightTimestamp {
   weight: number
   timestamp: number

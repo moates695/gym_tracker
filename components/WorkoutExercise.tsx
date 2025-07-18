@@ -18,7 +18,7 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
   const { exercise, exerciseIndex } = props; 
 
   const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
-  const [editExercises, _] = useAtom(editWorkoutExercisesAtom);
+  const [editExercises, _] = useAtom(editWorkoutExercisesAtom);  
 
   const [numSets, setNumSets] = useState<number>(0);
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
@@ -53,12 +53,14 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
   useEffect(() => {
     if (!editExercises) return;
     setIsDataExpanded(false);
+    setIsExpanded(false);
   }, [editExercises])
 
   return (
     <View style={styles.box}>
       <TouchableOpacity style={styles.row}
         onPress={() => setIsExpanded(!isExpanded)}
+        disabled={editExercises}
       >
         <Text style={[styles.text, {fontWeight: 500}]}>{exercise.name}</Text>
         <Text style={styles.text}>{numSets} sets</Text>
