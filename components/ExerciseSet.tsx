@@ -164,6 +164,8 @@ export default function ExerciseSet(props: ExerciseSetProps) {
     setOpenOptionsList(temp);
   };
 
+  // todo handle move down and switch open options between them
+
   return (
     <>
       <View style={styles.row}>
