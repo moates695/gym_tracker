@@ -19,6 +19,14 @@ export interface SetData {
   reps: number | null
   weight: number | null
   num_sets: number | null
+  class: SetClass
+}
+
+export const emptySetData: SetData = {
+  "reps": null,
+  "weight": null,
+  "num_sets": null,
+  "class": "working"
 }
 
 export type WeightType = 'free' | 'machine' | 'cable';
@@ -105,6 +113,8 @@ export interface OverviewHistoricalStatsData {
   num_sets: number
   reps: number
 }
+
+// todo: history shite
 
 export interface OverviewHistoricalStatsMuscles {
 

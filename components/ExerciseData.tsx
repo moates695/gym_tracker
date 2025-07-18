@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, StyleSheet, Text, Platform, TouchableOpacity, ScrollView, FlatList } from "react-native"
+import { View, StyleSheet, Text, Platform, TouchableOpacity, ScrollView, FlatList, StyleProp, ViewStyle } from "react-native"
 import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData, TimestampValue, ExerciseHistory } from "@/store/general"
 import ThreeAxisGraph, { Point3D } from './ThreeAxisGraph'
 import { useEffect, useRef, useState } from "react";
@@ -66,7 +66,7 @@ interface VolumeTimespanObject {
   value: VolumeTimespan
 }
 
-export const useDropdown = (options: any, value: any, setter: any, disabled: boolean = false): JSX.Element => {
+export const useDropdown = (options: any, value: any, setter: any, disabled: boolean = false, style?: StyleProp<ViewStyle>): JSX.Element => {
   return (
     <Dropdown 
       data={options}
@@ -74,7 +74,7 @@ export const useDropdown = (options: any, value: any, setter: any, disabled: boo
       labelField="label"
       valueField="value"
       onChange={item => {setter(item.value)}}
-      style={styles.dropdownButton}
+      style={[styles.dropdownButton, style]}
       selectedTextStyle={disabled ? {color: 'red', fontSize: 14} : styles.dropdownText}
       containerStyle={styles.dropdownContainerStyle}
       renderItem={(item, selected) => (
@@ -673,15 +673,4 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14
   },
-  historyContainer: {
-    width: '100%',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-  historyTableContainer: {
-    width: 200,
-    minHeight: 100,
-    justifyContent: 'center',
-  }
 });

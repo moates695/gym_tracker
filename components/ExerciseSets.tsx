@@ -1,7 +1,7 @@
 import { useAtom } from "jotai";
 import { useEffect, useState } from "react";
 import React, { View, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native"
-import { SetData, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
+import { SetData, WorkoutExercise, workoutExercisesAtom, emptySetData} from "@/store/general";
 import ConfirmationModal from "./ConfirmationModal";
 import ShiftTextInput from "./ShiftTextInput";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -32,24 +32,14 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
 
   const handleNewSet = () => {
     const tempSets = [...exercise.set_data];
-    tempSets.push({
-      "reps": null,
-      "weight": null,
-      "num_sets": null,
-    })
+    tempSets.push({ ...emptySetData })
     updateExerciseSetData(tempSets);
   }
 
   useEffect(() => {
     if (exercise.set_data.length > 0) return;
     const tempExercises = [...exercises];
-    tempExercises[exerciseIndex].set_data = [
-      {
-        "reps": null,
-        "weight": null,
-        "num_sets": null,
-      }
-    ]
+    tempExercises[exerciseIndex].set_data = [{ ...emptySetData }]
     setExercises(tempExercises);
   }, [exercise.set_data])
 

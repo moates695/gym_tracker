@@ -1,5 +1,5 @@
 import { fetchWrapper } from "@/middleware/helpers";
-import { emptyExerciseHistoricalData, exercisesHistoricalDataAtom, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
+import { emptyExerciseHistoricalData, emptySetData, exercisesHistoricalDataAtom, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useAtom } from "jotai";
 import React, { useState } from "react"
@@ -21,13 +21,7 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
 
   const handleAddExercise = () => {
     const exerciseCopy: WorkoutExercise = JSON.parse(JSON.stringify(exercise));
-    exerciseCopy.set_data = [
-      {
-        "reps": null,
-        "weight": null,
-        "num_sets": null,
-      }
-    ];
+    exerciseCopy.set_data = [{ ...emptySetData }];
     setWorkoutExercisesAtom(prev => [...prev, exerciseCopy]);
 
     setExercisesHistoricalData(prev => ({

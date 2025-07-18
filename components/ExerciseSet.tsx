@@ -1,13 +1,14 @@
 import { useAtom } from "jotai";
 import { useEffect, useState } from "react";
 import React, { View, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native"
-import { SetData, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
+import { emptySetData, SetClass, SetData, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
 import ConfirmationModal from "./ConfirmationModal";
 import ShiftTextInput from "./ShiftTextInput";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { commonStyles } from "@/styles/commonStyles";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { useDropdown } from "./ExerciseData";
 
 interface ExerciseSetProps {
   exercise: WorkoutExercise
@@ -36,6 +37,19 @@ export default function ExerciseSet(props: ExerciseSetProps) {
 
   const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false);
   const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
+
+  interface SetClassOption {
+    label: string
+    value: SetClass
+  }
+
+  const classOptions: SetClassOption[] = [
+    { label: 'working', value: 'working' },
+    { label: 'dropset', value: 'dropset' },
+    { label: 'warmup', value: 'warmup' },
+    { label: 'cooldown', value: 'cooldown' },
+  ]
+  const [classOptionValue, setClassOptionValue] = useState<SetClass>(set_data.class);
 
   const handleUpdateInteger = (text: string, key: 'reps' | 'num_sets') => {
     text = text.replace(/\D/g, '');
@@ -109,13 +123,7 @@ export default function ExerciseSet(props: ExerciseSetProps) {
   const handleDeleteSet = () => {
     let tempSetData = [...exercise.set_data];
     if (tempSetData.length <= 1) {
-      tempSetData = [
-        {
-          "reps": null,
-          "weight": null,
-          "num_sets": null,
-        }
-      ]
+      tempSetData = [{ ...emptySetData }]
       updateExerciseSetData(tempSetData);
       // handleUpdateOpenOptionsList(false);
       return;
@@ -163,7 +171,18 @@ export default function ExerciseSet(props: ExerciseSetProps) {
     updateExerciseSetData(tempSetData);
   };
 
-  // todo add sets classification dropdown
+  const handleUpdateSetClass = (newClass: SetClass) => {
+    setClassOptionValue(newClass);
+
+    const tempSetData = [...exercise.set_data];
+    const tempSet = tempSetData[setIndex];
+    tempSet.class = newClass
+    updateExerciseSetData(tempSetData);
+  };
+
+  useEffect(() => {
+    setClassOptionValue(set_data.class);
+  }, [set_data])
 
   return (
     <>
@@ -193,6 +212,7 @@ export default function ExerciseSet(props: ExerciseSetProps) {
             >
               <Ionicons name={copyPressOn ? 'copy' : 'copy-outline'} color={'green'} size={20} />
             </TouchableOpacity>
+            {useDropdown(classOptions, classOptionValue, handleUpdateSetClass, undefined, {width: 100})}
             <TouchableOpacity
               onPress={handleMoveUp}
               style={styles.button}
