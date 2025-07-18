@@ -13,6 +13,8 @@ export interface MuscleData {
   targets: MuscleTargetData[]
 }
 
+export type SetClass = 'working' | 'dropset' | 'warmup' | 'cooldown';
+
 export interface SetData {
   reps: number | null
   weight: number | null

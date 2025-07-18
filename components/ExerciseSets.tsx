@@ -22,8 +22,8 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
 
   const [exercises, setExercises] = useAtom(workoutExercisesAtom);
   
-  const [openOptionsList, setOpenOptionsList] = useState<boolean[]>([false]);
-
+  const [openOptions, setOpenOptions] = useState<boolean>(false);
+  
   const updateExerciseSetData = (set_data: any) => {
     const tempExercises: WorkoutExercise[] = [...exercises];
     tempExercises[exerciseIndex].set_data = set_data;
@@ -38,10 +38,6 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
       "num_sets": null,
     })
     updateExerciseSetData(tempSets);
-
-    const tempOpenOptionsList = [...openOptionsList];
-    tempOpenOptionsList.push(false);
-    setOpenOptionsList(tempOpenOptionsList);
   }
 
   useEffect(() => {
@@ -60,11 +56,13 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
   return (
     <View style={styles.container}>
       <View style={[styles.row, styles.headerRow]}>
-        <View style={styles.button}/>
-        <Text style={[styles.text, styles.header]}>reps</Text>
-        <Text style={[styles.text, styles.header]}>weight</Text>
-        <Text style={[styles.text, styles.header]}>sets</Text>
-        <View style={styles.button}/>
+        {!openOptions &&
+          <>
+            <Text style={[styles.text, styles.header]}>reps</Text>
+            <Text style={[styles.text, styles.header]}>weight</Text>
+            <Text style={[styles.text, styles.header]}>sets</Text>
+          </>
+        }
       </View>
       {exercise.set_data.map((set_data: SetData, index: number) => (
         <ExerciseSet 
@@ -73,17 +71,26 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
           exerciseIndex={exerciseIndex} 
           set_data={set_data} 
           setIndex={index} 
-          openOptionsList={openOptionsList}
-          setOpenOptionsList={setOpenOptionsList}
+          openOptions={openOptions}
         />
       ))}
       <View style={styles.row}>
-        <TouchableOpacity
-          onPress={handleNewSet}
-          style={[commonStyles.thinTextButton, {borderColor: 'green', marginTop: 5}]}
-        >
-          <Text style={styles.text}>new set</Text>
-        </TouchableOpacity>
+        <View style={{ flex: 1 }} />
+          <TouchableOpacity
+            onPress={handleNewSet}
+            style={[commonStyles.thinTextButton, {borderColor: 'green', marginTop: 5}]}
+          >
+            <Text style={styles.text}>new set</Text>
+          </TouchableOpacity>
+        <View style={{ flex: 1, alignItems: 'flex-end' }}>
+          <TouchableOpacity
+            onPress={() => setOpenOptions(!openOptions)}
+            style={styles.button}
+            activeOpacity={1}
+          >
+            <Ionicons name={openOptions ? 'options' : 'options-outline'} color={openOptions ? 'red': 'white'} size={25} />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   )
@@ -114,10 +121,10 @@ const styles = StyleSheet.create({
     paddingBottom: 5
   },
   headerRow: {
-    width: '93.5%'
+    width: '100%',
   },
   header: {
-    width: '25%',
+    width: '33%',
     textAlign: 'center',
   },
   textButton: {

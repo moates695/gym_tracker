@@ -14,13 +14,14 @@ interface ExerciseSetProps {
   exerciseIndex: number
   set_data: SetData
   setIndex: number
-  openOptionsList: boolean[]
-  setOpenOptionsList: (list: boolean[]) => void
+  openOptions: boolean
+  // openOptionsList: boolean[]
+  // setOpenOptionsList: (list: boolean[]) => void
 }
 
 export default function ExerciseSet(props: ExerciseSetProps) {
-  const { exercise, exerciseIndex, set_data, setIndex, openOptionsList, setOpenOptionsList } = props;
-  const openOptions = openOptionsList[setIndex];
+  // const { exercise, exerciseIndex, set_data, setIndex, openOptionsList, setOpenOptionsList } = props;
+  const { exercise, exerciseIndex, set_data, setIndex, openOptions } = props;
 
   const [exercises, setExercises] = useAtom(workoutExercisesAtom);
   // const [openOptionsList, SetOpenOptionsList] = useAtom(openSetOptionsAtom);
@@ -102,7 +103,7 @@ export default function ExerciseSet(props: ExerciseSetProps) {
     const tempSet = { ...tempSetData[setIndex] };
     tempSetData.push(tempSet);
     updateExerciseSetData(tempSetData);
-    handleUpdateOpenOptionsList(false);
+    // handleUpdateOpenOptionsList(false);
   }
 
   const handleDeleteSet = () => {
@@ -116,13 +117,13 @@ export default function ExerciseSet(props: ExerciseSetProps) {
         }
       ]
       updateExerciseSetData(tempSetData);
-      handleUpdateOpenOptionsList(false);
+      // handleUpdateOpenOptionsList(false);
       return;
     }
 
     tempSetData.splice(setIndex, 1);
     updateExerciseSetData(tempSetData);
-    handleUpdateOpenOptionsList(false);
+    // handleUpdateOpenOptionsList(false);
   }
 
   const openConfirm = (): Promise<boolean> => {
@@ -147,24 +148,22 @@ export default function ExerciseSet(props: ExerciseSetProps) {
   };
 
   const handleMoveUp = () => {
-    let tempSetData = [...exercise.set_data];
-    const temp = tempSetData[setIndex];
+    const tempSetData = [...exercise.set_data];
+    const tempSet = tempSetData[setIndex];
     tempSetData[setIndex] = tempSetData[setIndex - 1];
-    tempSetData[setIndex - 1] = temp;
+    tempSetData[setIndex - 1] = tempSet;
     updateExerciseSetData(tempSetData);
   };
 
   const handleMoveDown = () => {
-
+    const tempSetData = [...exercise.set_data];
+    const tempSet = tempSetData[setIndex];
+    tempSetData[setIndex] = tempSetData[setIndex + 1];
+    tempSetData[setIndex + 1] = tempSet;
+    updateExerciseSetData(tempSetData);
   };
 
-  const handleUpdateOpenOptionsList = (isOpen: boolean) => {
-    const temp = [...openOptionsList];
-    temp[setIndex] = isOpen;
-    setOpenOptionsList(temp);
-  };
-
-  // todo handle move down and switch open options between them
+  // todo add sets classification dropdown
 
   return (
     <>
@@ -236,13 +235,6 @@ export default function ExerciseSet(props: ExerciseSetProps) {
             />
           </>
         }
-        <TouchableOpacity
-          onPress={() => handleUpdateOpenOptionsList(!openOptions)}
-          style={styles.button}
-          activeOpacity={1}
-        >
-          <Ionicons name={openOptions ? 'options' : 'options-outline'} color={openOptions ? 'red': 'white'} size={25} />
-        </TouchableOpacity>
       </View>
       <ConfirmationModal visible={deleteModalVisible} onConfirm={handleConfirm} onCancel={handleCancel} message="Delete set?" confirm_string="yeah" cancel_string="nah"/>
     </>
