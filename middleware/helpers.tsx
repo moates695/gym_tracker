@@ -1,4 +1,4 @@
-import { SetData, WorkoutExercise } from "@/store/general";
+import { SetData, ValidSetData, WorkoutExercise } from "@/store/general";
 import * as SecureStore from "expo-secure-store";
 
 export const fetchExercises = async (setExercises: any) => {
@@ -57,6 +57,6 @@ export const isValidSet = (set_data: SetData, is_body_weight: boolean): boolean 
   return true;
 };
 
-export const getValidSets = (exercise: WorkoutExercise): SetData[] => {
-  return exercise.set_data.filter((data) => isValidSet(data, exercise.is_body_weight))
+export const getValidSets = (exercise: WorkoutExercise): ValidSetData[] => {
+  return exercise.set_data.filter((data) => isValidSet(data, exercise.is_body_weight)) as ValidSetData[];
 }

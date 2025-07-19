@@ -8,6 +8,7 @@ import LineGraph, {LineGraphPoint, LineGraphScale} from './LineGraph';
 import { commonStyles } from '@/styles/commonStyles';
 import { Dropdown } from 'react-native-element-dropdown';
 import CarouselDataTable from './CarouselDataTable';
+import { getValidSets } from '@/middleware/helpers';
 
 // WORKOUT OVERVIEW DATA
 // list of exercises in the workout
@@ -633,8 +634,65 @@ export default function ExerciseData(props: ExerciseDataProps) {
     }
   }, [dataOptionValue, nRepMaxOptionValue]);
 
+  const getBarValue = (): number | null => {
+    if (dataOptionValue !== 'volume') return null;
+    const validSets = getValidSets(exercise);
+    if (validSets.length === 0) return null;
+    let volume = 0;
+    for (const set_data of validSets) {
+      volume += set_data.reps! * set_data.weight! * set_data.num_sets!;
+    }
+    return volume;
+  };
+
+  const getCurrentPoints = (): LineGraphPoint[] => {
+    if (dataOptionValue !== 'history') return [];
+    if (historyGraphOptionValue !== 'weight_per_rep') {
+      return getCurrentPointsSets();
+    } else {
+      return getCurrentPointsReps();
+    }
+  };
+
+  const getCurrentPointsSets = (): LineGraphPoint[] => {
+    const points: LineGraphPoint[] = [];
+    let setNum = 1;
+    for (const set_data of getValidSets(exercise)) {
+      for (let i = 0; i < set_data.num_sets; i++) {
+        let yValue = set_data.weight!;
+        if (historyGraphOptionValue === 'volume_per_set') {
+          yValue *= set_data.reps!
+        }
+        points.push({
+          x: setNum,
+          y: yValue,
+        })
+        setNum++;
+      }
+    }
+    return points;
+  };
+
+  const getCurrentPointsReps = (): LineGraphPoint[] => {
+    const points: LineGraphPoint[] = [];
+    let repNum = 1; 
+    for (const set_data of getValidSets(exercise)) {
+      for (let i = 0; i < set_data.num_sets; i++) {
+        for (let j = 0; j < set_data.reps!; j++) {
+          points.push({
+            x: repNum,
+            y: set_data.weight,
+          });
+          repNum++;
+        }
+      }
+    }
+    return points;
+
+  }; 
+
   const dataVisualMap: Record<DataVisual, JSX.Element> = {
-    'graph': <LineGraph points={getPoints()} scale_type={graphScale}/>,
+    'graph': <LineGraph points={getPoints()} scale_type={graphScale} barValue={getBarValue()} currentPoints={getCurrentPoints()}/>,
     'table': getTable()
   }
 

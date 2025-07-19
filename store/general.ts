@@ -22,6 +22,13 @@ export interface SetData {
   class: SetClass
 }
 
+export interface ValidSetData {
+  reps: number
+  weight: number
+  num_sets: number
+  class: SetClass
+}
+
 export const emptySetData: SetData = {
   "reps": null,
   "weight": null,

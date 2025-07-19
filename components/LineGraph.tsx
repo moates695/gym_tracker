@@ -12,13 +12,14 @@ export type LineGraphScale = 'time' | 'value'
 interface LineGraphProps  {
   points: LineGraphPoint[]
   scale_type: LineGraphScale
+  barValue?: number | null
+  currentPoints?: LineGraphPoint[]
 }
 
 // todo: ability to click on point and see data for it ?
-// todo: option to normalize time series data (even spread) ?
 
 export default function LineGraph(props: LineGraphProps) {
-  const {points, scale_type} = props;
+  const {points, scale_type, barValue = null, currentPoints = []} = props;
 
   if (points.length === 0) {
     return (
@@ -30,14 +31,21 @@ export default function LineGraph(props: LineGraphProps) {
 
   const width = Dimensions.get('window').width - 40;
   const height = 250;
-  const padding = 40;
+  const padding = 50;
   
   // Calculate min/max values
   const xMin = Math.min(...points.map(p => p.x));
   const xMax = Math.max(...points.map(p => p.x));
-  const yMin = Math.min(...points.map(p => p.y));
-  const yMax = Math.max(...points.map(p => p.y));
-  
+  // const yMin = Math.min(...points.map(p => p.y));
+  const yMin = 0;
+  let yMax = Math.max(...points.map(p => p.y));
+  if (barValue !== null && barValue > yMax) {
+    yMax = barValue;
+  } else if (currentPoints.length !== 0) {
+    const tempMax = Math.max(...currentPoints.map(p => p.y));
+    if (tempMax > yMax) yMax = tempMax;
+  }
+
   // Position calculation functions
   const getXPosition = (x: number) => {
     return padding + ((x - xMin) / (xMax - xMin)) * (width - 2 * padding);
@@ -54,6 +62,14 @@ export default function LineGraph(props: LineGraphProps) {
     return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
   }).join(' ');
 
+  const getPath = (points: LineGraphPoint[]): string => {
+    return points.map((point, index) => {
+      const x = getXPosition(point.x);
+      const y = getYPosition(point.y);
+      return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
+    }).join(' ')
+  };
+
   // Format date for labels
   const formatDate = (timestamp: string | number | Date) => {
     const date = new Date(timestamp);
@@ -66,6 +82,14 @@ export default function LineGraph(props: LineGraphProps) {
     }
     const date = new Date(x);
     return `${date.getMonth() + 1}/${date.getDate()}`;
+  };
+
+  const getBarPoints = (): string => {
+    if (barValue == null) return '';
+    const x1 = getXPosition(xMin);
+    const x2 = getXPosition(xMax);
+    const y = getYPosition(barValue < yMax ? barValue : yMax);
+    return `M ${x1} ${y} L ${x2} ${y}`;
   };
 
   return (
@@ -161,14 +185,44 @@ export default function LineGraph(props: LineGraphProps) {
               })
             }
             
+            {barValue !== null &&
+              <Path
+                d={getBarPoints()}
+                stroke="orange"
+                strokeWidth="2"
+                fill="none"
+              />
+            }
+            {currentPoints.length >= 2 &&
+              <>
+              <Path
+                d={getPath(currentPoints)}
+                stroke="orange"
+                strokeWidth="2"
+                fill="none"
+              />
+              {currentPoints.map((point, index) => (
+                <Circle
+                  key={`point-${index}`}
+                  cx={getXPosition(point.x)}
+                  cy={getYPosition(point.y)}
+                  r="3"
+                  fill="black"
+                  stroke="orange"
+                  strokeWidth="2"
+                />
+              ))}
+              </>
+            }
+
             {/* Line path */}
             <Path
-              d={pathData}
+              d={getPath(points)}
               stroke="cyan"
               strokeWidth="2"
               fill="none"
             />
-            
+
             {/* Data points */}
             {points.map((point, index) => (
               <Circle
@@ -181,6 +235,8 @@ export default function LineGraph(props: LineGraphProps) {
                 strokeWidth="2"
               />
             ))}
+
+            
           </Svg>
         </View>
       :
@@ -227,6 +283,6 @@ const styles = StyleSheet.create({
     elevation: 3,
     width: '100%',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
 });

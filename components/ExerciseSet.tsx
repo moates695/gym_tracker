@@ -16,20 +16,14 @@ interface ExerciseSetProps {
   set_data: SetData
   setIndex: number
   openOptions: boolean
-  // openOptionsList: boolean[]
-  // setOpenOptionsList: (list: boolean[]) => void
 }
 
 export default function ExerciseSet(props: ExerciseSetProps) {
-  // const { exercise, exerciseIndex, set_data, setIndex, openOptionsList, setOpenOptionsList } = props;
   const { exercise, exerciseIndex, set_data, setIndex, openOptions } = props;
 
   const [exercises, setExercises] = useAtom(workoutExercisesAtom);
-  // const [openOptionsList, SetOpenOptionsList] = useAtom(openSetOptionsAtom);
-  // const openOption = openOptionsList?.[exerciseIndex]?.[setIndex] ?? false;
 
   const [displayWeight, setDisplayWeight] = useState<string>('');
-  // const [openOptions, setOpenOptions] = useState<boolean>(false);
   const [copyPressOn, setCopyPressOn] = useState<boolean>(false);
   const [deletePressOn, setDeletePressOn] = useState<boolean>(false);
   const [moveUpPressOn, setMoveUpPressOn] = useState<boolean>(false);
@@ -108,30 +102,24 @@ export default function ExerciseSet(props: ExerciseSetProps) {
     return formattedText;
   };
 
-  // const handleOpenOptions = () => {
-  //   setOpenOptions(!openOptions)
-  // }
-  
   const handleCopySet = () => {
     const tempSetData = [...exercise.set_data];
     const tempSet = { ...tempSetData[setIndex] };
     tempSetData.push(tempSet);
     updateExerciseSetData(tempSetData);
-    // handleUpdateOpenOptionsList(false);
   }
 
   const handleDeleteSet = () => {
     let tempSetData = [...exercise.set_data];
+    setDisplayWeight('');
     if (tempSetData.length <= 1) {
       tempSetData = [{ ...emptySetData }]
       updateExerciseSetData(tempSetData);
-      // handleUpdateOpenOptionsList(false);
       return;
     }
 
     tempSetData.splice(setIndex, 1);
     updateExerciseSetData(tempSetData);
-    // handleUpdateOpenOptionsList(false);
   }
 
   const openConfirm = (): Promise<boolean> => {
