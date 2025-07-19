@@ -66,6 +66,12 @@ interface VolumeTimespanObject {
   value: VolumeTimespan
 }
 
+type HistoryGraphOption = 'weight_per_set' | 'volume_per_set' | 'weight_per_rep';
+interface HistoryGraphObject {
+  label: string
+  value: HistoryGraphOption
+}
+
 export const useDropdown = (options: any, value: any, setter: any, disabled: boolean = false, style?: StyleProp<ViewStyle>): JSX.Element => {
   return (
     <Dropdown 
@@ -159,6 +165,13 @@ export default function ExerciseData(props: ExerciseDataProps) {
   const [dataVisual, setDataVisual] = useState<DataVisual>('graph');
 
   const [historyListIndex, setHistoryListIndex] = useState<number>(0);
+
+  const historyGraphOptions: HistoryGraphObject[] = [
+    { label: 'volume per set', value: 'volume_per_set' },
+    { label: 'weight per set', value: 'weight_per_set' },
+    { label: 'weight per rep', value: 'weight_per_rep' },
+  ]
+  const [historyGraphOptionValue, setHistoryGraphOptionValue] = useState<HistoryGraphOption>('volume_per_set');
 
   const handleSwitchDataVisual = () => {
     setDataVisual(dataVisual === 'graph' ? 'table' : 'graph')
@@ -270,18 +283,51 @@ export default function ExerciseData(props: ExerciseDataProps) {
   };
 
   const getHistoryPoints = (): LineGraphPoint[] => {
+    if (historyGraphOptionValue !== 'weight_per_rep') {
+      return getHistoryPointsSets();
+    } else {
+      return getHistoryPointsReps();
+    }
+  };
+
+  const getHistoryPointsSets = (): LineGraphPoint[] => {
     const data = exerciseData["history"][historyListIndex];
     if (data === undefined) return [];
-    
+
     const points: LineGraphPoint[] = [];
     let set_num = 1;
     data.set_data.map(set_data => {
       for (let i = 0; i < set_data.num_sets; i++) {
+        let yValue = set_data.weight;
+        if (historyGraphOptionValue === 'volume_per_set') {
+          yValue *= set_data.reps
+        } 
         points.push({
           "x": set_num,
-          "y": set_data.weight
+          "y": yValue
         })
         set_num++;
+      }
+    });
+
+    return points;
+  };
+
+  const getHistoryPointsReps = (): LineGraphPoint[] => {
+    const data = exerciseData["history"][historyListIndex];
+    if (data === undefined) return [];
+
+    const points: LineGraphPoint[] = [];
+    let rep_num = 1;
+    data.set_data.map(set_data => {
+      for (let i = 0; i < set_data.num_sets; i++) {
+        for (let j = 0; j < set_data.reps; j++) {
+          points.push({
+            "x": rep_num,
+            "y": set_data.weight
+          })
+          rep_num++;
+        }
       }
     });
 
@@ -306,7 +352,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
         return (<></>); 
     }
 
-    rows = rows.slice().reverse();
+    // rows = rows.slice().reverse();
 
     return (
       <CarouselDataTable 
@@ -352,7 +398,8 @@ export default function ExerciseData(props: ExerciseDataProps) {
         timestampToDateStr(value.timestamp)
       ])
     }
-
+    rows.reverse();
+    
     return [headers, rows];
   };
 
@@ -375,6 +422,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
         timestampToDateStr(data.timestamp)
       ])
     }
+    rows.reverse();
 
     return [headers, rows];
   };
@@ -392,8 +440,6 @@ export default function ExerciseData(props: ExerciseDataProps) {
         `${timestampToDateStr(date2)}-${timestampToDateStr(date1)}`
       ])
     }
-
-    rows = rows.slice().reverse();
 
     return [headers, rows];
   };
@@ -425,33 +471,6 @@ export default function ExerciseData(props: ExerciseDataProps) {
 
     return `${day}/${month}/${year}`;
   };
-
-  // const useDropdown = (options: any, value: any, setter: any): JSX.Element => {
-  //   return (
-  //     <Dropdown 
-  //       data={options}
-  //       value={value}
-  //       labelField="label"
-  //       valueField="value"
-  //       onChange={item => {setter(item.value)}}
-  //       style={styles.dropdownButton}
-  //       selectedTextStyle={styles.dropdownText}
-  //       containerStyle={styles.dropdownContainerStyle}
-  //       renderItem={(item, selected) => (
-  //         <View
-  //           style={{
-  //             padding: 10,
-  //             borderWidth: selected ? 1 : 0,
-  //             borderColor: selected ? 'red' : 'transparent',
-  //             backgroundColor: 'black',
-  //           }}
-  //         >
-  //           <Text style={{ color: selected ? 'red' : 'white' }}>{item.label}</Text>
-  //         </View>
-  //       )}
-  //     />
-  //   )
-  // };
 
   const renderItem = (item: any, selected: any): JSX.Element => {
     return (
@@ -534,6 +553,12 @@ export default function ExerciseData(props: ExerciseDataProps) {
 
   const historyComponent = (
     <>
+      {dataVisual === 'graph' &&
+        <View>
+          <Text style={styles.text}>Choose data accumulation:</Text>
+          {useDropdown(historyGraphOptions, historyGraphOptionValue, setHistoryGraphOptionValue)}
+        </View>
+      }
       <View style={[styles.row, {marginTop: 10}]}>
         <TouchableOpacity
           onPress={() => updateHistoryListIndex(historyListIndex - 1)}
@@ -594,7 +619,6 @@ export default function ExerciseData(props: ExerciseDataProps) {
     'reps_sets_weight': repsSetsWeightComponent
   }
 
-  // todo, implement this (useEffect?)
   const [graphScale, setGraphScale] = useState<LineGraphScale>('time');
 
   useEffect(() => {
