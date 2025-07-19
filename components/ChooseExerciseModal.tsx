@@ -103,7 +103,8 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
       setMuscleTargetValue('disabled');
       setRatioOptionsValue('disabled');
     } else {
-      setMuscleTargetValue(muscleTargetOptions[value][0].value);
+      // setMuscleTargetValue(muscleTargetOptions[value][0].value);
+      setMuscleTargetValue('all');
       setRatioOptionsValue('7');
     }
   };
@@ -240,7 +241,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
                 value={searchBar}
                 onChangeText={setSearchBar} 
                 style={styles.input}
-                placeholder="search filter"
+                placeholder="search..."
                 placeholderTextColor={'#ccc'}
               />
               <Text style={styles.text}>Weight type:</Text>

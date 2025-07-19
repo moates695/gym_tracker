@@ -35,7 +35,12 @@ export default function LineGraph(props: LineGraphProps) {
   
   // Calculate min/max values
   const xMin = Math.min(...points.map(p => p.x));
-  const xMax = Math.max(...points.map(p => p.x));
+  let xMax = Math.max(...points.map(p => p.x));
+  if (currentPoints.length !== 0) {
+    const tempMax = Math.max(...currentPoints.map(p => p.x));
+    if (tempMax > xMax) xMax = tempMax;
+
+  }
   // const yMin = Math.min(...points.map(p => p.y));
   const yMin = 0;
   let yMax = Math.max(...points.map(p => p.y));
