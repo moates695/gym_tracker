@@ -7,6 +7,8 @@ import Ionicons from "@expo/vector-icons/Ionicons"
 import { useAtom } from "jotai"
 import ConfirmationModal from "./ConfirmationModal"
 import cloneDeep from 'lodash/cloneDeep';
+import { AntDesign } from "@expo/vector-icons"
+import { set } from "lodash"
 
 interface WorkoutExerciseRowProps {
   exercise: WorkoutExercise
@@ -25,6 +27,8 @@ export default function WorkoutExerciseRow(props: WorkoutExerciseRowProps) {
   
   const [deletePressed, setDeletePressed] = useState<boolean>(false);
   const [copyPressed, setCopyPressed] = useState<boolean>(false);
+  const [moveUpPressOn, setMoveUpPressOn] = useState<boolean>(false);
+  const [moveDownPressOn, setMoveDownPressOn] = useState<boolean>(false);
 
   const handleDeleteExercise = () => {
     const tempExercises = [...exercises];
@@ -60,6 +64,22 @@ export default function WorkoutExerciseRow(props: WorkoutExerciseRowProps) {
     setExercises(tempExercises);
   };
 
+  const handleMoveUp = () => {
+    const tempExercises = [...exercises];
+    const tempExercise = exercises[exerciseIndex];
+    tempExercises[exerciseIndex] = tempExercises[exerciseIndex - 1];
+    tempExercises[exerciseIndex - 1] = tempExercise;
+    setExercises(tempExercises);
+  };
+
+  const handleMoveDown = () => {
+    const tempExercises = [...exercises];
+    const tempExercise = exercises[exerciseIndex];
+    tempExercises[exerciseIndex] = tempExercises[exerciseIndex + 1];
+    tempExercises[exerciseIndex + 1] = tempExercise;
+    setExercises(tempExercises);
+  };
+
   return (
     <>
       <View style={styles.workoutRow}>
@@ -78,15 +98,37 @@ export default function WorkoutExerciseRow(props: WorkoutExerciseRowProps) {
           <WorkoutExerciseComponent exercise={exercise} exerciseIndex={exerciseIndex}/>
         </View>
         {editExercises && 
-          <TouchableOpacity
-            onPress={() => handleCopyExercise()}
-            onPressIn={() => setCopyPressed(true)}
-            onPressOut={() =>  setCopyPressed(false)}
-            activeOpacity={1}
-            style={styles.editButtons}
-          >
-            <Ionicons name={copyPressed ? 'copy' : "copy-outline"} size={20} color="green" />
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              onPress={() => handleCopyExercise()}
+              onPressIn={() => setCopyPressed(true)}
+              onPressOut={() =>  setCopyPressed(false)}
+              activeOpacity={1}
+              style={styles.editButtons}
+            >
+              <Ionicons name={copyPressed ? 'copy' : "copy-outline"} size={20} color="green" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleMoveUp}
+              style={styles.editButtons}
+              onPressIn={() => setMoveUpPressOn(true)}
+              onPressOut={() => setMoveUpPressOn(false)}
+              activeOpacity={1}
+              disabled={exerciseIndex === 0}
+            >
+              <AntDesign name='arrowup' size={20} color={moveUpPressOn ? "cyan" : "#ccc"} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleMoveDown}
+              style={styles.editButtons}
+              onPressIn={() => setMoveDownPressOn(true)}
+              onPressOut={() => setMoveDownPressOn(false)}
+              activeOpacity={1}
+              disabled={exerciseIndex === exercises.length - 1}
+            >
+              <AntDesign name='arrowdown' size={20} color={moveDownPressOn ? "cyan" : "#ccc"} />
+            </TouchableOpacity>
+          </>
         }
       </View>
       <ConfirmationModal 
@@ -112,5 +154,9 @@ const styles = StyleSheet.create({
     padding: 10,
     justifyContent: 'center',
     alignItems: 'center',
-  }
+  },
+  button: {
+    padding: 0,
+    justifyContent: 'center',
+  },
 })

@@ -3,6 +3,8 @@ import { useEffect } from "react";
 import * as SecureStore from "expo-secure-store";
 import { jwtDecode } from "jwt-decode";
 import React from "react";
+import * as Font from 'expo-font';
+import { MaterialIcons, AntDesign, Ionicons } from '@expo/vector-icons';
 
 export default function RootLayout() {
   const router = useRouter();
@@ -55,7 +57,20 @@ export default function RootLayout() {
 
     checkUserState();
 
-  }, [])
+  }, []);
+
+  useEffect(() => {
+    async function loadFonts() {
+      await Font.loadAsync({
+        ...MaterialIcons.font,
+        ...AntDesign.font,
+        ...Ionicons.font,
+      });
+      // setFontsLoaded(true);
+    }
+
+    loadFonts();
+  }, []);
 
   return (
     <Stack

@@ -1,7 +1,7 @@
 import { useAtom } from "jotai";
 import { useEffect, useState } from "react";
 import React, { View, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native"
-import { SetData, WorkoutExercise, workoutExercisesAtom, emptySetData} from "@/store/general";
+import { SetData, WorkoutExercise, workoutExercisesAtom, emptySetData, SetClass} from "@/store/general";
 import ConfirmationModal from "./ConfirmationModal";
 import ShiftTextInput from "./ShiftTextInput";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -30,9 +30,11 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
     setExercises(tempExercises);
   };
 
-  const handleNewSet = () => {
+  const handleNewSet = (setClass: SetClass) => {
     const tempSets = [...exercise.set_data];
-    tempSets.push({ ...emptySetData })
+    const tempSet = {...emptySetData};
+    tempSet.class = setClass;
+    tempSets.push(tempSet);
     updateExerciseSetData(tempSets);
   }
 
@@ -67,10 +69,16 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
       <View style={styles.row}>
         <View style={{ flex: 1 }} />
           <TouchableOpacity
-            onPress={handleNewSet}
+            onPress={() => handleNewSet('working')}
             style={[commonStyles.thinTextButton, {borderColor: 'green', marginTop: 5}]}
           >
             <Text style={styles.text}>new set</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleNewSet('dropset')}
+            style={[commonStyles.thinTextButton, {borderColor: 'green', marginTop: 5, marginLeft: 20}]}
+          >
+            <Text style={styles.text}>dropset</Text>
           </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'flex-end' }}>
           <TouchableOpacity
