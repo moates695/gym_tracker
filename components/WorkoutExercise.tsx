@@ -7,7 +7,7 @@ import ExerciseData from "./ExerciseData";
 import { editWorkoutExercisesAtom, exercisesHistoricalDataAtom, SetData, WorkoutExercise } from "@/store/general"
 import { useAtom } from "jotai";
 import { commonStyles } from "@/styles/commonStyles";
-import { fetchWrapper, getValidSets, isValidSet } from "@/middleware/helpers"
+import { fetchWrapper, getExerciseValueMap, getValidSets, isValidSet } from "@/middleware/helpers"
 import MuscleGroupSvg from "./MuscleGroupSvg";
 
 interface WorkoutExerciseProps {
@@ -63,13 +63,6 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
     setIsExpanded(false);
   }, [editExercises])
 
-  const valueMap: Record<string, number> = {};
-  for (const group_data of exercise.muscle_data) {
-    for (const target_data of group_data.targets) {
-      valueMap[`${group_data.group_name}/${target_data.target_name}`] = target_data.ratio;
-    }
-  }
-
   return (
     <View style={styles.box}>
       <TouchableOpacity style={styles.row}
@@ -116,7 +109,7 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
             <>
               <View style={styles.divider}/>
               <MuscleGroupSvg
-                valueMap={valueMap} 
+                valueMap={getExerciseValueMap(exercise)} 
                 showGroups={false}
               />
             </>

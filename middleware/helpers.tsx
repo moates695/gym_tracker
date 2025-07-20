@@ -60,3 +60,13 @@ export const isValidSet = (set_data: SetData, is_body_weight: boolean): boolean 
 export const getValidSets = (exercise: WorkoutExercise): ValidSetData[] => {
   return exercise.set_data.filter((data) => isValidSet(data, exercise.is_body_weight)) as ValidSetData[];
 }
+
+export const getExerciseValueMap = (exercise: WorkoutExercise): Record<string, number> => {
+  const valueMap: Record<string, number> = {};
+  for (const group_data of exercise.muscle_data) {
+    for (const target_data of group_data.targets) {
+      valueMap[`${group_data.group_name}/${target_data.target_name}`] = target_data.ratio;
+    }
+  }
+  return valueMap;
+}

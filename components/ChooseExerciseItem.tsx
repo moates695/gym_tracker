@@ -1,14 +1,22 @@
-import { fetchWrapper } from "@/middleware/helpers";
+import { fetchWrapper, getExerciseValueMap } from "@/middleware/helpers";
 import { emptyExerciseHistoricalData, emptySetData, exercisesHistoricalDataAtom, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useAtom } from "jotai";
 import React, { useState } from "react"
 import { Text, StyleSheet, View, TouchableOpacity } from "react-native"
 import FrequencyCalendar from "./FrequencyCalendar";
+import MuscleGroupSvg from "./MuscleGroupSvg";
+import { useDropdown } from "./ExerciseData";
 
 interface ChooseExerciseDataProps {
   exercise: WorkoutExercise
   onChoose: () => void
+}
+
+type DisplayOption = 'frequency' | 'heatmap';
+interface DisplayOptionObject {
+  label: string
+  value: DisplayOption
 }
 
 // todo: in data, return dates when exercise last done, show as prev 7 day or prev month/30 day infographic
@@ -18,6 +26,12 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [workoutExercises, setWorkoutExercisesAtom] = useAtom(workoutExercisesAtom);
   const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
+
+  const displayOptions: DisplayOptionObject[] = [
+    { label: 'frequency calendar', value: 'frequency' },
+    { label: 'heatmap', value: 'heatmap' },
+  ]
+  const [displayValue, setDisplayValue] = useState<DisplayOption>('frequency');
 
   const handleAddExercise = () => {
     const exerciseCopy: WorkoutExercise = JSON.parse(JSON.stringify(exercise));
@@ -42,6 +56,14 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
     }))
   };
 
+  const displayMap: Record<DisplayOption, JSX.Element> = {
+    frequency: <FrequencyCalendar frequencyData={exercise.frequency} />,
+    heatmap: <MuscleGroupSvg
+                valueMap={getExerciseValueMap(exercise)} 
+                showGroups={false}
+              />
+  }
+
   return (
     <TouchableOpacity 
       style={styles.box}
@@ -62,26 +84,17 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
       </View>
       {isExpanded &&
         <>
-          <Text style={styles.text}>Bodyweight: {exercise.is_body_weight ? "true": "false"}</Text>
           <Text style={styles.text}>Description: {exercise.description}</Text>
+          <Text style={styles.text}>Bodyweight: {exercise.is_body_weight ? "true": "false"}</Text>
           <Text style={styles.text}>Weight Type: {exercise.weight_type}</Text>
-          <Text style={styles.text}>Muscle distribution:</Text>
-          {exercise.muscle_data.map((group_data, i) => {
-            return (
-              <View key={`group-${i}`}>
-                <Text style={styles.text}>{'\t'}{group_data.group_name}:</Text>
-                {group_data.targets.map((target_data, j) => {
-                  return (
-                    <View key={`target-${j}`}>
-                      <Text style={styles.text}>{'\t\t'}{target_data.target_name}: {target_data.ratio}</Text>
-                    </View>
-                  )
-                })}
-              </View>
-            )
-          })}
-          {/* <Text style={styles.text}>Frequency: {exercise.frequency.length}</Text> */}
-          <FrequencyCalendar frequencyData={exercise.frequency} />
+          {/* <MuscleGroupSvg
+            valueMap={valueMap} 
+            showGroups={false}
+          /> */}
+          
+          {useDropdown(displayOptions, displayValue, setDisplayValue)}
+          {displayMap[displayValue]}
+          {/* <FrequencyCalendar frequencyData={exercise.frequency} /> */}
         </>
       }
     </TouchableOpacity>
