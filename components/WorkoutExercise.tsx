@@ -8,6 +8,7 @@ import { editWorkoutExercisesAtom, exercisesHistoricalDataAtom, SetData, Workout
 import { useAtom } from "jotai";
 import { commonStyles } from "@/styles/commonStyles";
 import { fetchWrapper, getValidSets, isValidSet } from "@/middleware/helpers"
+import MuscleGroupSvg from "./MuscleGroupSvg";
 
 interface WorkoutExerciseProps {
   exercise: WorkoutExercise
@@ -22,11 +23,13 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
 
   const [numSets, setNumSets] = useState<number>(0);
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
-  const [isDataExpanded, setIsDataExpanded] = useState<boolean>(false);
+
+  type DataOption = 'none' | 'data' | 'heatmap';
+  const [dataOption, setDataOption] = useState<DataOption>('none');
 
   useEffect(() => {
     if (!isExpanded) {
-      setIsDataExpanded(false);
+      setDataOption('none');
     }
   }, [isExpanded]);
 
@@ -45,16 +48,27 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
     }))
   }
 
-  const handleDateExpanded = () => {
+  const handleDataExpanded = (option: DataOption) => {
     if (editExercises) return;
-    setIsDataExpanded(!isDataExpanded)
+    if (option === dataOption) {
+      setDataOption('none');
+    } else {
+      setDataOption(option);
+    }
   };
 
   useEffect(() => {
     if (!editExercises) return;
-    setIsDataExpanded(false);
+    setDataOption('none');
     setIsExpanded(false);
   }, [editExercises])
+
+  const valueMap: Record<string, number> = {};
+  for (const group_data of exercise.muscle_data) {
+    for (const target_data of group_data.targets) {
+      valueMap[`${group_data.group_name}/${target_data.target_name}`] = target_data.ratio;
+    }
+  }
 
   return (
     <View style={styles.box}>
@@ -69,13 +83,21 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
         <View>
           <ExerciseSets exercise={exercise} exerciseIndex={exerciseIndex}/>
           <View style={styles.rowThin}>
-            <TouchableOpacity
-              style={styles.thinTextButton}
-              onPress={handleDateExpanded}
-            >
-              <Text style={styles.text}>{isDataExpanded ? 'close data': 'open data'}</Text>
-            </TouchableOpacity>
-            {isDataExpanded && 
+            <View style={{flexDirection: 'row'}}>
+              <TouchableOpacity
+                style={styles.thinTextButton}
+                onPress={() => handleDataExpanded('heatmap')}
+              >
+                <Text style={styles.text}>heatmap</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.thinTextButton, {marginLeft: 5}]}
+                onPress={() => handleDataExpanded('data')}
+              >
+                <Text style={styles.text}>data</Text>
+              </TouchableOpacity>
+            </View>
+            {dataOption === 'data' && 
               <TouchableOpacity
                 onPress={handleRefreshHistory}
                 style={commonStyles.thinTextButton}
@@ -84,10 +106,19 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
               </TouchableOpacity>
             }
           </View>
-          {isDataExpanded &&
+          {dataOption === 'data' &&
             <>
               <View style={styles.divider}/>
               <ExerciseData exercise={exercise} exerciseIndex={exerciseIndex}/>
+            </>
+          }
+          {dataOption === 'heatmap' &&
+            <>
+              <View style={styles.divider}/>
+              <MuscleGroupSvg
+                valueMap={valueMap} 
+                showGroups={false}
+              />
             </>
           }
         </View>
@@ -122,6 +153,7 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingLeft: 5,
     paddingRight: 5,
+    marginTop: 5,
   },
   divider: {
     height: 1,
