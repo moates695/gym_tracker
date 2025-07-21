@@ -28,10 +28,10 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
   const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
 
   const displayOptions: DisplayOptionObject[] = [
-    { label: 'frequency calendar', value: 'frequency' },
     { label: 'heatmap', value: 'heatmap' },
+    { label: 'frequency calendar', value: 'frequency' },
   ]
-  const [displayValue, setDisplayValue] = useState<DisplayOption>('frequency');
+  const [displayValue, setDisplayValue] = useState<DisplayOption>('heatmap');
 
   const handleAddExercise = () => {
     const exerciseCopy: WorkoutExercise = JSON.parse(JSON.stringify(exercise));
@@ -87,14 +87,8 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
           <Text style={styles.text}>Description: {exercise.description}</Text>
           <Text style={styles.text}>Bodyweight: {exercise.is_body_weight ? "true": "false"}</Text>
           <Text style={styles.text}>Weight Type: {exercise.weight_type}</Text>
-          {/* <MuscleGroupSvg
-            valueMap={valueMap} 
-            showGroups={false}
-          /> */}
-          
           {useDropdown(displayOptions, displayValue, setDisplayValue)}
           {displayMap[displayValue]}
-          {/* <FrequencyCalendar frequencyData={exercise.frequency} /> */}
         </>
       }
     </TouchableOpacity>

@@ -172,6 +172,14 @@ export default function ExerciseSet(props: ExerciseSetProps) {
     setClassOptionValue(set_data.class);
   }, [set_data])
 
+  // todo: make this an icon? (emojis are kinda cringe)
+  const classMap: Record<SetClass, string> = {
+    working: '💪',
+    dropset: '⬇️',
+    warmup: '🔥',
+    cooldown: '❄️',
+  };
+
   return (
     <>
       <View style={styles.row}>
@@ -224,6 +232,11 @@ export default function ExerciseSet(props: ExerciseSetProps) {
           </>
         :
           <>
+            {/* <Text 
+              style={[styles.text, {justifyContent: 'center'}]}
+            >
+              {classMap[set_data.class]}
+            </Text> */}
             <TextInput 
               style={styles.textInput}
               keyboardType="number-pad"
@@ -236,11 +249,20 @@ export default function ExerciseSet(props: ExerciseSetProps) {
               onChangeText={(text) => handleUpdateWeight(text)}
               value={displayWeight}
             />
-            <ShiftTextInput
-              onChangeText={(text) => handleUpdateInteger(text, 'num_sets')}
-              value={(set_data.num_sets ?? '').toString()}
-              shiftPress={(increase: boolean) => handleShiftSet(increase)}
-            />
+            {set_data.class !== 'dropset' ?
+              <ShiftTextInput
+                onChangeText={(text) => handleUpdateInteger(text, 'num_sets')}
+                value={(set_data.num_sets ?? '').toString()}
+                shiftPress={(increase: boolean) => handleShiftSet(increase)}
+              />
+            :
+              <TextInput 
+                style={styles.textInput}
+                keyboardType="number-pad"
+                value={'1'}
+                editable={false}
+              />
+            }
           </>
         }
       </View>
