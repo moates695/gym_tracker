@@ -3,13 +3,15 @@ import { View, StyleSheet, Text, TouchableOpacity, Modal, Switch } from "react-n
 import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
 import { useAtom, useAtomValue } from "jotai";
-import { muscleGroupToTargetsAtom, muscleTargetoGroupAtom, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
+import { muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
 import { fetchWrapper, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
-import { useDropdown } from "./ExerciseData";
+import { timeSpanToMs, useDropdown } from "./ExerciseData";
 import { TimeSpanOption, TimeSpanOptionObject } from "./ExerciseData";
 import { Dropdown } from "react-native-element-dropdown";
 import DataTable from "./DataTable";
+import LineGraph, { LineGraphPoint } from "./LineGraph";
+import { OptionsObject } from "./ChooseExerciseModal";
 
 // get historical data when workout is started
 // for all previous workouts get
@@ -70,6 +72,7 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
 
   const exercises = useAtomValue(workoutExercisesAtom);
   const muscleGroupToTargets = useAtomValue(muscleGroupToTargetsAtom);
+  const overviewHistoricalStats = useAtomValue(overviewHistoricalStatsAtom);
 
   const displayedDataOptions: DisplayedDataOption[] = [
     { label: 'current workout', value: 'current' },
@@ -97,14 +100,14 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
   ]
   const [historyComparisonValue, setHistoryComparisonValue] = useState<HistoryComparisonType>('workout')
 
-  const totalsContributionTypeOptions: TotalsContributionTypeOption[] = [
+  const totalsContributionOptions: TotalsContributionTypeOption[] = [
     { label: 'volume', value: 'volume' },
     { label: 'sets', value: 'sets' },
     { label: 'reps', value: 'reps' },
     { label: 'duration', value: 'duration' },
     { label: '# exercises', value: 'num_exercises' },
   ]
-  const [totalsContributionTypeValue, setTotalsContributionTypeValue] = useState<ContributionType>('volume');
+  const [totalsContributionValue, setTotalsContributionValue] = useState<TotalsContributionType>('volume');
 
   const timeSpanOptions: TimeSpanOptionObject[] = [
     { label: 'week', value: 'week' },
@@ -115,6 +118,26 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
     { label: 'all', value: 'all' },
   ]
   const [timeSpanOptionValue, setTimeSpanOptionValue] = useState<TimeSpanOption>('month');
+
+  const muscleGroupOptions: OptionsObject[] = Object.keys(muscleGroupToTargets).map(group => (
+    {
+      label: group,
+      value: group
+    }
+  ));
+  const [muscleGroupValue, setMuscleGroupValue] = useState<string>(muscleGroupOptions[0].value);
+
+  const allMuscleTargetOptions = ((): Record<string, OptionsObject[]> => {
+    const optionsMap: Record<string, OptionsObject[]> = {};
+    for (const [group, targets] of Object.entries(muscleGroupToTargets)) {
+      optionsMap[group] = targets.map(name => ({
+        label: name,
+        value: name
+      }));
+    }
+    return optionsMap;
+  })();
+  const [muscleTargetValue, setMuscleTargetValue] = useState<string>(allMuscleTargetOptions[muscleGroupValue][0].value);
 
   const getBodyWeight = (exercise: WorkoutExercise): number => {
     // send request or do locally?
@@ -294,21 +317,108 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
     </>
   )
 
+  const historyDataContributionsMap: Record<HistoryComparisonType, JSX.Element> = {
+    workout: <>{useDropdown(totalsContributionOptions, totalsContributionValue, setTotalsContributionValue)}</>,
+    muscle_group: <>{useDropdown(contributionTypeOptions, contributionTypeValue, setContributionTypeValue)}</>,
+    muscle_target: <>{useDropdown(contributionTypeOptions, contributionTypeValue, setContributionTypeValue)}</>
+  };
+
+  const getHistoryPoints = (): LineGraphPoint[] => {
+    switch (historyComparisonValue) {
+      case 'workout':
+        return getHistoryWorkoutPoints();
+      case 'muscle_group':
+        return [];
+      case 'muscle_target':
+        return [];  
+    }
+  };
+
+  const getHistoryWorkoutPoints = (): LineGraphPoint[] => {
+    const points: LineGraphPoint[] = [];
+    for (const workout of overviewHistoricalStats) {
+      let yValue = null;
+      switch (totalsContributionValue) {
+        case 'volume':
+          yValue = workout.totals.volume;
+          break;
+        case 'reps':
+          yValue = workout.totals.reps;
+          break;
+        case 'sets':
+          yValue = workout.totals.num_sets;
+          break;
+        case 'duration':
+          yValue = workout.duration;
+          break;
+        case 'num_exercises':
+          yValue = workout.num_exercises;
+          break;
+      }
+      points.push({
+        x: Math.floor(workout.started_at),
+        y: yValue
+      })
+    }
+    return filterTimeSeries(points);
+  };
+
+  const getHistoryMuscleGroupPoints = (): LineGraphPoint[] => {
+    const points: LineGraphPoint[] = [];
+    for (const workout of overviewHistoricalStats) {
+      let yValue = 0;
+      switch (contributionTypeValue) {
+        case 'volume':
+          yValue = 0;
+      }
+      points.push({
+        x: Math.floor(workout.started_at),
+        y: yValue
+      })
+    }
+    return points;
+  };
+
+  const getHistoryMuscleTargetPoints = (): LineGraphPoint[] => {
+    const points: LineGraphPoint[] = [];
+    return points;
+  };
+
+  const filterTimeSeries = (points: LineGraphPoint[]): LineGraphPoint[] => {
+    return points.filter(point => {
+      return point.x >= (Date.now() - timeSpanToMs[timeSpanOptionValue])
+    });
+  }
+
+  const handleChooseMuscleGroup = (value: string) => {
+    setMuscleGroupValue(value);
+    if (historyComparisonValue === 'muscle_group') return;
+    setMuscleTargetValue(allMuscleTargetOptions[value][0].value);
+  };
+
   const historyData = (
     <>
       <Text style={styles.text}>Choose a comparison:</Text>
       {useDropdown(historyComparisonOptions, historyComparisonValue, setHistoryComparisonValue)}
-      {historyComparisonValue === 'muscle_group' &&
+      {historyComparisonValue !== 'workout' &&
         <>
+          <Text style={styles.text}>Choose a muscle group:</Text>
+          {useDropdown(muscleGroupOptions, muscleGroupValue, handleChooseMuscleGroup)}
         </>
       }
       {historyComparisonValue === 'muscle_target' &&
         <>
+          <Text style={styles.text}>Choose a muscle target:</Text>
+          {/* <View style={{ zIndex: 10 }}> */}
+          <View>
+            {useDropdown(allMuscleTargetOptions[muscleGroupValue], muscleTargetValue, setMuscleTargetValue)}
+          </View>
         </>
       }
       <Text style={styles.text}>Choose a contribution type:</Text>
-      {useDropdown(contributionTypeOptions, contributionTypeValue, setContributionTypeValue)}
+      {historyDataContributionsMap[historyComparisonValue]}
       {lookbackComponent}
+      <LineGraph points={getHistoryPoints()} scale_type="time"/>
     </>
   )
 

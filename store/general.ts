@@ -115,23 +115,18 @@ export const emptyExerciseHistoricalData: ExerciseHistoricalData = {
 
 export const exercisesHistoricalDataAtom = atom<Record<string, ExerciseHistoricalData>>({})
 
-export interface OverviewHistoricalStatsData {
+export interface OverviewHistoricalStatsTotals {
   volume: number
   num_sets: number
   reps: number
 }
 
-// todo: history shite
-
-export interface OverviewHistoricalStatsMuscles {
-
-}
-
 export interface OverviewHistoricalStats {
   started_at: number
   duration: number
-  totals: OverviewHistoricalStatsData
-  muscles: Record<string, Record<string, OverviewHistoricalStatsData>>
+  num_exercises: number
+  totals: OverviewHistoricalStatsTotals
+  muscles: Record<string, Record<string, OverviewHistoricalStatsTotals>>
 }
 
 export const overviewHistoricalStatsAtom = atom<OverviewHistoricalStats[]>([]);

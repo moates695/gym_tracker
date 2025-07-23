@@ -98,7 +98,7 @@ export default function LineGraph(props: LineGraphProps) {
   };
 
   return (
-     <View style={styles.container}>
+    <View style={styles.container}>
       {points.length >= 2 ?      
         <View style={styles.chartContainer}>
           <Svg width={width} height={height}>
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     color: 'white'
   },
   container: {
-    flex: 1,
+    // flex: 1,
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
@@ -285,7 +285,8 @@ const styles = StyleSheet.create({
     marginLeft: 20,
     borderRadius: 0,
     padding: 0,
-    elevation: 3,
+    // zIndex: 10,
+    // elevation: 3,
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',

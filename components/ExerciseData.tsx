@@ -101,6 +101,15 @@ export const useDropdown = (options: any, value: any, setter: any, disabled: boo
   )
 };
 
+export const timeSpanToMs: Record<TimeSpanOption, number> = {
+  'week': 7 * 24 * 60 * 60 * 1000,
+  'month': 30 * 24 * 60 * 60 * 1000,
+  '3_months': 3 * 30 * 24 * 60 * 60 * 1000,
+  '6_months': 6 * 30 * 24 * 60 * 60 * 1000,
+  'year': 365 * 24 * 60 * 60 * 1000,
+  'all': 0,
+}
+
 export default function ExerciseData(props: ExerciseDataProps) {
   const {exercise, exerciseIndex} = props;
 
@@ -154,15 +163,6 @@ export default function ExerciseData(props: ExerciseDataProps) {
   ]
   const [timeSpanOptionValue, setTimeSpanOptionValue] = useState<TimeSpanOption>('month');
 
-  const timeSpanToMs: Record<TimeSpanOption, number> = {
-    'week': 7 * 24 * 60 * 60 * 1000,
-    'month': 30 * 24 * 60 * 60 * 1000,
-    '3_months': 3 * 30 * 24 * 60 * 60 * 1000,
-    '6_months': 6 * 30 * 24 * 60 * 60 * 1000,
-    'year': 365 * 24 * 60 * 60 * 1000,
-    'all': 0,
-  }
-
   const [dataVisual, setDataVisual] = useState<DataVisual>('graph');
 
   const [historyListIndex, setHistoryListIndex] = useState<number>(0);
@@ -178,7 +178,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
     setDataVisual(dataVisual === 'graph' ? 'table' : 'graph')
   }
 
-  const filterTimeSeries = (points: LineGraphPoint[]) => {
+  const filterTimeSeries = (points: LineGraphPoint[]): LineGraphPoint[] => {
     if (timeSpanOptionValue === 'all') return points;
     return points.filter(point => {
       return point.x >= (Date.now() - timeSpanToMs[timeSpanOptionValue])

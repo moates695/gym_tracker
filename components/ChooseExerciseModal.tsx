@@ -15,7 +15,7 @@ interface ChooseExerciseProps {
   onChoose: () => void
 }
 
-interface OptionsObject {
+export interface OptionsObject {
   label: string
   value: string
 }
