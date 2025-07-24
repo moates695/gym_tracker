@@ -70,3 +70,8 @@ export const getExerciseValueMap = (exercise: WorkoutExercise): Record<string, n
   }
   return valueMap;
 }
+
+export const getBodyWeight = (exercise: WorkoutExercise): number => {
+  // send request or do locally?
+  return 18.25;
+};
