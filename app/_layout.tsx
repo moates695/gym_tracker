@@ -7,17 +7,21 @@ import * as Font from 'expo-font';
 import { MaterialIcons, AntDesign, Ionicons } from '@expo/vector-icons';
 import { fetchWrapper } from "@/middleware/helpers";
 
+export interface DecodedJWT {
+  email: string
+  user_id: string
+  exp: number
+  iat: number
+}
+
 export default function RootLayout() {
   const router = useRouter();
 
   useEffect(() => {
     router.replace("/loading");
 
-    // router.replace("/(tabs)");
-    // return;
-
     const checkUserState = async () => {
-      // await SecureStore.deleteItemAsync("auth_token"); //!!!!
+      // await SecureStore.deleteItemAsync("auth_token"); //!!!! for testing new user
 
       const auth_token = await SecureStore.getItemAsync("auth_token");
       if (!auth_token) {
@@ -26,7 +30,7 @@ export default function RootLayout() {
       }
 
       try {
-        const decoded: {email: string, user_id: string, exp: number, iat: number } = jwtDecode(auth_token);
+        const decoded: DecodedJWT = jwtDecode(auth_token);
         
         if (decoded.exp < Date.now() / 1000) {
           await SecureStore.deleteItemAsync("auth_token");
@@ -39,13 +43,24 @@ export default function RootLayout() {
 
         if (data.account_state == "none") {
           await SecureStore.deleteItemAsync("auth_token");
-          router.replace("/sign-up")
+          router.replace("/sign-up");
         } else if (data.account_state == "unverified") {
-          router.replace({
-            pathname: "/validate",
-            params: { email: decoded.email }
-          })
+          const temp_token = await SecureStore.getItemAsync("temp_token");
+          if (!temp_token) {
+            router.replace("/sign-in");
+            return;
+          }
+          
+          const decodedTempToken: DecodedJWT = jwtDecode(temp_token);
+          if (decodedTempToken.exp < Date.now() / 1000 - 3 * 60) {
+            router.replace("/sign-in");
+            return;
+          }
+
+          router.replace("/validate");
+
         } else if (data.account_state == "good") {
+          await SecureStore.deleteItemAsync("temp_token");
           await SecureStore.setItemAsync("auth_token", data.auth_token);
           router.replace("/(tabs)");
         } else {

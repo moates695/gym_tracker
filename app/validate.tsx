@@ -3,15 +3,36 @@ import { useEffect, useRef, useState } from "react";
 import { Alert, View, Text, TouchableOpacity } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import React from "react";
+import { DecodedJWT } from "./_layout";
+import { jwtDecode } from "jwt-decode";
 
 // todo resend validate email button
 
 export default function Validate() {
-  const { email } = useLocalSearchParams();
+  const router = useRouter();
+  
+  // const { email } = useLocalSearchParams();
+  const [tempToken, setTempToken] = useState<DecodedJWT | null>(null);
+
+  useEffect(() => {
+    const getTempToken = async () => {
+      const tempToken = await SecureStore.getItemAsync("temp_token");
+      if (!tempToken) {
+        router.back();
+        return;
+      }
+      const decodedTempToken: DecodedJWT = jwtDecode(tempToken);
+      setTempToken(decodedTempToken);
+    };
+
+    getTempToken();
+  }, []);
+
+  // TODO: fix rest of this file and refactor others
+
   const emailString: string = Array.isArray(email) ? email[0] : email ?? "";
 
   const pathname = usePathname();
-  const router = useRouter();
   const [stopFetch, setStopFetch] = useState<boolean>(true); 
 
   useEffect(() => {

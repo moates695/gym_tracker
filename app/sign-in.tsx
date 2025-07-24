@@ -4,6 +4,8 @@ import { useState } from "react";
 import TextInputFeild from "../components/InputField";
 import * as SecureStore from "expo-secure-store";
 import React from "react";
+import { DecodedJWT } from "./_layout";
+import { jwtDecode } from "jwt-decode";
 
 interface FormData {
   email: string,
@@ -46,20 +48,18 @@ export default function SignInScreen() {
       });
       
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-
       const data = await response.json();
+
       if (data.status === "none") {
         setMessage("email does not exist");
       } else if (data.status === "unverified") {
-        Alert.alert("Your email hasn't been verified yet");
-        router.replace({
-          pathname: "/validate",
-          params: { email: formData.email }
-        })
+        await SecureStore.setItemAsync("temp_token", data.token)
+        router.replace("/validate");
       } else if (data.status === "incorrect-password") {
         setMessage("incorrect password");
       } else if (data.status === "signed-in") {
-        await SecureStore.setItemAsync("auth_token", data.auth_token);
+        await SecureStore.deleteItemAsync("temp_token");
+        await SecureStore.setItemAsync("auth_token", data.token);
         router.replace('/(tabs)')
       } else {
         throw new Error("Return status not recognised")

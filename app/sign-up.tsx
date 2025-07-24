@@ -91,7 +91,7 @@ export default function SignUpScreen() {
 
   const validateEmail = (email: string) => {
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email.trim() || !emailPattern.test(formData.email)) {
+    if (!email.trim() || !emailPattern.test(email)) {
       setInError({
         ...inError,
         'email': 'invalid email'
@@ -127,7 +127,7 @@ export default function SignUpScreen() {
     usernameTimeoutRef.current = setTimeout(async () => {
       try {
         const response = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}/register/username?` + 
+          `${process.env.EXPO_PUBLIC_API_URL}/register/check/username?` + 
           new URLSearchParams({ username }).toString()
         );
         if (!response.ok) throw new Error('response not ok');
@@ -215,11 +215,10 @@ export default function SignUpScreen() {
       });
       
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      const data = await response.json();
 
-      router.replace({
-        pathname: "/validate",
-        params: { email: formData.email }
-      })
+      await SecureStore.setItemAsync("temp_token", data.temp_token);
+      router.replace("/validate");
 
     } catch (error) {
       console.log(error)
