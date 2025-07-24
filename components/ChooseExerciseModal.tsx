@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { TouchableOpacity, View, Text, StyleSheet, ScrollView, TextInput, Switch } from "react-native";
 
-import { fetchExercises, fetchWrapper } from "@/middleware/helpers";
+import { fetchWrapper } from "@/middleware/helpers";
 import { useAtom, useAtomValue } from "jotai";
 import { exerciseListAtom, MuscleData, muscleGroupToTargetsAtom, WorkoutExercise, WeightType } from "@/store/general";
 import ChooseExerciseData from "./ChooseExerciseItem";

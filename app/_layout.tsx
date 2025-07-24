@@ -5,6 +5,7 @@ import { jwtDecode } from "jwt-decode";
 import React from "react";
 import * as Font from 'expo-font';
 import { MaterialIcons, AntDesign, Ionicons } from '@expo/vector-icons';
+import { fetchWrapper } from "@/middleware/helpers";
 
 export default function RootLayout() {
   const router = useRouter();
@@ -27,14 +28,17 @@ export default function RootLayout() {
       try {
         const decoded: {email: string, user_id: string, exp: number, iat: number } = jwtDecode(auth_token);
         
-        const response = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}/register/validate/check?` + 
-          new URLSearchParams({ "email": decoded.email, "user_id": decoded.user_id }).toString()
-        );
-        if (!response.ok) throw new Error("response not ok");
+        if (decoded.exp < Date.now() / 1000) {
+          await SecureStore.deleteItemAsync("auth_token");
+          router.replace("/sign-in");
+          return;
+        }
 
-        const data = await response.json();
+        const data = await fetchWrapper('login', 'GET');
+        if (data === null) throw new Error("response not ok");
+
         if (data.account_state == "none") {
+          await SecureStore.deleteItemAsync("auth_token");
           router.replace("/sign-up")
         } else if (data.account_state == "unverified") {
           router.replace({

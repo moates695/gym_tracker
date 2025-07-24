@@ -2,6 +2,7 @@ import { useLocalSearchParams, usePathname, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Alert, View, Text, TouchableOpacity } from "react-native";
 import * as SecureStore from "expo-secure-store";
+import React from "react";
 
 // todo resend validate email button
 
