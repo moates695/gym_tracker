@@ -3,10 +3,10 @@ import { View, StyleSheet, Text, TouchableOpacity, Modal, Switch } from "react-n
 import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
 import { useAtom, useAtomValue } from "jotai";
-import { muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
+import { muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
 import { fetchWrapper, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
-import { timeSpanToMs, useDropdown } from "./ExerciseData";
+import { filterTimeSeries, timeSpanToMs, useDropdown } from "./ExerciseData";
 import { TimeSpanOption, TimeSpanOptionObject } from "./ExerciseData";
 import { Dropdown } from "react-native-element-dropdown";
 import DataTable from "./DataTable";
@@ -49,13 +49,13 @@ interface MuscleTypeOption {
   value: MuscleType
 }
 
-type ContributionType = 'volume' | 'sets' | 'reps';
+type ContributionType = 'volume' | 'num_sets' | 'reps';
 interface ContributionTypeOption {
   label: string
   value: ContributionType
 }
 
-type TotalsContributionType = 'volume' | 'sets' | 'reps' | 'duration' | 'num_exercises';
+type TotalsContributionType = 'volume' | 'num_sets' | 'reps' | 'duration' | 'num_exercises';
 interface TotalsContributionTypeOption {
   label: string
   value: TotalsContributionType
@@ -73,6 +73,7 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
   const exercises = useAtomValue(workoutExercisesAtom);
   const muscleGroupToTargets = useAtomValue(muscleGroupToTargetsAtom);
   const overviewHistoricalStats = useAtomValue(overviewHistoricalStatsAtom);
+  const workoutStartTime = useAtomValue(workoutStartTimeAtom);
 
   const displayedDataOptions: DisplayedDataOption[] = [
     { label: 'current workout', value: 'current' },
@@ -88,7 +89,7 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
 
   const contributionTypeOptions: ContributionTypeOption[] = [
     { label: 'volume', value: 'volume' },
-    { label: 'sets', value: 'sets' },
+    { label: 'sets', value: 'num_sets' },
     { label: 'reps', value: 'reps' },
   ]
   const [contributionTypeValue, setContributionTypeValue] = useState<ContributionType>('volume');
@@ -102,7 +103,7 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
 
   const totalsContributionOptions: TotalsContributionTypeOption[] = [
     { label: 'volume', value: 'volume' },
-    { label: 'sets', value: 'sets' },
+    { label: 'sets', value: 'num_sets' },
     { label: 'reps', value: 'reps' },
     { label: 'duration', value: 'duration' },
     { label: '# exercises', value: 'num_exercises' },
@@ -118,6 +119,21 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
     { label: 'all', value: 'all' },
   ]
   const [timeSpanOptionValue, setTimeSpanOptionValue] = useState<TimeSpanOption>('month');
+
+  const [workoutDuration, setWorkoutDuration] = useState<number>(0);
+
+  useEffect(() => {
+    if (workoutStartTime === null) return;
+
+    const updateDuration = () => {
+      setWorkoutDuration(Math.floor((Date.now() - workoutStartTime) / 1000));
+    };
+
+    updateDuration();
+    const interval = setInterval(updateDuration, 1000);
+    return () => clearInterval(interval);
+
+  }, [workoutStartTime])
 
   const muscleGroupOptions: OptionsObject[] = Object.keys(muscleGroupToTargets).map(group => (
     {
@@ -324,14 +340,19 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
   };
 
   const getHistoryPoints = (): LineGraphPoint[] => {
+    let points: LineGraphPoint[] = [];
     switch (historyComparisonValue) {
       case 'workout':
-        return getHistoryWorkoutPoints();
+        points = getHistoryWorkoutPoints();
+        break;
       case 'muscle_group':
-        return [];
+        points = getHistoryMuscleGroupPoints();
+        break;
       case 'muscle_target':
-        return [];  
+        points = getHistoryMuscleTargetPoints();  
+        break;
     }
+    return filterTimeSeries(points, timeSpanOptionValue);
   };
 
   const getHistoryWorkoutPoints = (): LineGraphPoint[] => {
@@ -345,7 +366,7 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
         case 'reps':
           yValue = workout.totals.reps;
           break;
-        case 'sets':
+        case 'num_sets':
           yValue = workout.totals.num_sets;
           break;
         case 'duration':
@@ -360,20 +381,16 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
         y: yValue
       })
     }
-    return filterTimeSeries(points);
+    return points;
   };
 
   const getHistoryMuscleGroupPoints = (): LineGraphPoint[] => {
     const points: LineGraphPoint[] = [];
-    for (const workout of overviewHistoricalStats) {
-      let yValue = 0;
-      switch (contributionTypeValue) {
-        case 'volume':
-          yValue = 0;
-      }
+    for (const stats of overviewHistoricalStats) {
+      if (!(muscleGroupValue in stats.muscles)) continue; 
       points.push({
-        x: Math.floor(workout.started_at),
-        y: yValue
+        x: Math.floor(stats.started_at),
+        y: Object.values(stats.muscles[muscleGroupValue]).reduce((acc, val) => acc + val[contributionTypeValue], 0)
       })
     }
     return points;
@@ -381,14 +398,122 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
 
   const getHistoryMuscleTargetPoints = (): LineGraphPoint[] => {
     const points: LineGraphPoint[] = [];
+    for (const stats of overviewHistoricalStats) {
+      if (!(muscleGroupValue in stats.muscles)) continue; 
+      for (const [targetName, targetStats] of Object.entries(stats.muscles[muscleGroupValue])) {
+        if (targetName != muscleTargetValue) continue;
+        points.push({
+          x: Math.floor(stats.started_at),
+          y: targetStats[contributionTypeValue]
+        })
+      }
+    }
     return points;
   };
 
-  const filterTimeSeries = (points: LineGraphPoint[]): LineGraphPoint[] => {
-    return points.filter(point => {
-      return point.x >= (Date.now() - timeSpanToMs[timeSpanOptionValue])
-    });
-  }
+  const getBarValue = (): number => {
+    switch (historyComparisonValue) {
+      case 'workout':
+        return getBarValueWorkout();
+      case 'muscle_group':
+        return getBarValueMuscleGroup();
+      case 'muscle_target':
+        return getBarValueMuscleTarget();
+    }
+  };
+
+  const getBarValueWorkout = (): number => {
+    const validExercises = [];
+    for (const exercise of exercises) {
+      validExercises.push(getValidSets(exercise));
+    }
+
+    if (totalsContributionValue === 'duration') {
+      return workoutDuration;
+    } else if (totalsContributionValue === 'num_exercises') {
+      return validExercises.length;
+    }
+
+    let value = 0;
+    for (const set_data_list of validExercises) {
+      for (const set_data of set_data_list) {
+        if (totalsContributionValue === 'volume') {
+          value += set_data.reps * set_data.weight * set_data.num_sets;
+        } else if (totalsContributionValue === 'reps') {
+          value += set_data.reps * set_data.num_sets;
+        } else {
+          value += set_data.num_sets;
+        }
+      }
+    }
+
+    return value;
+  };
+
+  const getBarValueMuscleGroup = (): number => {
+    let value = 0;
+    for (const exercise of exercises) {
+      const valid_sets = getValidSets(exercise);
+      if (valid_sets.length === 0) continue;
+
+      let maxRatio = -1;
+      for (const muscle_data of exercise.muscle_data) {
+        if (muscle_data.group_name !== muscleGroupValue) continue;
+        for (const target_data of muscle_data.targets) {
+          if (target_data.ratio <= maxRatio) continue;
+          maxRatio = target_data.ratio;
+        }
+      }
+
+      if (maxRatio === -1) continue;
+
+      for (const set_data of getValidSets(exercise)) {
+        if (contributionTypeValue === 'volume') {
+          const weight = exercise.is_body_weight ? getBodyWeight(exercise) : set_data.weight
+          value += set_data.reps * weight * set_data.num_sets * (maxRatio / 10);
+        } else if (contributionTypeValue === 'reps') {
+          value += set_data.reps * set_data.num_sets;
+        } else {
+          value += set_data.num_sets;
+        }
+      }
+    }
+
+    return value;
+  };
+
+  const getBarValueMuscleTarget = (): number => {
+    let value = 0;
+    for (const exercise of exercises) {
+      const valid_sets = getValidSets(exercise);
+      if (valid_sets.length === 0) continue;
+
+      let maxRatio = -1;
+      for (const muscle_data of exercise.muscle_data) {
+        if (muscle_data.group_name !== muscleGroupValue) continue;
+        for (const target_data of muscle_data.targets) {
+          if (target_data.target_name != muscleTargetValue) continue;
+          if (target_data.ratio <= maxRatio) continue;
+          maxRatio = target_data.ratio;
+        }
+      }
+
+      if (maxRatio === -1) continue;
+
+      for (const set_data of getValidSets(exercise)) {
+        if (contributionTypeValue === 'volume') {
+          const weight = exercise.is_body_weight ? getBodyWeight(exercise) : set_data.weight
+          value += set_data.reps * weight * set_data.num_sets * (maxRatio / 10);
+        } else if (contributionTypeValue === 'reps') {
+          value += set_data.reps * set_data.num_sets;
+        } else {
+          value += set_data.num_sets;
+        }
+      }
+    }
+    
+    return value;
+  };
 
   const handleChooseMuscleGroup = (value: string) => {
     setMuscleGroupValue(value);
@@ -418,7 +543,7 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
       <Text style={styles.text}>Choose a contribution type:</Text>
       {historyDataContributionsMap[historyComparisonValue]}
       {lookbackComponent}
-      <LineGraph points={getHistoryPoints()} scale_type="time"/>
+      <LineGraph points={getHistoryPoints()} scale_type="time" barValue={getBarValue()}/>
     </>
   )
 

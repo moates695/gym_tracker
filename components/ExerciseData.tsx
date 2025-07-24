@@ -110,6 +110,13 @@ export const timeSpanToMs: Record<TimeSpanOption, number> = {
   'all': 0,
 }
 
+export const filterTimeSeries = (points: LineGraphPoint[], timeSpanOptionValue: TimeSpanOption): LineGraphPoint[] => {
+  if (timeSpanOptionValue === 'all') return points;
+  return points.filter(point => {
+    return point.x >= (Date.now() - timeSpanToMs[timeSpanOptionValue])
+  });
+}
+
 export default function ExerciseData(props: ExerciseDataProps) {
   const {exercise, exerciseIndex} = props;
 
@@ -178,13 +185,6 @@ export default function ExerciseData(props: ExerciseDataProps) {
     setDataVisual(dataVisual === 'graph' ? 'table' : 'graph')
   }
 
-  const filterTimeSeries = (points: LineGraphPoint[]): LineGraphPoint[] => {
-    if (timeSpanOptionValue === 'all') return points;
-    return points.filter(point => {
-      return point.x >= (Date.now() - timeSpanToMs[timeSpanOptionValue])
-    });
-  }
-
   const getPoints = (): LineGraphPoint[] => {
     switch (dataOptionValue) {
       case 'n_rep_max':
@@ -227,7 +227,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
         "y": parseFloat((point as any)["weight"]),
       })
     }
-    return filterTimeSeries(points);
+    return filterTimeSeries(points, timeSpanOptionValue);
   };
 
   const getVolumePoints = (): LineGraphPoint[] => {
@@ -247,7 +247,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
         "y": (point as TimestampValue)["value"]
       })
     }
-    return filterTimeSeries(points);
+    return filterTimeSeries(points, timeSpanOptionValue);
   };
 
   const getVolumePerBucketPoints = (): LineGraphPoint[] => {
