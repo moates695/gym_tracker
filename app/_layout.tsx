@@ -44,33 +44,31 @@ export default function RootLayout() {
           return;
         }
 
-        const data = await fetchWrapper('login', 'GET');
+        const data = await fetchWrapper({
+          route: 'login',
+          method: 'GET',
+        });
         if (data === null) throw new Error("response not ok");
 
-        if (data.account_state == "none") {
+        if (data.account_state !== "good") {
           await SecureStore.deleteItemAsync("auth_token");
-          router.replace("/sign-up");
+        }
+        if (data.account_state !== "unverified") {
+          await SecureStore.deleteItemAsync("temp_token");
+        }
 
+        if (data.account_state == "none") {
+          router.replace("/sign-up");
         } else if (data.account_state == "unverified") {
           const temp_token = await SecureStore.getItemAsync("temp_token");
-          if (!temp_token) {
+          if (!temp_token || (jwtDecode(temp_token) as DecodedJWT).exp < Date.now() / 1000 - 120) {
+            await SecureStore.deleteItemAsync("temp_token");
             router.replace("/sign-in");
             return;
           }
-          
-          const decodedTempToken: DecodedJWT = jwtDecode(temp_token);
-          if (decodedTempToken.exp < Date.now() / 1000 - 3 * 60) {
-            router.replace("/sign-in");
-            return;
-          }
-
           router.replace("/validate");
-
         } else if (data.account_state == "good") {
-          await SecureStore.deleteItemAsync("temp_token");
-          await SecureStore.setItemAsync("auth_token", data.auth_token);
           router.replace("/(tabs)");
-        
         } else {
           throw new Error("response not recognised");
         }
@@ -93,7 +91,6 @@ export default function RootLayout() {
         ...AntDesign.font,
         ...Ionicons.font,
       });
-      // setFontsLoaded(true);
     }
 
     loadFonts();

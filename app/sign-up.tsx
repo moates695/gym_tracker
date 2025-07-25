@@ -7,6 +7,8 @@ import * as SecureStore from "expo-secure-store";
 import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { commonStyles } from "@/styles/commonStyles";
+import { OptionsObject } from "@/components/ChooseExerciseModal";
+import { useDropdown } from "@/components/ExerciseData";
 
 type Gender = "male" | "female" | "other";
 type GoalStatus = "bulking" | "cutting" | "maintaining";
@@ -23,6 +25,21 @@ interface FormData {
   weight: string,
   goal_status: GoalStatus
   ped_status: PedStatus
+}
+
+interface GenderOption {
+  label: string
+  value: Gender
+}
+
+interface PhaseOption {
+  label: string
+  value: GoalStatus
+}
+
+interface PedOption {
+  label: string
+  value: PedStatus
 }
 
 export default function SignUpScreen() {
@@ -56,6 +73,27 @@ export default function SignUpScreen() {
   const usernameTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isTimeoutActive, setIsTimeoutActive] = useState<boolean>(false);
   const [submitting, SetSubmitting] = useState<boolean>(false);
+
+  const genderOptions: GenderOption[] = [
+    { label: 'male', value: 'male' },
+    { label: 'female', value: 'female' },
+    { label: 'other', value: 'other' },
+  ]
+  const [genderValue, setGenderValue] = useState<Gender>('male');
+
+  const phaseOptions: PhaseOption[] = [
+    { label: 'bulking', value: 'bulking' },
+    { label: 'cutting', value: 'cutting' },
+    { label: 'maintaining', value: 'maintaining' },
+  ]
+  const [phaseValue, setPhaseValue] = useState<GoalStatus>('bulking');
+
+  const pedOptions: PedOption[] = [
+    { label: 'natural', value: 'natural' },
+    { label: 'juicing', value: 'juicing' },
+    { label: 'silent', value: 'silent' },
+  ]
+  const [pedValue, setPedValue] = useState<PedStatus>('natural');
 
   const handleTextChange = (field: string, value: string): void => {
     setInError({
@@ -94,12 +132,12 @@ export default function SignUpScreen() {
 
   };
 
-  const handleSelectChange = (field: string, value: string): void => {
-    setFormData({
-      ...formData,
-      [field]: value
-    })
-  };
+  // const handleSelectChange = (field: string, value: string): void => {
+  //   setFormData({
+  //     ...formData,
+  //     [field]: value
+  //   })
+  // };
 
   const validateEmail = (email: string) => {
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -215,8 +253,8 @@ export default function SignUpScreen() {
     
     try {
       let form_copy: Record<any, any> = { ...formData};
-      form_copy.height = parseInt(formData.height);
-      form_copy.weight = parseInt(formData.weight);
+      form_copy.height = parseFloat(formData.height);
+      form_copy.weight = parseFloat(formData.weight);
 
       const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/register`, {
         method: "POST",
@@ -229,22 +267,27 @@ export default function SignUpScreen() {
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
       const data = await response.json();
 
-      // if (data.) {
+      if (data.status === "success") {
+        await SecureStore.setItemAsync("temp_token", data.temp_token);
+        router.replace("/validate");
+        return;
+      }
 
-      // }
-
-      await SecureStore.setItemAsync("temp_token", data.temp_token);
-      router.replace("/validate");
+      const tempInError = {...inError};
+      for (const field of data.fields) {
+        tempInError[field] = `${field} already in use`
+      }
+      setInError(tempInError);
 
     } catch (error) {
-      console.log(error)
+      console.log(error);
       Alert.alert("error during registration")
     } finally {
       SetSubmitting(false);
     }
   };
 
-  const formDataLabels: Record<string, string> = {
+  const formDataLabels: Record<keyof FormData, string> = {
     email: "Email",
     password: "Password",
     username: "Username",
@@ -253,13 +296,15 @@ export default function SignUpScreen() {
     gender: "Gender",
     height: "Height (cm)",
     weight: "Weight (kg)",
-    goal_status: "Current phase"
+    goal_status: "Current phase",
+    ped_status: "PED use"
   }
 
-  const formDataOptions: Record<string, string[]> = {
-    gender: ["male", "female", "other"],
-    goal_status: ["bulking", "cutting", "maintaining"]
-  }
+  // const formDataOptions: Record<string, string[]> = {
+  //   gender: ["male", "female", "other"] as Gender[],
+  //   goal_status: ["bulking", "cutting", "maintaining"] as GoalStatus[],
+  //   ped_status: ["natural", "juicing", "silent"] as PedStatus[]
+  // }
 
   return (
     <KeyboardAvoidingView
@@ -273,7 +318,7 @@ export default function SignUpScreen() {
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={commonStyles.boldText}>Sign Up</Text>
           <View style={styles.container}>
-            {['email', 'password', 'username'].map((key, index) => (
+            {(['email', 'password', 'username'] as (keyof FormData)[]).map((key, index) => (
               <View key={index} style={styles.singleItemRow}>
                 <TextInputFeild field={key} label={formDataLabels[key]} value={formData[key as keyof FormData]} is_number={false} is_secure={key==='password'} error_message={inError[key]} onChangeText={handleTextChange}/>
               </View>
@@ -287,9 +332,18 @@ export default function SignUpScreen() {
                 ))}
               </View>
             ))}
-            {(['gender', 'goal_status'] as (keyof FormData)[]).map((key, index) => (
-              <RadioButtons key={index} field={key} label={formDataLabels[key]} options={formDataOptions[key]} selection={formData[key]} handleSelect={handleSelectChange}/>
-            ))}
+            <View style={styles.container}>
+              <Text style={styles.formHeader}>Gender</Text>
+              {useDropdown(genderOptions, genderValue, setGenderValue, undefined, styles.dropDown)}
+            </View>
+            <View style={styles.container}>
+              <Text style={styles.formHeader}>Phase</Text>
+              {useDropdown(phaseOptions, phaseValue, setPhaseValue, undefined, styles.dropDown)}
+            </View>
+            <View style={styles.container}>
+              <Text style={styles.formHeader}>Natty status</Text>
+              {useDropdown(pedOptions, pedValue, setPedValue, undefined, styles.dropDown)}
+            </View>
           </View>
 
           <View style={styles.buttonContainer}>
@@ -330,7 +384,6 @@ const styles = StyleSheet.create({
     padding: 30 
   },
   container: {
-    flex: 1,
     padding: 10,
     color: "white",
   },
@@ -359,5 +412,13 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     alignItems: "center",
+  },
+  formHeader: {
+    fontSize: 16,
+    marginBottom: 5,
+    color: "white"
+  },
+  dropDown: {
+    width: '40%'
   }
 });

@@ -18,11 +18,11 @@ export const fetchWrapper = async ({route, method, params, body, token_str = 'au
     if (method === 'GET' && params) {
       url = `${url}?${new URLSearchParams(params).toString()}`
     }
-    const auth_token = await SecureStore.getItemAsync(token_str);
+    const token = await SecureStore.getItemAsync(token_str);
     const response = await fetch(url, {
       method: method,
       headers: {
-        "Authorization": `Bearer ${auth_token}`,
+        "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json"
       },
       ...(method === 'POST' && {body: JSON.stringify(body)})         
@@ -38,8 +38,6 @@ export const fetchWrapper = async ({route, method, params, body, token_str = 'au
     return null;
   }
 }
-
-export const fetchWrapperTempToken = () => {};
 
 export const isValidSet = (set_data: SetData, is_body_weight: boolean): boolean => {
   for (const [key, value] of Object.entries(set_data)) {

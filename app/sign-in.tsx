@@ -75,6 +75,7 @@ export default function SignInScreen() {
         })
       } else if (data.status === "unverified") {
         await SecureStore.setItemAsync("temp_token", data.token)
+        // todo: send a verification email using data.token
         router.replace("/validate");
       } else if (data.status === "incorrect-password") {
         setInError({

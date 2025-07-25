@@ -1,3 +1,4 @@
+import React from "react";
 import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
 
 interface RadioButtonProps {
@@ -11,10 +12,10 @@ interface RadioButtonProps {
 export default function RadioButtons (props: RadioButtonProps) {
   const { field, label, options, selection, handleSelect } = props;
   
-  const optionsItemWidth = 100 / options.length;
+  const optionsItemWidth = 100 / options.length - 3;
 
   return (
-    <View>
+    <View style={{backgroundColor: 'red'}}>
       <Text style={styles.text}>{label}</Text>
       <View style={styles.optionsContainer}>
         {options.map((option) => (
