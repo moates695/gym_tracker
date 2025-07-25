@@ -6,6 +6,8 @@ import React from "react";
 import * as Font from 'expo-font';
 import { MaterialIcons, AntDesign, Ionicons } from '@expo/vector-icons';
 import { fetchWrapper } from "@/middleware/helpers";
+import { useColorScheme } from 'react-native';
+import * as SystemUI from "expo-system-ui"
 
 export interface DecodedJWT {
   email: string
@@ -17,11 +19,15 @@ export interface DecodedJWT {
 export default function RootLayout() {
   const router = useRouter();
 
+  const colorScheme = useColorScheme();
+
+  SystemUI.setBackgroundColorAsync("black")
+
   useEffect(() => {
     router.replace("/loading");
 
     const checkUserState = async () => {
-      // await SecureStore.deleteItemAsync("auth_token"); //!!!! for testing new user
+      await SecureStore.deleteItemAsync("auth_token"); //!!!! for testing new user
 
       const auth_token = await SecureStore.getItemAsync("auth_token");
       if (!auth_token) {
@@ -44,6 +50,7 @@ export default function RootLayout() {
         if (data.account_state == "none") {
           await SecureStore.deleteItemAsync("auth_token");
           router.replace("/sign-up");
+
         } else if (data.account_state == "unverified") {
           const temp_token = await SecureStore.getItemAsync("temp_token");
           if (!temp_token) {
@@ -63,6 +70,7 @@ export default function RootLayout() {
           await SecureStore.deleteItemAsync("temp_token");
           await SecureStore.setItemAsync("auth_token", data.auth_token);
           router.replace("/(tabs)");
+        
         } else {
           throw new Error("response not recognised");
         }
@@ -94,7 +102,14 @@ export default function RootLayout() {
   return (
     <Stack
       screenOptions={{
-        headerShown: false
+        headerShown: false,
+        headerStyle: {
+          backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
+        },
+        headerTintColor: colorScheme === 'dark' ? '#fff' : '#000',
+        contentStyle: {
+          backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
+        },
       }}
     >
       <Stack.Screen name="loading"/>

@@ -1,13 +1,24 @@
 import { SetData, ValidSetData, WorkoutExercise } from "@/store/general";
 import * as SecureStore from "expo-secure-store";
 
-export const fetchWrapper = async (route: string, method: string, params?: any, body?: any) => {
+type FetchWrapperMethods = 'POST' | 'GET';
+type TokenString = 'auth_token' | 'temp_token';
+
+interface FetchWrapperArgs {
+  route: string
+  method: FetchWrapperMethods
+  params?: Record<string, string>
+  body?: Object
+  token_str?: TokenString
+}
+
+export const fetchWrapper = async ({route, method, params, body, token_str = 'auth_token'}: FetchWrapperArgs) => {
   try {
     let url = `${process.env.EXPO_PUBLIC_API_URL}/${route}`;
     if (method === 'GET' && params) {
       url = `${url}?${new URLSearchParams(params).toString()}`
     }
-    const auth_token = await SecureStore.getItemAsync("auth_token");
+    const auth_token = await SecureStore.getItemAsync(token_str);
     const response = await fetch(url, {
       method: method,
       headers: {
@@ -27,6 +38,8 @@ export const fetchWrapper = async (route: string, method: string, params?: any, 
     return null;
   }
 }
+
+export const fetchWrapperTempToken = () => {};
 
 export const isValidSet = (set_data: SetData, is_body_weight: boolean): boolean => {
   for (const [key, value] of Object.entries(set_data)) {
