@@ -45,14 +45,15 @@ export default function Validate() {
         token_str: 'temp_token'
       })
       if (data === null) return;
-
+      
       if (data.account_state !== "unverified") {
         clearIntervalRef();
       }
 
       if (data.account_state === "none") {
+        Alert.alert("account was not recognized");
         router.replace("/sign-up");
-      } else if (data.account_state === "none") {
+      } else if (data.account_state === "good") {
         await SecureStore.deleteItemAsync("temp_token");
         await SecureStore.setItemAsync("auth_token", data.auth_token);
         router.replace("/(tabs)");
@@ -60,11 +61,12 @@ export default function Validate() {
     };
 
     intervalRef.current = window.setInterval(fetchValidationStatus, 1500);
-    return () => {
-      if (intervalRef.current !== null) {
-        clearInterval(intervalRef.current);
-      }
-    };
+    // return () => {
+    //   if (intervalRef.current !== null) {
+    //     clearInterval(intervalRef.current);
+    //   }
+    // };
+    return clearIntervalRef;
 
   }, [tempToken]);
 

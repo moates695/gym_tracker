@@ -75,8 +75,17 @@ export default function SignInScreen() {
         })
       } else if (data.status === "unverified") {
         await SecureStore.setItemAsync("temp_token", data.token)
-        // todo: send a verification email using data.token
-        router.replace("/validate");
+        const resendData = await fetchWrapper({
+          route: 'register/validate/resend',
+          method: 'POST',
+          token_str: 'temp_token'
+        })
+        if (resendData === null) {
+          await SecureStore.deleteItemAsync("temp_token");
+          Alert.alert("account exists, error sending validation email")
+        } else {
+          router.replace("/validate");
+        }
       } else if (data.status === "incorrect-password") {
         setInError({
           ...inError,
@@ -98,7 +107,7 @@ export default function SignInScreen() {
   }
 
   const isButtonDisabled = () => {
-    return formData.email === '' || formData.password === '';
+    return formData.email === '' || formData.password === '' || submitting;
   };
 
   return (
@@ -131,7 +140,7 @@ export default function SignInScreen() {
               }}
               disabled={isButtonDisabled()}
             >
-              <Text style={{ color: "white"}}>{submitting ? 'submitting' : 'sign up'}</Text>
+              <Text style={{ color: "white"}}>{submitting ? 'submitting' : 'sign in'}</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.buttonContainer}>

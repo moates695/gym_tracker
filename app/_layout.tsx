@@ -6,7 +6,7 @@ import React from "react";
 import * as Font from 'expo-font';
 import { MaterialIcons, AntDesign, Ionicons } from '@expo/vector-icons';
 import { fetchWrapper } from "@/middleware/helpers";
-import { useColorScheme } from 'react-native';
+import { Alert, useColorScheme } from 'react-native';
 import * as SystemUI from "expo-system-ui"
 
 export interface DecodedJWT {
@@ -66,7 +66,17 @@ export default function RootLayout() {
             router.replace("/sign-in");
             return;
           }
-          router.replace("/validate");
+          const data = await fetchWrapper({
+            route: 'register/validate/resend',
+            method: 'POST',
+            token_str: 'temp_token'
+          })
+          if (data === null) {
+            await SecureStore.deleteItemAsync("temp_token");
+            router.replace("/sign-in");
+          } else {
+            router.replace("/validate");
+          }
         } else if (data.account_state == "good") {
           router.replace("/(tabs)");
         } else {

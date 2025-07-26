@@ -9,6 +9,7 @@ import { StatusBar } from "expo-status-bar";
 import { commonStyles } from "@/styles/commonStyles";
 import { OptionsObject } from "@/components/ChooseExerciseModal";
 import { useDropdown } from "@/components/ExerciseData";
+import { fetchWrapper } from "@/middleware/helpers";
 
 type Gender = "male" | "female" | "other";
 type GoalStatus = "bulking" | "cutting" | "maintaining";
