@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { TouchableOpacity, View, Text, StyleSheet, ScrollView, TextInput, Switch } from "react-native";
 
-import { fetchExercises, fetchWrapper } from "@/middleware/helpers";
+import { fetchWrapper } from "@/middleware/helpers";
 import { useAtom, useAtomValue } from "jotai";
 import { exerciseListAtom, MuscleData, muscleGroupToTargetsAtom, WorkoutExercise, WeightType } from "@/store/general";
 import ChooseExerciseData from "./ChooseExerciseItem";
@@ -82,7 +82,10 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
   const [customOnly, setCustomOnly] = useState<boolean>(false);
 
   const handleExercisesRefresh = async () => {
-    const data = await fetchWrapper('exercises/list/all', 'GET');
+    const data = await fetchWrapper({
+    route: 'exercises/list/all',
+    method: 'GET'
+});
     if (data === null) return;
     setExercises(data.exercises);
   };

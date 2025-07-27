@@ -5,9 +5,15 @@ import TextInputFeild from "../components/InputField";
 import RadioButtons from "../components/RadioButtons";
 import * as SecureStore from "expo-secure-store";
 import React from "react";
+import { StatusBar } from "expo-status-bar";
+import { commonStyles } from "@/styles/commonStyles";
+import { OptionsObject } from "@/components/ChooseExerciseModal";
+import { useDropdown } from "@/components/ExerciseData";
+import { fetchWrapper } from "@/middleware/helpers";
 
-type Gender = "male" | "female" | "other"
+type Gender = "male" | "female" | "other";
 type GoalStatus = "bulking" | "cutting" | "maintaining";
+type PedStatus = "natural" | "juicing" | "silent";
 
 interface FormData {
   email: string,
@@ -19,6 +25,22 @@ interface FormData {
   height: string,
   weight: string,
   goal_status: GoalStatus
+  ped_status: PedStatus
+}
+
+interface GenderOption {
+  label: string
+  value: Gender
+}
+
+interface PhaseOption {
+  label: string
+  value: GoalStatus
+}
+
+interface PedOption {
+  label: string
+  value: PedStatus
 }
 
 export default function SignUpScreen() {
@@ -33,24 +55,53 @@ export default function SignUpScreen() {
     height: "55",
     weight: "60",
     gender: "female",
-    goal_status: "bulking"
+    goal_status: "bulking",
+    ped_status: "natural"
   })
+
+  const [inError, setInError] = useState<Record<string, string>>({
+    email: "",
+    username: "",
+    password: "",
+    first_name: "",
+    last_name: "",
+    height: "",
+    weight: "",
+    gender: "",
+    goal_status: ""
+  });
 
   const usernameTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isTimeoutActive, setIsTimeoutActive] = useState<boolean>(false);
-  const [inError, setInError] = useState<Record<string, string>>({});
   const [submitting, SetSubmitting] = useState<boolean>(false);
 
-  const handleTextChange = (field: string, value: string): void => {
-    if (field in ["height", "weight"]) { // todo maybe remove this?
-      value = String(Number(value.replace("^\d*\.?\d+$", "")) || 0);
-    }
+  const genderOptions: GenderOption[] = [
+    { label: 'male', value: 'male' },
+    { label: 'female', value: 'female' },
+    { label: 'other', value: 'other' },
+  ]
+  const [genderValue, setGenderValue] = useState<Gender>('male');
 
-    setInError(prev => {
-      const { [field]: _, ...rest } = prev;
-      return rest;
-    })
-    
+  const phaseOptions: PhaseOption[] = [
+    { label: 'bulking', value: 'bulking' },
+    { label: 'cutting', value: 'cutting' },
+    { label: 'maintaining', value: 'maintaining' },
+  ]
+  const [phaseValue, setPhaseValue] = useState<GoalStatus>('bulking');
+
+  const pedOptions: PedOption[] = [
+    { label: 'natural', value: 'natural' },
+    { label: 'juicing', value: 'juicing' },
+    { label: 'silent', value: 'silent' },
+  ]
+  const [pedValue, setPedValue] = useState<PedStatus>('natural');
+
+  const handleTextChange = (field: string, value: string): void => {
+    setInError({
+      ...inError,
+      [field]: value !== '' ? '' : 'cannot be empty'
+    });
+
     setFormData({
       ...formData,
       [field]: value,
@@ -82,16 +133,16 @@ export default function SignUpScreen() {
 
   };
 
-  const handleSelectChange = (field: string, value: string): void => {
-    setFormData({
-      ...formData,
-      [field]: value
-    })
-  };
+  // const handleSelectChange = (field: string, value: string): void => {
+  //   setFormData({
+  //     ...formData,
+  //     [field]: value
+  //   })
+  // };
 
   const validateEmail = (email: string) => {
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email.trim() || !emailPattern.test(formData.email)) {
+    if (!email.trim() || !emailPattern.test(email)) {
       setInError({
         ...inError,
         'email': 'invalid email'
@@ -127,7 +178,7 @@ export default function SignUpScreen() {
     usernameTimeoutRef.current = setTimeout(async () => {
       try {
         const response = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}/register/username?` + 
+          `${process.env.EXPO_PUBLIC_API_URL}/register/check/username?` + 
           new URLSearchParams({ username }).toString()
         );
         if (!response.ok) throw new Error('response not ok');
@@ -162,7 +213,7 @@ export default function SignUpScreen() {
 
   const validateHeight = (height_str: string) => {
     const height = Number(height_str);
-    if (height >= 20 && height <= 300) return;
+    if (!Number.isNaN(height) && height >= 20 && height <= 300) return;
     setInError({
       ...inError,
       height: "invalid height"
@@ -171,7 +222,7 @@ export default function SignUpScreen() {
 
   const validateWeight = (weight_str: string) => {
     const weight = Number(weight_str);
-    if (weight >= 20 && weight <= 300) return;
+    if (!Number.isNaN(weight) && weight >= 20 && weight <= 300) return;
     setInError({
       ...inError,
       weight: "invalid weight"
@@ -187,8 +238,8 @@ export default function SignUpScreen() {
   };
 
   const isFormInError = (): boolean => {
-    for (const key in inError) {
-      if (inError[key].length === 0) continue;
+    for (const value of Object.values(inError)) {
+      if (value.length === 0) continue;
       return true;
     }
     return false;
@@ -203,8 +254,8 @@ export default function SignUpScreen() {
     
     try {
       let form_copy: Record<any, any> = { ...formData};
-      form_copy.height = parseInt(formData.height);
-      form_copy.weight = parseInt(formData.weight);
+      form_copy.height = parseFloat(formData.height);
+      form_copy.weight = parseFloat(formData.weight);
 
       const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/register`, {
         method: "POST",
@@ -215,67 +266,85 @@ export default function SignUpScreen() {
       });
       
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      const data = await response.json();
 
-      router.replace({
-        pathname: "/validate",
-        params: { email: formData.email }
-      })
+      if (data.status === "success") {
+        await SecureStore.setItemAsync("temp_token", data.temp_token);
+        router.replace("/validate");
+        return;
+      }
+
+      const tempInError = {...inError};
+      for (const field of data.fields) {
+        tempInError[field] = `${field} already in use`
+      }
+      setInError(tempInError);
 
     } catch (error) {
-      console.log(error)
+      console.log(error);
       Alert.alert("error during registration")
     } finally {
       SetSubmitting(false);
     }
   };
 
-  const formDataLabels: Record<string, string> = {
+  const formDataLabels: Record<keyof FormData, string> = {
     email: "Email",
     password: "Password",
     username: "Username",
     first_name: "First name",
     last_name: "Last name",
     gender: "Gender",
-    height: "Height",
-    weight: "Weight",
-    goal_status: "Current phase"
+    height: "Height (cm)",
+    weight: "Weight (kg)",
+    goal_status: "Current phase",
+    ped_status: "PED use"
   }
 
-  const formDataOptions: Record<string, string[]> = {
-    gender: ["male", "female", "other"],
-    goal_status: ["bulking", "cutting", "maintaining"]
-  }
+  // const formDataOptions: Record<string, string[]> = {
+  //   gender: ["male", "female", "other"] as Gender[],
+  //   goal_status: ["bulking", "cutting", "maintaining"] as GoalStatus[],
+  //   ped_status: ["natural", "juicing", "silent"] as PedStatus[]
+  // }
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1, backgroundColor: "black"}}
     >
+      {Platform.OS == 'android' &&
+        <StatusBar style="light" backgroundColor="black" translucent={false} />
+      }
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView contentContainerStyle={styles.content}>
-        
-          <Text style={styles.text}>Sign Up</Text>
-
+          <Text style={commonStyles.boldText}>Sign Up</Text>
           <View style={styles.container}>
-            {['email', 'password', 'username'].map((key, index) => (
+            {(['email', 'password', 'username'] as (keyof FormData)[]).map((key, index) => (
               <View key={index} style={styles.singleItemRow}>
                 <TextInputFeild field={key} label={formDataLabels[key]} value={formData[key as keyof FormData]} is_number={false} is_secure={key==='password'} error_message={inError[key]} onChangeText={handleTextChange}/>
               </View>
             ))}
-            {[['first_name', 'last_name'], ['height', 'weight']].map((tuple, index) => (
-              <View key={index} style={styles.doubleItemRow}>
-                <View style={styles.doubleItem}>
-                  <TextInputFeild field={tuple[0]} label={formDataLabels[tuple[0]]} value={formData[tuple[0] as keyof FormData]} is_number={index === 1} error_message={inError[tuple[0]]} onChangeText={handleTextChange}/>
-                </View>
-                <View style={styles.doubleItem}>
-                  <TextInputFeild field={tuple[1]} label={formDataLabels[tuple[1]]} value={formData[tuple[1] as keyof FormData]} is_number={index === 1} error_message={inError[tuple[1]]} onChangeText={handleTextChange}/>
-                </View>
+            {([['first_name', 'last_name'], ['height', 'weight']] as (keyof FormData)[][]).map((tuple, tupleIdx) => (
+              <View key={tupleIdx} style={styles.doubleItemRow}>
+                {tuple.map((item, itemIdx) => (
+                  <View key={itemIdx} style={styles.doubleItem}>
+                    <TextInputFeild field={item} label={formDataLabels[item]} value={formData[item]} is_number={tupleIdx === 1} error_message={inError[item]} onChangeText={handleTextChange}/>
+                  </View>
+                ))}
               </View>
             ))}
-
-            {['gender', 'goal_status'].map((key, index) => (
-              <RadioButtons key={index} field={key} label={formDataLabels[key]} options={formDataOptions[key]} selection={formData[key as keyof FormData]} handleSelect={handleSelectChange}/>
-            ))}
+            <View style={styles.container}>
+              <Text style={styles.formHeader}>Gender</Text>
+              {useDropdown(genderOptions, genderValue, setGenderValue, undefined, styles.dropDown)}
+            </View>
+            <View style={styles.container}>
+              <Text style={styles.formHeader}>Phase</Text>
+              {useDropdown(phaseOptions, phaseValue, setPhaseValue, undefined, styles.dropDown)}
+            </View>
+            <View style={styles.container}>
+              <Text style={styles.formHeader}>Natty status</Text>
+              {useDropdown(pedOptions, pedValue, setPedValue, undefined, styles.dropDown)}
+            </View>
           </View>
 
           <View style={styles.buttonContainer}>
@@ -285,14 +354,13 @@ export default function SignUpScreen() {
                 backgroundColor: isButtonDisabled() ? "#ccc" : "#0db80d",
                 padding: 12,
                 borderRadius: 5,
-                width: "50%",
+                width: "30%",
                 alignItems: "center"
               }}
               disabled={isButtonDisabled()}
             >
-              <Text style={{ color: "white"}}>Submit</Text>
+              <Text style={{ color: "white"}}>{submitting ? 'submitting' : 'sign up'}</Text>
             </TouchableOpacity>
-            {submitting && <Text style={{ color: "white"}}>submitting...</Text>}
           </View>
 
           <View style={styles.buttonContainer}>
@@ -303,7 +371,6 @@ export default function SignUpScreen() {
               <Text style={{ color: "white"}}>already have an account?</Text>
             </TouchableOpacity>
           </View>
-
         </ScrollView>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
@@ -311,10 +378,13 @@ export default function SignUpScreen() {
 }
 
 const styles = StyleSheet.create({
-  text: { color: "white" },
-  content: { padding: 30 },
+  text: { 
+    color: "white" 
+  },
+  content: { 
+    padding: 30 
+  },
   container: {
-    flex: 1,
     padding: 10,
     color: "white",
   },
@@ -343,5 +413,13 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     alignItems: "center",
+  },
+  formHeader: {
+    fontSize: 16,
+    marginBottom: 5,
+    color: "white"
+  },
+  dropDown: {
+    width: '40%'
   }
 });

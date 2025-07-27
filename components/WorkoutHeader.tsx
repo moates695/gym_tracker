@@ -32,7 +32,7 @@ export default function WorkoutHeader() {
   return (
     <View style={styles.row}>
       <View style={[styles.rowObject, {width: showStartOptions ? '100%' : '30%'}]}>
-        <Text style={[styles.text, styles.boldText]}>Workout</Text>
+        <Text style={commonStyles.boldText}>Workout</Text>
       </View>
       {!showStartOptions &&
         <>

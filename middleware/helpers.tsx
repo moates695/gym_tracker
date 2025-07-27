@@ -1,37 +1,28 @@
 import { SetData, ValidSetData, WorkoutExercise } from "@/store/general";
 import * as SecureStore from "expo-secure-store";
 
-export const fetchExercises = async (setExercises: any) => {
-  try {
-    const auth_token = await SecureStore.getItemAsync("auth_token");
-    const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/exercises/list/all`, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${auth_token}`
-      }         
-    });
-    
-    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-  
-    const data = await response.json();
-    setExercises(data.exercises);
-    
-  } catch (error) {
-    console.log(error)
-  }
-};
+type FetchWrapperMethods = 'POST' | 'GET';
+type TokenString = 'auth_token' | 'temp_token';
 
-export const fetchWrapper = async (route: string, method: string, params?: any, body?: any) => {
+interface FetchWrapperArgs {
+  route: string
+  method: FetchWrapperMethods
+  params?: Record<string, string>
+  body?: Object
+  token_str?: TokenString
+}
+
+export const fetchWrapper = async ({route, method, params, body, token_str = 'auth_token'}: FetchWrapperArgs) => {
   try {
     let url = `${process.env.EXPO_PUBLIC_API_URL}/${route}`;
     if (method === 'GET' && params) {
       url = `${url}?${new URLSearchParams(params).toString()}`
     }
-    const auth_token = await SecureStore.getItemAsync("auth_token");
+    const token = await SecureStore.getItemAsync(token_str);
     const response = await fetch(url, {
       method: method,
       headers: {
-        "Authorization": `Bearer ${auth_token}`,
+        "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json"
       },
       ...(method === 'POST' && {body: JSON.stringify(body)})         
