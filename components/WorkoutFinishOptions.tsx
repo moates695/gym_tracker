@@ -81,8 +81,11 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
       "start_time": workoutStartTime,
       "duration": Date.now() - workoutStartTime!
     };
-    console.log(JSON.stringify(body))
-    await fetchWrapper('workout/save', 'POST', undefined, body);
+    await fetchWrapper({
+      route: 'workout/save',
+      method: 'GET',
+      body: body
+    });
     // todo handle error thrown or failed request
 
     setWorkoutExercises([]);

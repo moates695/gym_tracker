@@ -41,7 +41,11 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
   }, [exercise.set_data]);
 
   const handleRefreshHistory = async () => {
-    const data = await fetchWrapper('exercise/history', 'GET', {id: exercise.id}, undefined)
+    const data = await fetchWrapper({
+      route: 'exercise/history',
+      method: 'GET',
+      params: {id: exercise.id}
+    })
     setExercisesHistoricalData(prev => ({
       ...prev,
       [exercise.id]: data

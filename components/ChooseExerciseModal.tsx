@@ -82,7 +82,10 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
   const [customOnly, setCustomOnly] = useState<boolean>(false);
 
   const handleExercisesRefresh = async () => {
-    const data = await fetchWrapper('exercises/list/all', 'GET');
+    const data = await fetchWrapper({
+    route: 'exercises/list/all',
+    method: 'GET'
+});
     if (data === null) return;
     setExercises(data.exercises);
   };

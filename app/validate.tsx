@@ -17,6 +17,7 @@ export default function Validate() {
   
   const [tempToken, setTempToken] = useState<DecodedJWT | null>(null);
   const intervalRef = useRef<number | null>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     const getTempToken = async () => {
@@ -36,7 +37,10 @@ export default function Validate() {
     if (tempToken === null) return;
 
     const fetchValidationStatus = async () => {
-      console.log("in validate function")
+      if (pathname !== '/validate') {
+        clearIntervalRef();
+        return;
+      }
 
       const data = await fetchWrapper({
         route: 'register/validate/check',
@@ -46,9 +50,9 @@ export default function Validate() {
       })
       if (data === null) return;
       
-      if (data.account_state !== "unverified") {
-        clearIntervalRef();
-      }
+      if (data.account_state === 'unverified') return;
+
+      clearIntervalRef();
 
       if (data.account_state === "none") {
         Alert.alert("account was not recognized");
@@ -61,76 +65,20 @@ export default function Validate() {
     };
 
     intervalRef.current = window.setInterval(fetchValidationStatus, 1500);
-    // return () => {
-    //   if (intervalRef.current !== null) {
-    //     clearInterval(intervalRef.current);
-    //   }
-    // };
     return clearIntervalRef;
 
   }, [tempToken]);
+
+  useEffect(() => {
+    if (pathname === '/validate') return;
+    clearIntervalRef();
+  }, [pathname]);
 
   const clearIntervalRef = () => {
     if (intervalRef.current === null) return;
     clearInterval(intervalRef.current);
     intervalRef.current = null;
   };
-
-  // const pathname = usePathname();
-  // const [stopFetch, setStopFetch] = useState<boolean>(true); 
-
-  // useEffect(() => {
-  //   setStopFetch(pathname !== '/validate');
-  // }, [pathname]);
-
-  // useEffect(() => {
-  //   let timeoutId: NodeJS.Timeout;
-
-  //   const fetchValidationStatus = async () => {
-  //     if (stopFetch) return;
-
-  //     let is_validated: boolean = false;
-  //     try {
-  //       if (tempToken === null) throw Error('');
-
-  //       const data = await fetchWrapper({
-  //         route: 'register/validate/check',
-  //         method: 'GET',
-  //         params: { email: tempToken },
-  //         token_str: 'temp_token'
-  //       })
-
-  //       const response = await fetch(
-  //         `${process.env.EXPO_PUBLIC_API_URL}/register/validate/check?` + 
-  //         new URLSearchParams({ email: emailString }).toString()
-  //       )
-  //       if (!response.ok) throw new Error('request not okay');
-
-  //       // const data = await response.json();
-
-  //       if (data.account_state === "good") {
-  //         is_validated = true;
-  //         clearTimeout(timeoutId);
-  //         await SecureStore.setItemAsync('auth_token', data.auth_token);
-  //         router.replace("/(tabs)")
-  //       } else if (data.account_state === "none") {
-  //         throw new Error("email not recognised")
-  //       }
-
-  //     } catch (error) {
-  //       console.log(error);
-  //     } finally {
-  //       if (!is_validated) {
-  //         timeoutId = setTimeout(fetchValidationStatus, 1500);        
-  //       }
-  //     }
-  //   };
-
-  //   fetchValidationStatus();
-
-  //   return () => clearTimeout(timeoutId);
-
-  // }, [stopFetch]);
 
   return (
     <KeyboardAvoidingView
@@ -148,8 +96,9 @@ export default function Validate() {
               Check your emails for a validation link.
             </Text>
             <TouchableOpacity 
-              onPress={() => {
+              onPress={async () => {
                 clearIntervalRef();
+                await SecureStore.deleteItemAsync("temp_token");
                 router.replace("/sign-up");
               }}
             >

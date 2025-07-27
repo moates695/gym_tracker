@@ -26,14 +26,20 @@ export default function Workout() {
   const [showOverview, setShowOverview] = useState<boolean>(false);
 
   const getMuscleMaps = async () => {
-    const data = await fetchWrapper('muscles/get_maps', 'GET');
+    const data = await fetchWrapper({
+      route: 'muscles/get_maps',
+      method: 'GET'
+    });
     if (data === null) return;
     setGroupToTargets(data.group_to_targets);
     setTargetoGroup(data.target_to_group);
   };
 
   const getOverviewStats = async () => {
-    const data = await fetchWrapper('workout/overview/stats', 'GET');
+    const data = await fetchWrapper({
+      route: 'workout/overview/stat',
+      method: 'GET'
+    });
     if (data === null) return;
     setOverviewHistoricalStats(data.workouts);
   };
@@ -69,7 +75,10 @@ export default function Workout() {
 
   useEffect(() => {
     const getData = async () => {
-      const data = await fetchWrapper('exercises/list/all', 'GET');
+      const data = await fetchWrapper({
+      route: 'exercises/list/all',
+      method: 'GET'
+    });
       if (data === null) return;
       setExerciseList(data.exercises)
     };
