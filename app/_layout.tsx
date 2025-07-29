@@ -27,7 +27,7 @@ export default function RootLayout() {
     router.replace("/loading");
 
     const checkUserState = async () => {
-      await SecureStore.deleteItemAsync("auth_token"); //!!!! for testing new user
+      // await SecureStore.deleteItemAsync("auth_token"); //!!!! for testing new user
 
       const auth_token = await SecureStore.getItemAsync("auth_token");
       if (!auth_token) {

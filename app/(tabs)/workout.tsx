@@ -9,6 +9,7 @@ import WorkoutOverview from "@/components/WorkoutOverview";
 import { commonStyles } from "@/styles/commonStyles";
 import { fetchWrapper } from "@/middleware/helpers";
 import WorkoutExerciseRow from "@/components/WorkoutExerciseRow";
+import Constants from "expo-constants";
 
 export default function Workout() {
   const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom);
@@ -37,7 +38,7 @@ export default function Workout() {
 
   const getOverviewStats = async () => {
     const data = await fetchWrapper({
-      route: 'workout/overview/stat',
+      route: 'workout/overview/stats',
       method: 'GET'
     });
     if (data === null) return;

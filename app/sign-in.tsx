@@ -9,6 +9,7 @@ import { jwtDecode } from "jwt-decode";
 import { StatusBar } from "expo-status-bar";
 import { commonStyles } from "@/styles/commonStyles";
 import { fetchWrapper } from "@/middleware/helpers";
+import Constants from 'expo-constants';
 
 interface FormData {
   email: string,
@@ -52,7 +53,7 @@ export default function SignInScreen() {
   const handleSubmit = async (): Promise<void> => {
     setSubmitting(true);
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/sign-in`, {
+      const response = await fetch(`${Constants.expoConfig?.extra?.apiUrl}/sign-in`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

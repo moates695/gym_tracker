@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Text, Alert } from "react-native";
 import ConfirmationModal from "./ConfirmationModal";
 import { useAtom } from "jotai";
 import { SetData, showWorkoutStartOptionsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
@@ -69,10 +69,13 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
     for (const exercise of workoutExercises) {
       const validSets = getValidSets(exercise);
       if (validSets.length === 0) continue;
+      const updatedValidSets = validSets.map(({ class: set_class, ...rest}) => ({
+        ...rest,
+        set_class
+      }));
       exerciseData.push({
         "id": exercise.id,
-        "set_data": validSets,
-        "is_body_weight": exercise.is_body_weight
+        "set_data": updatedValidSets,
       })
     }
 
@@ -81,12 +84,16 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
       "start_time": workoutStartTime,
       "duration": Date.now() - workoutStartTime!
     };
-    await fetchWrapper({
+    
+    const data = await fetchWrapper({
       route: 'workout/save',
-      method: 'GET',
+      method: 'POST',
       body: body
     });
-    // todo handle error thrown or failed request
+    if (data === null || data.status === 'error') {
+      Alert.alert("error saving workout");
+      return;
+    }
 
     setWorkoutExercises([]);
     setWorkoutStartTime(null);

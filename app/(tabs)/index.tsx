@@ -12,10 +12,6 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.container}>
       <Text style={{color: "white"}}>Home</Text>
-      <Text style={{color: "white"}}>Home</Text>
-      <TouchableOpacity>
-        <Text style={{color: "white"}}>Workout</Text>
-      </TouchableOpacity>
     </SafeAreaView >
   );
 }

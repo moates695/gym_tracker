@@ -10,6 +10,7 @@ import { commonStyles } from "@/styles/commonStyles";
 import { OptionsObject } from "@/components/ChooseExerciseModal";
 import { useDropdown } from "@/components/ExerciseData";
 import { fetchWrapper } from "@/middleware/helpers";
+import Constants from 'expo-constants';
 
 type Gender = "male" | "female" | "other";
 type GoalStatus = "bulking" | "cutting" | "maintaining";
@@ -178,7 +179,7 @@ export default function SignUpScreen() {
     usernameTimeoutRef.current = setTimeout(async () => {
       try {
         const response = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}/register/check/username?` + 
+          `${Constants.expoConfig?.extra?.apiUrl}/register/check/username?` + 
           new URLSearchParams({ username }).toString()
         );
         if (!response.ok) throw new Error('response not ok');
@@ -257,7 +258,7 @@ export default function SignUpScreen() {
       form_copy.height = parseFloat(formData.height);
       form_copy.weight = parseFloat(formData.weight);
 
-      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/register`, {
+      const response = await fetch(`${Constants.expoConfig?.extra?.apiUrl}/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,5 +1,6 @@
 import { SetData, ValidSetData, WorkoutExercise } from "@/store/general";
 import * as SecureStore from "expo-secure-store";
+import Constants from 'expo-constants';
 
 type FetchWrapperMethods = 'POST' | 'GET';
 type TokenString = 'auth_token' | 'temp_token';
@@ -12,12 +13,15 @@ interface FetchWrapperArgs {
   token_str?: TokenString
 }
 
-export const fetchWrapper = async ({route, method, params, body, token_str = 'auth_token'}: FetchWrapperArgs) => {
+export const fetchWrapper = async ({route, method, params = {}, body, token_str = 'auth_token'}: FetchWrapperArgs) => {
   try {
-    let url = `${process.env.EXPO_PUBLIC_API_URL}/${route}`;
-    if (method === 'GET' && params) {
-      url = `${url}?${new URLSearchParams(params).toString()}`
+    let url = `${Constants.expoConfig?.extra?.apiUrl}/${route}`;
+    
+    if (method === 'GET') {
+      params.use_real = Constants.expoConfig?.extra?.useReal;
     }
+    url = `${url}?${new URLSearchParams(params).toString()}`;
+    
     const token = await SecureStore.getItemAsync(token_str);
     const response = await fetch(url, {
       method: method,
@@ -28,7 +32,15 @@ export const fetchWrapper = async ({route, method, params, body, token_str = 'au
       ...(method === 'POST' && {body: JSON.stringify(body)})         
     });
     
-    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+    if (!response.ok) {
+      if (response.status === 422) {
+        const errorData = await response.json();
+        console.log('Validation errors:', errorData.detail);
+      } else {
+        console.log('HTTP error. Status: ', response.status);
+      }
+      throw new Error('HTTP Error');
+    }
   
     const data = await response.json();
     return data;
