@@ -7,6 +7,8 @@ export default {
     version: "1.0.0",
     orientation: "portrait",
     android: {
+      compileSdkVersion: 34,
+      targetSdkVersion: 34,
       package: "com.moates.gymjunkie"
     },
     extra: {
