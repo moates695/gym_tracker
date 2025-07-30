@@ -74,7 +74,7 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
         set_class
       }));
       exerciseData.push({
-        "id": exercise.id,
+        "exercise_id": exercise.id,
         "set_data": updatedValidSets,
       })
     }

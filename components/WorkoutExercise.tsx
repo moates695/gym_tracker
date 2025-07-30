@@ -44,7 +44,7 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
     const data = await fetchWrapper({
       route: 'exercise/history',
       method: 'GET',
-      params: {id: exercise.id}
+      params: {exercise_id: exercise.id}
     })
     setExercisesHistoricalData(prev => ({
       ...prev,
