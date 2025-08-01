@@ -9,6 +9,7 @@ import ConfirmationModal from "./ConfirmationModal"
 import cloneDeep from 'lodash/cloneDeep';
 import { AntDesign } from "@expo/vector-icons"
 import { set } from "lodash"
+import LoadingScreen from "@/app/loading"
 
 interface WorkoutExerciseRowProps {
   exercise: WorkoutExercise
@@ -29,6 +30,10 @@ export default function WorkoutExerciseRow(props: WorkoutExerciseRowProps) {
   const [copyPressed, setCopyPressed] = useState<boolean>(false);
   const [moveUpPressOn, setMoveUpPressOn] = useState<boolean>(false);
   const [moveDownPressOn, setMoveDownPressOn] = useState<boolean>(false);
+
+  if (exercises === null) {
+    return <LoadingScreen delay={1000} />
+  }
 
   const handleDeleteExercise = () => {
     const tempExercises = [...exercises];

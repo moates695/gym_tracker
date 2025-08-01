@@ -8,6 +8,7 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "backgroundColor": "#000000",
     "ios": {
       "supportsTablet": true,
       "infoPlist": {

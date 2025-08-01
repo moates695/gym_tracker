@@ -1,5 +1,8 @@
 import { atom } from 'jotai'
-import { atomWithStorage } from 'jotai/utils';
+import { atomWithStorage, createJSONStorage, loadable } from 'jotai/utils';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const storage = createJSONStorage(() => AsyncStorage) as any;
 
 export interface MuscleTargetData {
   target_id: string,
@@ -55,9 +58,12 @@ export interface WorkoutExercise {
   frequency: Record<number, number>
 }
 
-export const workoutExercisesAtom = atomWithStorage<WorkoutExercise[]>('workoutExercisesAtom', []);
+// AsyncStorage.clear();
 
-export const workoutStartTimeAtom = atomWithStorage<number | null>('workoutStartTimeAtom', Date.now());
+export const workoutExercisesAtom = atomWithStorage<WorkoutExercise[] | null>('workoutExercisesAtom', null, storage, { getOnInit: true });
+export const loadableWorkoutExercisesAtom = loadable(workoutExercisesAtom);
+
+export const workoutStartTimeAtom = atomWithStorage<number | null>('workoutStartTimeAtom', Date.now(), storage);
 
 export const muscleGroupToTargetsAtom = atomWithStorage<Record<string, string[]>>('muscleGroupToTargetsAtom', {});
 export const muscleTargetoGroupAtom = atomWithStorage<Record<string, string>>('muscleTargetoGroupAtom', {});

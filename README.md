@@ -1,3 +1,7 @@
+# DEBUG
+
+1. Use `Expo Go` not `development build`. *DO NOT* scan the QR code, manually type in url like `exp://`
+
 # Welcome to your Expo app 👋
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
