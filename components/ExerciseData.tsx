@@ -124,52 +124,6 @@ export default function ExerciseData(props: ExerciseDataProps) {
   const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
   const exerciseData = exercisesHistoricalData[exercise.id];
 
-  // todo: handle when exerciseData is undefined, cannot do early return because of hooks
-
-  // if (exerciseData === undefined) {
-  //   const handleRefreshHistory = async () => {
-  //     const data = await fetchWrapper({
-  //       route: 'exercise/history',
-  //       method: 'GET',
-  //       params: {exercise_id: exercise.id}
-  //     })
-  //     setExercisesHistoricalData(prev => ({
-  //       ...prev,
-  //       [exercise.id]: data
-  //     }))
-  //   }
-
-  //   handleRefreshHistory();
-
-  //   return <LoadingScreen />
-
-  // }
-
-  // if (exerciseData === undefined) {
-  //   return <LoadingScreen />
-  // }
-
-  // console.log(exerciseData);
-
-  // useEffect(() => {
-  //   console.log('here554')
-  //   if (exerciseData !== undefined) return;
-
-  //   const handleRefreshHistory = async () => {
-  //     const data = await fetchWrapper({
-  //       route: 'exercise/history',
-  //       method: 'GET',
-  //       params: {exercise_id: exercise.id}
-  //     })
-  //     setExercisesHistoricalData(prev => ({
-  //       ...prev,
-  //       [exercise.id]: data
-  //     }))
-  //   }
-  //   handleRefreshHistory();
-    
-  // }, [exerciseData]);
-
   const dataOptions: DataOptionObject[] = [
     { label: 'rep max', value: 'n_rep_max' },
     { label: 'volume', value: 'volume' },
@@ -201,7 +155,6 @@ export default function ExerciseData(props: ExerciseDataProps) {
       console.log(error)
       setNRepMaxHistoryOptions([]);
     }
-
   }, [exerciseData]);
 
   const volumeOptions: VolumeOptionObject[] = [
