@@ -184,17 +184,25 @@ export default function ExerciseData(props: ExerciseDataProps) {
   ]
   const [nRepMaxOptionValue, setNRepMaxOptionValue] = useState<NRepMaxDataOption>('all_time');
 
-  const nRepMaxHistoryOptions = [];
-  try {
-    for (const key in exerciseData['n_rep_max']['history']) {
-      nRepMaxHistoryOptions.push({
-        label: key, value: key
-      })
-    } 
-  } catch (error) {
-    console.log(error)
-  }
+  const [nRepMaxHistoryOptions, setNRepMaxHistoryOptions] = useState<any[]>([]);
   const [nRepMaxHistoryOptionValue, setNRepMaxHistoryOptionValue] = useState<string | null>(nRepMaxHistoryOptions[0]?.value ?? null);
+
+  useEffect(() => {
+    try {
+      const temp: any[] = [];
+      for (const key in exerciseData['n_rep_max']['history']) {
+        temp.push({
+          label: key, value: key
+        })
+      }
+      setNRepMaxHistoryOptions(temp);
+      setNRepMaxHistoryOptionValue(temp[0]?.value ?? null);
+    } catch (error) {
+      console.log(error)
+      setNRepMaxHistoryOptions([]);
+    }
+
+  }, [exerciseData]);
 
   const volumeOptions: VolumeOptionObject[] = [
     { label: 'workout', value: 'workout' },

@@ -57,10 +57,10 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
 
   const fetchExerciseHistoricalData = async (id: string) => {
     const data = await fetchWrapper({
-    route: 'exercise/history',
-    method: 'GET',
-    params: {exercise_id: id}
-})
+      route: 'exercise/history',
+      method: 'GET',
+      params: {exercise_id: id}
+    })
     setExercisesHistoricalData(prev => ({
       ...prev,
       [id]: data
