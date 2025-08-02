@@ -60,7 +60,7 @@ export interface WorkoutExercise {
 
 // AsyncStorage.clear();
 
-export const workoutExercisesAtom = atomWithStorage<WorkoutExercise[] | null>('workoutExercisesAtom', null, storage, { getOnInit: true });
+export const workoutExercisesAtom = atomWithStorage<WorkoutExercise[]>('workoutExercisesAtom', [], storage, { getOnInit: true });
 export const loadableWorkoutExercisesAtom = loadable(workoutExercisesAtom);
 
 export const workoutStartTimeAtom = atomWithStorage<number | null>('workoutStartTimeAtom', Date.now(), storage);

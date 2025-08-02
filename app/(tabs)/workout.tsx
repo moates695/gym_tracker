@@ -97,24 +97,19 @@ export default function Workout() {
     getMuscleMaps();
   }, [])
 
-  console.log(loadableWorkoutExercises.state)
-
   if (loadableWorkoutExercises.state === 'loading') {
-    console.log('here11')
     return <LoadingScreen delay={1000}/>
   } else if (loadableWorkoutExercises.state === 'hasError') {
-    console.log('here12')
     Alert.alert('error loading workout data');
-    setWorkoutExercises([]);
-  } else if (workoutExercises === null) {
-    console.log('here13');
-    console.log(loadableWorkoutExercises.data)
-    setWorkoutExercises([]);
+    // setWorkoutExercises([]);
   }
+  // } else if (workoutExercises === null) {
+  //   setWorkoutExercises([]);
+  // }
 
-  if (workoutExercises === null) {
-    return <LoadingScreen delay={1000}/>
-  }
+  // if (workoutExercises === null) {
+  //   return <LoadingScreen delay={1000}/>
+  // }
 
   return (
     <Suspense fallback={<View style={{ flex: 1, backgroundColor: 'black' }} />}>

@@ -8,7 +8,8 @@ import LineGraph, {LineGraphPoint, LineGraphScale} from './LineGraph';
 import { commonStyles } from '@/styles/commonStyles';
 import { Dropdown } from 'react-native-element-dropdown';
 import CarouselDataTable from './CarouselDataTable';
-import { getValidSets } from '@/middleware/helpers';
+import { fetchWrapper, getValidSets } from '@/middleware/helpers';
+import LoadingScreen from '@/app/loading';
 
 // WORKOUT OVERVIEW DATA
 // list of exercises in the workout
@@ -120,8 +121,54 @@ export const filterTimeSeries = (points: LineGraphPoint[], timeSpanOptionValue: 
 export default function ExerciseData(props: ExerciseDataProps) {
   const {exercise, exerciseIndex} = props;
 
-  const [exercisesHistoricalData, setExercisesHistoricalDataAtom] = useAtom(exercisesHistoricalDataAtom);
+  const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
   const exerciseData = exercisesHistoricalData[exercise.id];
+
+  // todo: handle when exerciseData is undefined, cannot do early return because of hooks
+
+  // if (exerciseData === undefined) {
+  //   const handleRefreshHistory = async () => {
+  //     const data = await fetchWrapper({
+  //       route: 'exercise/history',
+  //       method: 'GET',
+  //       params: {exercise_id: exercise.id}
+  //     })
+  //     setExercisesHistoricalData(prev => ({
+  //       ...prev,
+  //       [exercise.id]: data
+  //     }))
+  //   }
+
+  //   handleRefreshHistory();
+
+  //   return <LoadingScreen />
+
+  // }
+
+  // if (exerciseData === undefined) {
+  //   return <LoadingScreen />
+  // }
+
+  // console.log(exerciseData);
+
+  // useEffect(() => {
+  //   console.log('here554')
+  //   if (exerciseData !== undefined) return;
+
+  //   const handleRefreshHistory = async () => {
+  //     const data = await fetchWrapper({
+  //       route: 'exercise/history',
+  //       method: 'GET',
+  //       params: {exercise_id: exercise.id}
+  //     })
+  //     setExercisesHistoricalData(prev => ({
+  //       ...prev,
+  //       [exercise.id]: data
+  //     }))
+  //   }
+  //   handleRefreshHistory();
+    
+  // }, [exerciseData]);
 
   const dataOptions: DataOptionObject[] = [
     { label: 'rep max', value: 'n_rep_max' },
@@ -138,11 +185,15 @@ export default function ExerciseData(props: ExerciseDataProps) {
   const [nRepMaxOptionValue, setNRepMaxOptionValue] = useState<NRepMaxDataOption>('all_time');
 
   const nRepMaxHistoryOptions = [];
-  for (const key in exerciseData['n_rep_max']['history']) {
-    nRepMaxHistoryOptions.push({
-      label: key, value: key
-    })
-  } 
+  try {
+    for (const key in exerciseData['n_rep_max']['history']) {
+      nRepMaxHistoryOptions.push({
+        label: key, value: key
+      })
+    } 
+  } catch (error) {
+    console.log(error)
+  }
   const [nRepMaxHistoryOptionValue, setNRepMaxHistoryOptionValue] = useState<string | null>(nRepMaxHistoryOptions[0]?.value ?? null);
 
   const volumeOptions: VolumeOptionObject[] = [
@@ -186,15 +237,20 @@ export default function ExerciseData(props: ExerciseDataProps) {
   }
 
   const getPoints = (): LineGraphPoint[] => {
-    switch (dataOptionValue) {
-      case 'n_rep_max':
-        return getNRepMaxPoints();
-      case 'volume':
-        return getVolumePoints();
-      case 'history':
-        return getHistoryPoints();
-      default:
-        return [];
+    try {
+      switch (dataOptionValue) {
+        case 'n_rep_max':
+          return getNRepMaxPoints();
+        case 'volume':
+          return getVolumePoints();
+        case 'history':
+          return getHistoryPoints();
+        default:
+          return [];
+      }
+    } catch (error) {
+      console.log(error);
+      return [];
     }
   };
 
@@ -339,18 +395,23 @@ export default function ExerciseData(props: ExerciseDataProps) {
     let headers = [];
     let rows = [];
 
-    switch (dataOptionValue) {
-      case 'n_rep_max':
-        [headers, rows] = getNRepMaxTable();
-        break;
-      case 'volume':
-        [headers, rows] = getVolumeTable();
-        break;
-      case 'history':
-        [headers, rows] = getHistoryTable();
-        break;
-      default:
-        return (<></>); 
+    try {
+      switch (dataOptionValue) {
+        case 'n_rep_max':
+          [headers, rows] = getNRepMaxTable();
+          break;
+        case 'volume':
+          [headers, rows] = getVolumeTable();
+          break;
+        case 'history':
+          [headers, rows] = getHistoryTable();
+          break;
+        default:
+          return (<></>); 
+      }
+    } catch (error) {
+      console.log(error);
+      return (<></>);
     }
 
     // rows = rows.slice().reverse();
@@ -506,7 +567,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
   );
 
   const updateHistoryListIndex = (newIndex: number) => {
-    if (newIndex < 0 || newIndex >= exerciseData["history"].length) return;
+    if (newIndex < 0 || newIndex >= (exerciseData?.history?.length ?? 0)) return;
     setHistoryListIndex(newIndex);
   };
 
@@ -574,15 +635,19 @@ export default function ExerciseData(props: ExerciseDataProps) {
           <Text style={styles.text}>older</Text>
         </TouchableOpacity>
       </View>
-      <Text 
-        style={[styles.text, {alignSelf: 'center', margin: 5}]}
-      >
-        Workout on {timestampToDateStr(exerciseData["history"][historyListIndex].timestamp)}
-      </Text>
+      {exerciseData !== undefined &&
+        <Text 
+          style={[styles.text, {alignSelf: 'center', margin: 5}]}
+        >
+          Workout on {timestampToDateStr(exerciseData["history"][historyListIndex].timestamp)}
+        </Text>
+      }
     </>
   )
 
   const get3DGraphPoints = (): Point3D[] => {
+    if (exerciseData === undefined) return [];
+    
     const points: Point3D[] = [];
     for (const data of exerciseData["reps_sets_weight"]) {
       points.push({
@@ -694,6 +759,28 @@ export default function ExerciseData(props: ExerciseDataProps) {
   const dataVisualMap: Record<DataVisual, JSX.Element> = {
     'graph': <LineGraph points={getPoints()} scale_type={graphScale} barValue={getBarValue()} currentPoints={getCurrentPoints()}/>,
     'table': getTable()
+  }
+
+  useEffect(() => {
+    if (exerciseData !== undefined) return;
+
+    const handleRefreshHistory = async () => {
+      const data = await fetchWrapper({
+        route: 'exercise/history',
+        method: 'GET',
+        params: {exercise_id: exercise.id}
+      })
+      setExercisesHistoricalData(prev => ({
+        ...prev,
+        [exercise.id]: data
+      }))
+    }
+
+    handleRefreshHistory();
+  }, [exerciseData]);
+
+  if (exerciseData === undefined) {
+    return <LoadingScreen delay={500}/>
   }
 
   return (

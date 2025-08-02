@@ -4,7 +4,7 @@ import { TouchableOpacity, View, Text, StyleSheet, ScrollView, TextInput, Switch
 import { fetchWrapper } from "@/middleware/helpers";
 import { useAtom, useAtomValue } from "jotai";
 import { exerciseListAtom, MuscleData, muscleGroupToTargetsAtom, WorkoutExercise, WeightType } from "@/store/general";
-import ChooseExerciseData from "./ChooseExerciseItem";
+import ChooseExerciseItem from "./ChooseExerciseItem";
 import { commonStyles } from "@/styles/commonStyles";
 import InputField from "./InputField";
 import workoutExercise from "./WorkoutExercise";
@@ -276,7 +276,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
         <ScrollView style={styles.scrollView}>
           {displayedExercises.map((exercise, i) => {
             return (
-              <ChooseExerciseData key={i} exercise={exercise} onChoose={onChoose}/>
+              <ChooseExerciseItem key={i} exercise={exercise} onChoose={onChoose}/>
             )
           })}
         </ScrollView>

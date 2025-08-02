@@ -31,6 +31,8 @@ export default function RootLayout() {
 
   const checkUserState = async () => {
     // await SecureStore.deleteItemAsync("auth_token"); //!!!! for testing new user
+    
+    router.replace("/loading");
 
     const auth_token = await SecureStore.getItemAsync("auth_token");
     if (!auth_token) {
@@ -82,6 +84,7 @@ export default function RootLayout() {
         }
       } else if (data.account_state == "good") {
         // await loadStoredData();
+        await loadFonts();
         router.replace("/(tabs)");
       } else {
         throw new Error("response not recognised");
@@ -89,9 +92,10 @@ export default function RootLayout() {
 
     } catch (error) {
       console.log(error);
-      router.replace("/sign-up")
+      router.replace("/sign-up");
     }
   };
+
 
   // const loadStoredData = async () => {
   //   const loadItems = [
@@ -116,21 +120,23 @@ export default function RootLayout() {
   //   }
   // };
 
-  useEffect(() => {
-    router.replace("/loading");
-    checkUserState();
-  }, []);
+  const loadFonts = async () => {
+    await Font.loadAsync({
+      ...MaterialIcons.font,
+      ...AntDesign.font,
+      ...Ionicons.font,
+    });
+  };
+
+  const initialSetup = async () => {
+    await Promise.all([
+      checkUserState(),
+      loadFonts()
+    ]);
+  };
 
   useEffect(() => {
-    async function loadFonts() {
-      await Font.loadAsync({
-        ...MaterialIcons.font,
-        ...AntDesign.font,
-        ...Ionicons.font,
-      });
-    }
-
-    loadFonts();
+    initialSetup();
   }, []);
 
   return (
