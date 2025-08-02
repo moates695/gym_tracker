@@ -36,7 +36,8 @@ interface ContributionTypeOption {
 export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoricalProps) {
   const exercises = useAtomValue(workoutExercisesAtom); 
   const muscleGroupToTargets = useAtomValue(muscleGroupToTargetsAtom);
-  const overviewHistoricalStats = useAtomValue(overviewHistoricalStatsAtom);
+  // const overviewHistoricalStats = useAtomValue(overviewHistoricalStatsAtom);
+  const [overviewHistoricalStats, setOverviewHistoricalStats] = useAtom(overviewHistoricalStatsAtom);
   const workoutStartTime = useAtomValue(workoutStartTimeAtom);
 
   const historyComparisonOptions: HistoryComparisonOption[] = [
@@ -93,6 +94,13 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
   const [timeSpanOptionValue, setTimeSpanOptionValue] = useState<TimeSpanOption>('month');
 
   const [workoutDuration, setWorkoutDuration] = useState<number>(0);
+
+  useEffect(() => {
+    if (overviewHistoricalStats.length > 0) return;
+
+    
+
+  }, [overviewHistoricalStats]);
 
   useEffect(() => {
     if (workoutStartTime === null) return;

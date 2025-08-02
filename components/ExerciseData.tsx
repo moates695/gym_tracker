@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { View, StyleSheet, Text, Platform, TouchableOpacity, ScrollView, FlatList, StyleProp, ViewStyle } from "react-native"
-import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData, TimestampValue, ExerciseHistory } from "@/store/general"
+import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData, TimestampValue, ExerciseHistory, loadableExercisesHistoricalDataAtom } from "@/store/general"
 import ThreeAxisGraph, { Point3D } from './ThreeAxisGraph'
 import { useEffect, useRef, useState } from "react";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import LineGraph, {LineGraphPoint, LineGraphScale} from './LineGraph';
 import { commonStyles } from '@/styles/commonStyles';
 import { Dropdown } from 'react-native-element-dropdown';
@@ -123,6 +123,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
 
   const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
   const exerciseData = exercisesHistoricalData[exercise.id];
+  const loadableExercisesHistoricalData = useAtomValue(loadableExercisesHistoricalDataAtom);
 
   const dataOptions: DataOptionObject[] = [
     { label: 'rep max', value: 'n_rep_max' },
@@ -741,7 +742,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
   }, [exerciseData]);
 
   if (exerciseData === undefined) {
-    return <LoadingScreen delay={500}/>
+    return <LoadingScreen />
   }
 
   return (

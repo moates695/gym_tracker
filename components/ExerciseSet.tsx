@@ -32,6 +32,8 @@ export default function ExerciseSet(props: ExerciseSetProps) {
   const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false);
   const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
 
+  console.log(exercise.set_data)
+
   interface SetClassOption {
     label: string
     value: SetClass
@@ -56,14 +58,22 @@ export default function ExerciseSet(props: ExerciseSetProps) {
   }
 
   const handleUpdateWeight = (text: string) => {
-    const cleanedText = text.replace(/[^0-9.]/g, '');
+    let cleanedText = '';
+    if (exercise.is_body_weight) {
+      cleanedText = text.replace(/(?!^)-|[^0-9.-]/g, '');
+    } else {
+      cleanedText = text.replace(/[^0-9.]/g, '');
+    }
     const formattedText = formatFloatString(cleanedText);
 
-    setDisplayWeight(formattedText)
+    setDisplayWeight(formattedText);
 
     let weight = null;
     if (formattedText !== '' && formattedText !== '.') {
-      weight = Math.abs(parseFloat(formattedText) || 0);
+      weight = parseFloat(formattedText) || 0;
+    }
+    if (!exercise.is_body_weight && weight !== null) {
+      weight = Math.abs(weight);
     }
     const tempSetData: SetData[] = [...exercise.set_data];
     tempSetData[setIndex].weight = weight;

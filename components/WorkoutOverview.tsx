@@ -61,7 +61,7 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
               style={commonStyles.thinTextButton}
             >
               <Text style={styles.text}>refresh data</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> 
           }
         </View>
         <View style={styles.dataContainer}>

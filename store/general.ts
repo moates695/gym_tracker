@@ -58,7 +58,7 @@ export interface WorkoutExercise {
   frequency: Record<number, number>
 }
 
-// AsyncStorage.clear();
+// AsyncStorage.clear(); //! for testing
 
 export const workoutExercisesAtom = atomWithStorage<WorkoutExercise[]>('workoutExercisesAtom', [], storage, { getOnInit: true });
 export const loadableWorkoutExercisesAtom = loadable(workoutExercisesAtom);
@@ -70,7 +70,7 @@ export const muscleTargetoGroupAtom = atomWithStorage<Record<string, string>>('m
 
 export const showWorkoutStartOptionsAtom = atom<boolean>(true);
 
-export const exerciseListAtom = atomWithStorage('exerciseListAtom', [])
+export const exerciseListAtom = atomWithStorage('exerciseListAtom', []);
 
 export const editWorkoutExercisesAtom = atom<boolean>(false);
 
@@ -119,7 +119,8 @@ export const emptyExerciseHistoricalData: ExerciseHistoricalData = {
   "reps_sets_weight": []
 }
 
-export const exercisesHistoricalDataAtom = atom<Record<string, ExerciseHistoricalData>>({})
+export const exercisesHistoricalDataAtom = atom<Record<string, ExerciseHistoricalData>>({});
+export const loadableExercisesHistoricalDataAtom = loadable(exercisesHistoricalDataAtom);
 
 export interface OverviewHistoricalStatsData {
   volume: number

@@ -101,15 +101,7 @@ export default function Workout() {
     return <LoadingScreen delay={1000}/>
   } else if (loadableWorkoutExercises.state === 'hasError') {
     Alert.alert('error loading workout data');
-    // setWorkoutExercises([]);
   }
-  // } else if (workoutExercises === null) {
-  //   setWorkoutExercises([]);
-  // }
-
-  // if (workoutExercises === null) {
-  //   return <LoadingScreen delay={1000}/>
-  // }
 
   return (
     <Suspense fallback={<View style={{ flex: 1, backgroundColor: 'black' }} />}>
