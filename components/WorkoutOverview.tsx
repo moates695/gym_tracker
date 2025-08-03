@@ -3,7 +3,7 @@ import { View, StyleSheet, Text, TouchableOpacity, Modal, Switch } from "react-n
 import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
 import { useAtom, useAtomValue } from "jotai";
-import { muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
+import { exercisesHistoricalDataAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
 import { fetchWrapper, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
 import { filterTimeSeries, timeSpanToMs, useDropdown } from "./ExerciseData";
@@ -28,11 +28,22 @@ interface DisplayedDataOption {
 export default function WorkoutOverview(props: WorkoutOverviewProps) {
   const { onPress } = props;
   
+  const [overviewHistoricalStats, setOverviewHistoricalStats] = useAtom(overviewHistoricalStatsAtom);
+
   const displayedDataOptions: DisplayedDataOption[] = [
     { label: 'current workout', value: 'current' },
     { label: 'workout history', value: 'history' },
   ]
   const [displayedDataValue, setDisplayedDataValue] = useState<DisplayedDataType>('current');
+
+  const getOverviewStats = async () => {
+    const data = await fetchWrapper({
+      route: 'workout/overview/stats',
+      method: 'GET'
+    });
+    if (data === null) return;
+    setOverviewHistoricalStats(data.workouts);
+  };
 
   const displayDataMap: Record<DisplayedDataType, JSX.Element> = {
     'current': <WorkoutOverviewCurrent />,
@@ -42,7 +53,17 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
   return (
     <View style={styles.modalBackground}>
       <View style={styles.modalContainer}>
-        <Text style={commonStyles.boldText}>Overview</Text>
+        <View style={styles.headerRow}>
+          <Text style={commonStyles.boldText}>Overview</Text>
+          {displayedDataValue === 'history' &&
+            <TouchableOpacity
+              onPress={getOverviewStats}
+              style={commonStyles.thinTextButton}
+            >
+              <Text style={styles.text}>refresh data</Text>
+            </TouchableOpacity> 
+          }
+        </View>
         <View style={styles.dataContainer}>
           <Text style={styles.text}>Choose display data:</Text>
           {useDropdown(displayedDataOptions, displayedDataValue, setDisplayedDataValue)}

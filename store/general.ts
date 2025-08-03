@@ -1,5 +1,8 @@
 import { atom } from 'jotai'
-import { atomWithStorage } from 'jotai/utils';
+import { atomWithStorage, createJSONStorage, loadable } from 'jotai/utils';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const storage = createJSONStorage(() => AsyncStorage) as any;
 
 export interface MuscleTargetData {
   target_id: string,
@@ -55,16 +58,19 @@ export interface WorkoutExercise {
   frequency: Record<number, number>
 }
 
-export const workoutExercisesAtom = atomWithStorage<WorkoutExercise[]>('workoutExercisesAtom', []);
+// AsyncStorage.clear(); //! for testing
 
-export const workoutStartTimeAtom = atomWithStorage<number | null>('workoutStartTimeAtom', Date.now());
+export const workoutExercisesAtom = atomWithStorage<WorkoutExercise[]>('workoutExercisesAtom', [], storage, { getOnInit: true });
+export const loadableWorkoutExercisesAtom = loadable(workoutExercisesAtom);
+
+export const workoutStartTimeAtom = atomWithStorage<number | null>('workoutStartTimeAtom', Date.now(), storage);
 
 export const muscleGroupToTargetsAtom = atomWithStorage<Record<string, string[]>>('muscleGroupToTargetsAtom', {});
 export const muscleTargetoGroupAtom = atomWithStorage<Record<string, string>>('muscleTargetoGroupAtom', {});
 
 export const showWorkoutStartOptionsAtom = atom<boolean>(true);
 
-export const exerciseListAtom = atomWithStorage('exerciseListAtom', [])
+export const exerciseListAtom = atomWithStorage('exerciseListAtom', []);
 
 export const editWorkoutExercisesAtom = atom<boolean>(false);
 
@@ -113,7 +119,8 @@ export const emptyExerciseHistoricalData: ExerciseHistoricalData = {
   "reps_sets_weight": []
 }
 
-export const exercisesHistoricalDataAtom = atom<Record<string, ExerciseHistoricalData>>({})
+export const exercisesHistoricalDataAtom = atomWithStorage<Record<string, ExerciseHistoricalData>>('exercisesHistoricalDataAtom', {}, storage);
+export const loadableExercisesHistoricalDataAtom = loadable(exercisesHistoricalDataAtom);
 
 export interface OverviewHistoricalStatsData {
   volume: number
@@ -129,4 +136,5 @@ export interface OverviewHistoricalStats {
   muscles: Record<string, Record<string, OverviewHistoricalStatsData>>
 }
 
-export const overviewHistoricalStatsAtom = atom<OverviewHistoricalStats[]>([]);
+export const overviewHistoricalStatsAtom = atomWithStorage<OverviewHistoricalStats[]>('overviewHistoricalStatsAtom', [], storage);
+export const loadableOverviewHistoricalStatsAtom = loadable(overviewHistoricalStatsAtom);

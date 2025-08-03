@@ -4,7 +4,7 @@ import { TouchableOpacity, View, Text, StyleSheet, ScrollView, TextInput, Switch
 import { fetchWrapper } from "@/middleware/helpers";
 import { useAtom, useAtomValue } from "jotai";
 import { exerciseListAtom, MuscleData, muscleGroupToTargetsAtom, WorkoutExercise, WeightType } from "@/store/general";
-import ChooseExerciseData from "./ChooseExerciseItem";
+import ChooseExerciseItem from "./ChooseExerciseItem";
 import { commonStyles } from "@/styles/commonStyles";
 import InputField from "./InputField";
 import workoutExercise from "./WorkoutExercise";
@@ -25,8 +25,8 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
   
   const muscleGroupToTargets = useAtomValue(muscleGroupToTargetsAtom);
 
-  const [exercises, setExercises] = useAtom(exerciseListAtom);
-  const [displayedExercises, setDisplayedExercises] = useState<WorkoutExercise[]>(exercises); 
+  const [exercisesList, setExercisesList] = useAtom(exerciseListAtom);
+  const [displayedExercises, setDisplayedExercises] = useState<WorkoutExercise[]>(exercisesList); 
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [searchBar, setSearchBar] = useState<string>('');
   
@@ -87,12 +87,12 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
     method: 'GET'
 });
     if (data === null) return;
-    setExercises(data.exercises);
+    setExercisesList(data.exercises);
   };
 
   const handleToggleShowFilters =  () => {
     if (showFilters) {
-      setDisplayedExercises(exercises);
+      setDisplayedExercises(exercisesList);
       setSearchBar('');
       setMuscleGroupValue('all');
       setMuscleTargetValue('disabled');
@@ -198,7 +198,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
   };
 
   const applyFilters = () => {
-    let tempExercises: WorkoutExercise[] = [...exercises];
+    let tempExercises: WorkoutExercise[] = [...exercisesList];
     tempExercises = searchBarFilter(tempExercises);
     tempExercises = muscleFilter(tempExercises);
     tempExercises = weightTypeFilter(tempExercises);
@@ -215,8 +215,13 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
     ratioOptionsValue, 
     weightTypeValue,
     customOnly,
-    exercises
+    exercisesList
   ]);
+
+  useEffect(() => {
+    if (exercisesList.length > 0) return;
+    handleExercisesRefresh();
+  }, [exercisesList]);
 
   return (
     <View style={styles.modalBackground}>
@@ -276,7 +281,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
         <ScrollView style={styles.scrollView}>
           {displayedExercises.map((exercise, i) => {
             return (
-              <ChooseExerciseData key={i} exercise={exercise} onChoose={onChoose}/>
+              <ChooseExerciseItem key={i} exercise={exercise} onChoose={onChoose}/>
             )
           })}
         </ScrollView>

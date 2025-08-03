@@ -21,7 +21,7 @@ interface DisplayOptionObject {
 
 // todo: in data, return dates when exercise last done, show as prev 7 day or prev month/30 day infographic
 
-export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
+export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
   const { exercise, onChoose: onPress } = props;
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [workoutExercises, setWorkoutExercisesAtom] = useAtom(workoutExercisesAtom);
@@ -36,7 +36,14 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
   const handleAddExercise = () => {
     const exerciseCopy: WorkoutExercise = JSON.parse(JSON.stringify(exercise));
     exerciseCopy.set_data = [{ ...emptySetData }];
-    setWorkoutExercisesAtom(prev => [...prev, exerciseCopy]);
+    const tempExercises = [...workoutExercises];
+    tempExercises.push(exerciseCopy);
+    setWorkoutExercisesAtom(tempExercises);
+    // setWorkoutExercisesAtom((prev) => {
+    //   const exerciseCopy: WorkoutExercise = JSON.parse(JSON.stringify(exercise));
+    //   exerciseCopy.set_data = [{ ...emptySetData }];
+    //   return [...prev, exerciseCopy];
+    // });
 
     setExercisesHistoricalData(prev => ({
       ...prev,
@@ -50,10 +57,10 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
 
   const fetchExerciseHistoricalData = async (id: string) => {
     const data = await fetchWrapper({
-    route: 'exercise/history',
-    method: 'GET',
-    params: {exercise_id: id}
-})
+      route: 'exercise/history',
+      method: 'GET',
+      params: {exercise_id: id}
+    })
     setExercisesHistoricalData(prev => ({
       ...prev,
       [id]: data
@@ -63,9 +70,9 @@ export default function ChooseExerciseData(props: ChooseExerciseDataProps) {
   const displayMap: Record<DisplayOption, JSX.Element> = {
     frequency: <FrequencyCalendar frequencyData={exercise.frequency} />,
     heatmap: <MuscleGroupSvg
-                valueMap={getExerciseValueMap(exercise)} 
-                showGroups={false}
-              />
+      valueMap={getExerciseValueMap(exercise)} 
+      showGroups={false}
+    />
   }
 
   return (

@@ -3,7 +3,7 @@ import { View, StyleSheet, Text, TouchableOpacity, Modal, Switch } from "react-n
 import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
 import { useAtom, useAtomValue } from "jotai";
-import { muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
+import { loadableOverviewHistoricalStatsAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
 import { fetchWrapper, getBodyWeight, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
 import { filterTimeSeries, timeSpanToMs, useDropdown } from "./ExerciseData";
@@ -12,6 +12,7 @@ import { Dropdown } from "react-native-element-dropdown";
 import DataTable from "./DataTable";
 import LineGraph, { LineGraphPoint } from "./LineGraph";
 import { OptionsObject } from "./ChooseExerciseModal";
+import LoadingScreen from "@/app/loading";
 
 interface WorkoutOverviewHistoricalProps {}
 
@@ -36,7 +37,9 @@ interface ContributionTypeOption {
 export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoricalProps) {
   const exercises = useAtomValue(workoutExercisesAtom); 
   const muscleGroupToTargets = useAtomValue(muscleGroupToTargetsAtom);
-  const overviewHistoricalStats = useAtomValue(overviewHistoricalStatsAtom);
+  // const overviewHistoricalStats = useAtomValue(overviewHistoricalStatsAtom);
+  const [overviewHistoricalStats, setOverviewHistoricalStats] = useAtom(overviewHistoricalStatsAtom);
+  const loadableOverviewHistoricalStats = useAtomValue(loadableOverviewHistoricalStatsAtom);
   const workoutStartTime = useAtomValue(workoutStartTimeAtom);
 
   const historyComparisonOptions: HistoryComparisonOption[] = [
@@ -94,6 +97,11 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
 
   const [workoutDuration, setWorkoutDuration] = useState<number>(0);
 
+  // useEffect(() => {
+  //   if (overviewHistoricalStats.length > 0) return;
+
+  // }, [overviewHistoricalStats]);
+
   useEffect(() => {
     if (workoutStartTime === null) return;
 
@@ -102,7 +110,7 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
     };
 
     updateDuration();
-    const interval = setInterval(updateDuration, 1000);
+    const interval = setInterval(updateDuration, 5000);
     return () => clearInterval(interval);
 
   }, [workoutStartTime])
@@ -290,6 +298,20 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
 
     return value;
   };
+
+  const getOverviewStats = async () => {
+    const data = await fetchWrapper({
+      route: 'workout/overview/stats',
+      method: 'GET'
+    });
+    if (data === null) return;
+    setOverviewHistoricalStats(data.workouts);
+  };
+
+  if (['loading', 'hasError'].includes(loadableOverviewHistoricalStats.state)) {
+    getOverviewStats();
+    return <LoadingScreen />
+  }
 
   return (
     <>

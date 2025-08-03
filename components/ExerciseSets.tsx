@@ -51,7 +51,7 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
         {!openOptions &&
           <>
             <Text style={[styles.text, styles.header]}>reps</Text>
-            <Text style={[styles.text, styles.header]}>weight</Text>
+            <Text style={[styles.text, styles.header]}>{exercise.is_body_weight ? '+/- weight' : 'weight'}</Text>
             <Text style={[styles.text, styles.header]}>sets</Text>
           </>
         }

@@ -1,21 +1,22 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollView, Platform } from "react-native";
-import { useAtom } from "jotai";
+import React, { Suspense, useEffect, useState } from "react";
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollView, Platform, Alert } from "react-native";
+import { useAtom, useAtomValue } from "jotai";
 import { StatusBar } from 'expo-status-bar';
 
-import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom, editWorkoutExercisesAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom } from "@/store/general";
+import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom, editWorkoutExercisesAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom, loadableWorkoutExercisesAtom } from "@/store/general";
 import ChooseExercise from "@/components/ChooseExerciseModal";
 import WorkoutOverview from "@/components/WorkoutOverview";
 import { commonStyles } from "@/styles/commonStyles";
 import { fetchWrapper } from "@/middleware/helpers";
 import WorkoutExerciseRow from "@/components/WorkoutExerciseRow";
 import Constants from "expo-constants";
+import LoadingScreen from "../loading";
 
 export default function Workout() {
   const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom);
+  const loadableWorkoutExercises = useAtomValue(loadableWorkoutExercisesAtom);
   const [workoutStartTime, setWorkoutStartTime] = useAtom(workoutStartTimeAtom);
   const [exerciseList, setExerciseList] = useAtom(exerciseListAtom);
-  const [exercises, _] = useAtom(workoutExercisesAtom);
   const [showStartOptions, setShowStartOptions] = useAtom(showWorkoutStartOptionsAtom);
   const [editExercises, setEditExercises] = useAtom(editWorkoutExercisesAtom);
   const [overviewHistoricalStats, setOverviewHistoricalStats] = useAtom(overviewHistoricalStatsAtom);
@@ -88,15 +89,22 @@ export default function Workout() {
   }, []);
 
   useEffect(() => {
-    if (exercises.length > 0) return;
+    if (workoutExercises && workoutExercises.length > 0) return;
     setEditExercises(false);
-  }, [exercises.length, editExercises])
+  }, [workoutExercises, editExercises])
 
   useEffect(() => {
     getMuscleMaps();
   }, [])
 
+  if (loadableWorkoutExercises.state === 'loading') {
+    return <LoadingScreen delay={1000}/>
+  } else if (loadableWorkoutExercises.state === 'hasError') {
+    Alert.alert('error loading workout data');
+  }
+
   return (
+    <Suspense fallback={<View style={{ flex: 1, backgroundColor: 'black' }} />}>
     <SafeAreaView style={styles.container}> 
       {Platform.OS == 'android' &&
         <StatusBar style="light" backgroundColor="black" translucent={false} />
@@ -182,6 +190,7 @@ export default function Workout() {
         </View>
       }    
     </SafeAreaView>
+    </Suspense>
   )
 }
 
