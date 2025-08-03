@@ -32,8 +32,6 @@ export default function ExerciseSet(props: ExerciseSetProps) {
   const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false);
   const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
 
-  console.log(exercise.set_data)
-
   interface SetClassOption {
     label: string
     value: SetClass

@@ -122,7 +122,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
   const {exercise, exerciseIndex} = props;
 
   const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
-  const exerciseData = exercisesHistoricalData[exercise.id];
+  const [exerciseData, setExerciseData] = useState<ExerciseHistoricalData>(exercisesHistoricalData[exercise.id]);
   const loadableExercisesHistoricalData = useAtomValue(loadableExercisesHistoricalDataAtom);
 
   const dataOptions: DataOptionObject[] = [
@@ -723,8 +723,16 @@ export default function ExerciseData(props: ExerciseDataProps) {
     'table': getTable()
   }
 
-  useEffect(() => {
-    if (exerciseData !== undefined) return;
+  const loadExerciseData = () => { 
+    if (loadableExercisesHistoricalData.state === 'hasData') {
+      const temp = exercisesHistoricalData[exercise.id];
+      if (temp !== undefined) {
+        setExerciseData(temp);
+        return;
+      }
+    }
+
+    if (loadableExercisesHistoricalData.state === 'loading' || exerciseData !== undefined) return;
 
     const handleRefreshHistory = async () => {
       const data = await fetchWrapper({
@@ -739,9 +747,14 @@ export default function ExerciseData(props: ExerciseDataProps) {
     }
 
     handleRefreshHistory();
-  }, [exerciseData]);
+  };
+
+  useEffect(() => {
+    loadExerciseData();
+  }, [loadableExercisesHistoricalData.state, exerciseData])
 
   if (exerciseData === undefined) {
+    loadExerciseData();
     return <LoadingScreen />
   }
 

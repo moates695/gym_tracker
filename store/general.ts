@@ -119,7 +119,7 @@ export const emptyExerciseHistoricalData: ExerciseHistoricalData = {
   "reps_sets_weight": []
 }
 
-export const exercisesHistoricalDataAtom = atom<Record<string, ExerciseHistoricalData>>({});
+export const exercisesHistoricalDataAtom = atomWithStorage<Record<string, ExerciseHistoricalData>>('exercisesHistoricalDataAtom', {}, storage);
 export const loadableExercisesHistoricalDataAtom = loadable(exercisesHistoricalDataAtom);
 
 export interface OverviewHistoricalStatsData {
@@ -136,4 +136,5 @@ export interface OverviewHistoricalStats {
   muscles: Record<string, Record<string, OverviewHistoricalStatsData>>
 }
 
-export const overviewHistoricalStatsAtom = atom<OverviewHistoricalStats[]>([]);
+export const overviewHistoricalStatsAtom = atomWithStorage<OverviewHistoricalStats[]>('overviewHistoricalStatsAtom', [], storage);
+export const loadableOverviewHistoricalStatsAtom = loadable(overviewHistoricalStatsAtom);
