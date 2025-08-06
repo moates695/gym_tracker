@@ -1,9 +1,26 @@
-import { View, Text } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import React from "react";
+import { View, Text, SafeAreaView, StyleSheet, Platform } from "react-native";
 
 export default function Plan() {
   return (
-    <View style={{ backgroundColor: "black" }}>
-      <Text>Plan</Text>
-    </View>
+    <SafeAreaView style={styles.container}> 
+      {Platform.OS == 'android' &&
+        <StatusBar style="light" backgroundColor="black" translucent={false} />
+      }
+
+    </SafeAreaView>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'black',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  text: {
+    color: '#fff',
+  },
+});
