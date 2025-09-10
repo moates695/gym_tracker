@@ -1,5 +1,5 @@
 import { fetchWrapper, getExerciseValueMap } from "@/middleware/helpers";
-import { emptyExerciseHistoricalData, emptySetData, exercisesHistoricalDataAtom, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
+import { emptyExerciseHistoricalData, emptySetData, ExerciseListItem, exercisesHistoricalDataAtom, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useAtom } from "jotai";
 import React, { useState } from "react"
@@ -9,7 +9,7 @@ import MuscleGroupSvg from "./MuscleGroupSvg";
 import { useDropdown } from "./ExerciseData";
 
 interface ChooseExerciseDataProps {
-  exercise: WorkoutExercise
+  exercise: ExerciseListItem
   onChoose: () => void
 }
 
@@ -22,7 +22,8 @@ interface DisplayOptionObject {
 // todo: in data, return dates when exercise last done, show as prev 7 day or prev month/30 day infographic
 
 export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
-  const { exercise, onChoose: onPress } = props;
+  const { exercise, onChoose } = props;
+  
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [workoutExercises, setWorkoutExercisesAtom] = useAtom(workoutExercisesAtom);
   const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
@@ -33,12 +34,13 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
   ]
   const [displayValue, setDisplayValue] = useState<DisplayOption>('heatmap');
 
-  const handleAddExercise = () => {
+  const handleChooseExercise = () => {
     const exerciseCopy: WorkoutExercise = JSON.parse(JSON.stringify(exercise));
     exerciseCopy.set_data = [{ ...emptySetData }];
     const tempExercises = [...workoutExercises];
     tempExercises.push(exerciseCopy);
     setWorkoutExercisesAtom(tempExercises);
+    
     // setWorkoutExercisesAtom((prev) => {
     //   const exerciseCopy: WorkoutExercise = JSON.parse(JSON.stringify(exercise));
     //   exerciseCopy.set_data = [{ ...emptySetData }];
@@ -51,7 +53,7 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
     }))
     fetchExerciseHistoricalData(exercise.id);
 
-    onPress();
+    onChoose();
 
   };
 
@@ -76,6 +78,10 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
   }
 
   return (
+    // <View>
+    //   <Text style={styles.text}>test</Text>
+    // </View>
+
     <TouchableOpacity 
       style={styles.box}
       onPress={() => setIsExpanded(!isExpanded)}
@@ -88,7 +94,7 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
           }
         </Text>
         <TouchableOpacity 
-          onPress={handleAddExercise}
+          onPress={handleChooseExercise}
         >
           <Text style={[styles.text, commonStyles.textButton]}>add</Text> 
         </TouchableOpacity>

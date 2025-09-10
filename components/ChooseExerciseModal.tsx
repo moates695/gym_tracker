@@ -3,13 +3,14 @@ import { TouchableOpacity, View, Text, StyleSheet, ScrollView, TextInput, Switch
 
 import { fetchWrapper } from "@/middleware/helpers";
 import { useAtom, useAtomValue } from "jotai";
-import { exerciseListAtom, MuscleData, muscleGroupToTargetsAtom, WorkoutExercise, WeightType } from "@/store/general";
+import { exerciseListAtom, MuscleData, muscleGroupToTargetsAtom, WorkoutExercise, WeightType, ExerciseListItem } from "@/store/general";
 import ChooseExerciseItem from "./ChooseExerciseItem";
 import { commonStyles } from "@/styles/commonStyles";
 import InputField from "./InputField";
 import workoutExercise from "./WorkoutExercise";
 import { Dropdown } from "react-native-element-dropdown";
 import { useDropdown } from "./ExerciseData";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 interface ChooseExerciseProps {
   onChoose: () => void
@@ -24,9 +25,9 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
   const { onChoose } = props;
   
   const muscleGroupToTargets = useAtomValue(muscleGroupToTargetsAtom);
-
+  
   const [exercisesList, setExercisesList] = useAtom(exerciseListAtom);
-  const [displayedExercises, setDisplayedExercises] = useState<WorkoutExercise[]>(exercisesList); 
+  const [displayedExercises, setDisplayedExercises] = useState<ExerciseListItem[]>(exercisesList); 
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [searchBar, setSearchBar] = useState<string>('');
   
@@ -83,9 +84,9 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
 
   const handleExercisesRefresh = async () => {
     const data = await fetchWrapper({
-    route: 'exercises/list/all',
-    method: 'GET'
-});
+      route: 'exercises/list/all',
+      method: 'GET'
+    });
     if (data === null) return;
     setExercisesList(data.exercises);
   };
@@ -132,7 +133,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
     return ratioOptions;
   };
 
-  const searchBarFilter = (tempExercises: WorkoutExercise[]): WorkoutExercise[] => {
+  const searchBarFilter = (tempExercises: ExerciseListItem[]): ExerciseListItem[] => {
     if (searchBar === '') {
       return tempExercises;
     }
@@ -142,22 +143,22 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
       part.trim() !== ''
     );
 
-    let filtered: WorkoutExercise[] = [];
+    let filtered: ExerciseListItem[] = [];
     let matchingIds: string[] = [];
     for (const part of parts) {
-      const temp = tempExercises.filter((exercise: WorkoutExercise) => 
+      const temp = tempExercises.filter((exercise: ExerciseListItem) => 
         exercise.name.toLowerCase().includes(part.toLowerCase()) && !matchingIds.includes(exercise.id)
       );
       filtered = filtered.concat(temp);
-      matchingIds = matchingIds.concat(temp.map((exercise: WorkoutExercise) => exercise.id));
+      matchingIds = matchingIds.concat(temp.map((exercise: ExerciseListItem) => exercise.id));
     }
 
     return filtered;
   };
 
-  const muscleFilter = (tempExercises: WorkoutExercise[]): WorkoutExercise[] => {
+  const muscleFilter = (tempExercises: ExerciseListItem[]): ExerciseListItem[] => {
     if (muscleGroupValue === 'all') return tempExercises;
-    return tempExercises.filter((exercise: WorkoutExercise) => 
+    return tempExercises.filter((exercise: ExerciseListItem) => 
       muscleDataMatchesFilters(exercise.muscle_data)
     );
   };
@@ -180,25 +181,25 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
     return false;
   };
 
-  const weightTypeFilter = (tempExercises: WorkoutExercise[]): WorkoutExercise[] => {
+  const weightTypeFilter = (tempExercises: ExerciseListItem[]): ExerciseListItem[] => {
     const weightType = weightTypeValue;
     if (weightType === 'all') return tempExercises;
 
-    return tempExercises.filter((exercise: WorkoutExercise) => 
+    return tempExercises.filter((exercise: ExerciseListItem) => 
       exercise.weight_type === weightType
     )
 
   };
 
-  const customExercisesFilter = (tempExercises: WorkoutExercise[]): WorkoutExercise[] => {
+  const customExercisesFilter = (tempExercises: ExerciseListItem[]): ExerciseListItem[] => {
     if (!customOnly) return tempExercises;
-    return tempExercises.filter((exercise: WorkoutExercise) => 
+    return tempExercises.filter((exercise: ExerciseListItem) => 
       exercise.is_custom
     )
   };
 
   const applyFilters = () => {
-    let tempExercises: WorkoutExercise[] = [...exercisesList];
+    let tempExercises: ExerciseListItem[] = [...exercisesList];
     tempExercises = searchBarFilter(tempExercises);
     tempExercises = muscleFilter(tempExercises);
     tempExercises = weightTypeFilter(tempExercises);

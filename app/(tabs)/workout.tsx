@@ -11,11 +11,14 @@ import { fetchWrapper } from "@/middleware/helpers";
 import WorkoutExerciseRow from "@/components/WorkoutExerciseRow";
 import Constants from "expo-constants";
 import LoadingScreen from "../loading";
+// import { ErrorBoundary } from "expo-router";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function Workout() {
   const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom);
   const loadableWorkoutExercises = useAtomValue(loadableWorkoutExercisesAtom);
   const [workoutStartTime, setWorkoutStartTime] = useAtom(workoutStartTimeAtom);
+
   const [exerciseList, setExerciseList] = useAtom(exerciseListAtom);
   const [showStartOptions, setShowStartOptions] = useAtom(showWorkoutStartOptionsAtom);
   const [editExercises, setEditExercises] = useAtom(editWorkoutExercisesAtom);
@@ -78,9 +81,9 @@ export default function Workout() {
   useEffect(() => {
     const getData = async () => {
       const data = await fetchWrapper({
-      route: 'exercises/list/all',
-      method: 'GET'
-    });
+        route: 'exercises/list/all',
+        method: 'GET'
+      });
       if (data === null) return;
       setExerciseList(data.exercises)
     };
@@ -95,7 +98,7 @@ export default function Workout() {
 
   useEffect(() => {
     getMuscleMaps();
-  }, [])
+  }, []);
 
   if (loadableWorkoutExercises.state === 'loading') {
     return <LoadingScreen delay={1000}/>
