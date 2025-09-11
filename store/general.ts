@@ -67,6 +67,7 @@ export const showWorkoutStartOptionsAtom = atom<boolean>(true);
 
 export interface ExerciseListItem extends Exercise {
   frequency: Record<number, number>
+  variations?: ExerciseListItem[]
 }
 
 export const exerciseListAtom = atomWithStorage<ExerciseListItem[]>('exerciseListAtom', []);

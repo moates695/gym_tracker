@@ -15,6 +15,8 @@ interface WorkoutExerciseProps {
   exerciseIndex: number
 }
 
+// todo handle a variation name (might require changing the interface?)
+
 export default function workoutExercise(props: WorkoutExerciseProps) {
   const { exercise, exerciseIndex } = props; 
 

@@ -2,11 +2,13 @@ import { fetchWrapper, getExerciseValueMap } from "@/middleware/helpers";
 import { emptyExerciseHistoricalData, emptySetData, ExerciseListItem, exercisesHistoricalDataAtom, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useAtom } from "jotai";
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { Text, StyleSheet, View, TouchableOpacity } from "react-native"
 import FrequencyCalendar from "./FrequencyCalendar";
 import MuscleGroupSvg from "./MuscleGroupSvg";
 import { useDropdown } from "./ExerciseData";
+import { OptionsObject } from "./ChooseExerciseModal";
+import { MaterialIcons } from "@expo/vector-icons";
 
 interface ChooseExerciseDataProps {
   exercise: ExerciseListItem
@@ -24,9 +26,13 @@ interface DisplayOptionObject {
 export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
   const { exercise, onChoose } = props;
   
+  const variations = exercise.variations ?? [];
+
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [workoutExercises, setWorkoutExercisesAtom] = useAtom(workoutExercisesAtom);
   const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
+
+  const [chosenVariation, setChosenVariation] = useState<ExerciseListItem>(exercise);
 
   const displayOptions: DisplayOptionObject[] = [
     { label: 'heatmap', value: 'heatmap' },
@@ -34,27 +40,32 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
   ]
   const [displayValue, setDisplayValue] = useState<DisplayOption>('heatmap');
 
+  const baseVariationValue = 'base';
+  const variationOptions: OptionsObject[] = ((): OptionsObject[] => {
+    const options: OptionsObject[] = [
+      { label: 'base exercise', value: baseVariationValue }
+    ];
+    for (const variation of variations) {
+      options.push({ label: variation.name, value: variation.name })
+    }
+    return options
+  })();
+  const [variationValue, setVariationValue] = useState<string>(baseVariationValue);
+
   const handleChooseExercise = () => {
-    const exerciseCopy: WorkoutExercise = JSON.parse(JSON.stringify(exercise));
+    const exerciseCopy: WorkoutExercise = JSON.parse(JSON.stringify(chosenVariation));
     exerciseCopy.set_data = [{ ...emptySetData }];
     const tempExercises = [...workoutExercises];
     tempExercises.push(exerciseCopy);
     setWorkoutExercisesAtom(tempExercises);
-    
-    // setWorkoutExercisesAtom((prev) => {
-    //   const exerciseCopy: WorkoutExercise = JSON.parse(JSON.stringify(exercise));
-    //   exerciseCopy.set_data = [{ ...emptySetData }];
-    //   return [...prev, exerciseCopy];
-    // });
 
     setExercisesHistoricalData(prev => ({
       ...prev,
       [exerciseCopy.id]: emptyExerciseHistoricalData
     }))
-    fetchExerciseHistoricalData(exercise.id);
+    fetchExerciseHistoricalData(chosenVariation.id);
 
     onChoose();
-
   };
 
   const fetchExerciseHistoricalData = async (id: string) => {
@@ -70,29 +81,41 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
   };
 
   const displayMap: Record<DisplayOption, JSX.Element> = {
-    frequency: <FrequencyCalendar frequencyData={exercise.frequency} />,
+    frequency: <FrequencyCalendar frequencyData={chosenVariation.frequency} />,
     heatmap: <MuscleGroupSvg
-      valueMap={getExerciseValueMap(exercise)} 
+      valueMap={getExerciseValueMap(chosenVariation)} 
       showGroups={false}
     />
   }
 
-  return (
-    // <View>
-    //   <Text style={styles.text}>test</Text>
-    // </View>
+  useEffect(() => {
+    if (variationValue === baseVariationValue) {
+      setChosenVariation(exercise);
+      return;
+    }
+    for (const variation of variations) {
+      if (variation.name != variationValue) continue;
+      setChosenVariation(variation);
+      break;
+    }
+  }, [variationValue])
 
-    <TouchableOpacity 
-      style={styles.box}
-      onPress={() => setIsExpanded(!isExpanded)}
-    >
+  return (
+    <View style={styles.box}>
       <View style={styles.row}>
-        <Text style={styles.text}>
-          {exercise.name}
-          {exercise.is_custom && 
-            <Text style={[styles.text, {fontSize: 10}]}> (custom)</Text>
-          }
-        </Text>
+        <TouchableOpacity
+          onPress={() => setIsExpanded(!isExpanded)}
+        >
+          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+            <Text style={styles.text}>{exercise.name}</Text>
+            <MaterialIcons 
+              name={isExpanded ? "expand-less" : "expand-more"} 
+              size={16} 
+              color="white" 
+              style={{paddingLeft: 4, paddingBottom: 4}}
+            />
+          </View>
+        </TouchableOpacity>
         <TouchableOpacity 
           onPress={handleChooseExercise}
         >
@@ -101,14 +124,21 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
       </View>
       {isExpanded &&
         <>
-          <Text style={styles.text}>Description: {exercise.description}</Text>
-          <Text style={styles.text}>Bodyweight: {exercise.is_body_weight ? "true": "false"}</Text>
-          <Text style={styles.text}>Weight Type: {exercise.weight_type}</Text>
+          {variations.length > 0 &&
+            <>
+              <Text style={styles.text}>Choose variation:</Text>
+              {useDropdown(variationOptions, variationValue, setVariationValue)}
+            </>
+          }
+          <Text style={styles.text}>Description: {chosenVariation.description}</Text>
+          <Text style={styles.text}>Bodyweight: {chosenVariation.is_body_weight ? "true": "false"}</Text>
+          <Text style={styles.text}>Weight Type: {chosenVariation.weight_type}</Text>
+          <Text style={styles.text}>Is custom: {chosenVariation.is_custom ? 'yes': 'no'}</Text>
           {useDropdown(displayOptions, displayValue, setDisplayValue)}
           {displayMap[displayValue]}
         </>
       }
-    </TouchableOpacity>
+    </View>
   )
 }
 

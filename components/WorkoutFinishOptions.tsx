@@ -23,7 +23,7 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
   
   const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom)
   const [workoutStartTime, setWorkoutStartTime] = useAtom(workoutStartTimeAtom)
-  const [showWorkoutStartOptions, setShowWorkoutStartOptions] = useAtom(showWorkoutStartOptionsAtom)
+  const [, setShowWorkoutStartOptions] = useAtom(showWorkoutStartOptionsAtom)
 
   const router = useRouter();
   
@@ -69,12 +69,14 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
     for (const exercise of workoutExercises) {
       const validSets = getValidSets(exercise);
       if (validSets.length === 0) continue;
+
       const updatedValidSets = validSets.map(({ class: set_class, ...rest}) => ({
         ...rest,
         set_class
       }));
+      
       exerciseData.push({
-        "exercise_id": exercise.id,
+        "id": exercise.id,
         "set_data": updatedValidSets,
       })
     }
