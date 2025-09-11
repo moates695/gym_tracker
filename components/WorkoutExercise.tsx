@@ -75,7 +75,20 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
         onPress={() => setIsExpanded(!isExpanded)}
         disabled={editExercises}
       >
-        <Text style={[styles.text, {fontWeight: 500}]}>{exercise.name}</Text>
+        <View style={{flexDirection: 'row', alignItems: 'baseline'}}>
+          <Text 
+            style={[styles.text, {fontWeight: 500}]}
+          >
+            {exercise.name}
+          </Text>
+          {exercise.variation_name !== undefined &&
+            <Text 
+              style={[styles.text, {paddingLeft: 4, fontSize: 12, fontStyle: 'italic' }]}
+            >
+              ({exercise.variation_name})
+            </Text>
+          }
+        </View>
         <Text style={styles.text}>{numSets} sets</Text>
       </TouchableOpacity>
       {isExpanded &&

@@ -53,15 +53,20 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
   const [variationValue, setVariationValue] = useState<string>(baseVariationValue);
 
   const handleChooseExercise = () => {
-    const exerciseCopy: WorkoutExercise = JSON.parse(JSON.stringify(chosenVariation));
-    exerciseCopy.set_data = [{ ...emptySetData }];
+    const newExercise = JSON.parse(JSON.stringify(chosenVariation));
+    delete newExercise.frequency;
+    newExercise.set_data = [{ ...emptySetData }];
+    if (variationValue !== baseVariationValue) {
+      newExercise.name = exercise.name;
+      newExercise.variation_name = chosenVariation.name;
+    }
     const tempExercises = [...workoutExercises];
-    tempExercises.push(exerciseCopy);
+    tempExercises.push(newExercise);
     setWorkoutExercisesAtom(tempExercises);
 
     setExercisesHistoricalData(prev => ({
       ...prev,
-      [exerciseCopy.id]: emptyExerciseHistoricalData
+      [newExercise.id]: emptyExerciseHistoricalData
     }))
     fetchExerciseHistoricalData(chosenVariation.id);
 

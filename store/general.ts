@@ -51,7 +51,10 @@ export interface Exercise {
   is_custom: boolean
 }
 
+//? base exercise: `variation_name` = undefined
+//? variation: `variation_name` = non empty string
 export interface WorkoutExercise extends Exercise {
+  variation_name?: string
   set_data: SetData[]
 }
 
@@ -65,6 +68,8 @@ export const muscleTargetoGroupAtom = atomWithStorage<Record<string, string>>('m
 
 export const showWorkoutStartOptionsAtom = atom<boolean>(true);
 
+//? base exercise: `variations` = list
+//? variation: `variations` = undefined
 export interface ExerciseListItem extends Exercise {
   frequency: Record<number, number>
   variations?: ExerciseListItem[]
