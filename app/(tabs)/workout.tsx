@@ -3,29 +3,27 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollVi
 import { useAtom, useAtomValue } from "jotai";
 import { StatusBar } from 'expo-status-bar';
 
-import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom, editWorkoutExercisesAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom, loadableWorkoutExercisesAtom } from "@/store/general";
+import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom, editWorkoutExercisesAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom, loadableWorkoutExercisesAtom, exercisesHistoricalDataAtom } from "@/store/general";
 import ChooseExercise from "@/components/ChooseExerciseModal";
 import WorkoutOverview from "@/components/WorkoutOverview";
 import { commonStyles } from "@/styles/commonStyles";
 import { fetchWrapper } from "@/middleware/helpers";
 import WorkoutExerciseRow from "@/components/WorkoutExerciseRow";
-import Constants from "expo-constants";
 import LoadingScreen from "../loading";
-// import { ErrorBoundary } from "expo-router";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function Workout() {
   const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom);
   const loadableWorkoutExercises = useAtomValue(loadableWorkoutExercisesAtom);
-  const [workoutStartTime, setWorkoutStartTime] = useAtom(workoutStartTimeAtom);
+  const [, setWorkoutStartTime] = useAtom(workoutStartTimeAtom);
 
-  const [exerciseList, setExerciseList] = useAtom(exerciseListAtom);
+  const [, setExerciseList] = useAtom(exerciseListAtom);
   const [showStartOptions, setShowStartOptions] = useAtom(showWorkoutStartOptionsAtom);
   const [editExercises, setEditExercises] = useAtom(editWorkoutExercisesAtom);
-  const [overviewHistoricalStats, setOverviewHistoricalStats] = useAtom(overviewHistoricalStatsAtom);
+  const [, setOverviewHistoricalStats] = useAtom(overviewHistoricalStatsAtom);
+  const [, setexercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
 
-  const [groupToTargets, setGroupToTargets] = useAtom(muscleGroupToTargetsAtom);
-  const [targetoGroup, setTargetoGroup] = useAtom(muscleTargetoGroupAtom);
+  const [, setGroupToTargets] = useAtom(muscleGroupToTargetsAtom);
+  const [, setTargetoGroup] = useAtom(muscleTargetoGroupAtom);
 
   const [chooseNewExercise, setChooseNewExercise] = useState<boolean>(false);
   const [showOverview, setShowOverview] = useState<boolean>(false);
@@ -51,22 +49,23 @@ export default function Workout() {
 
   // const getPreviousWorkouts = async () => {};
 
-  const createNewWorkout = async () => {
+  const startNewWorkout = async () => {
     setWorkoutExercises([]);
     setWorkoutStartTime(Date.now());
+    setexercisesHistoricalData({});
 
     getMuscleMaps();
     getOverviewStats();
   };
 
+  const handleStartNewWorkout = () => {
+    startNewWorkout();
+    setShowStartOptions(false);
+  };
+
   const handleContinueWorkout = () => {
     setShowStartOptions(false);
   } 
-
-  const handleStartNewWorkout = () => {
-    createNewWorkout();
-    setShowStartOptions(false);
-  };
 
   const handleAddNewExercise = () => {
     setEditExercises(false);
@@ -75,7 +74,7 @@ export default function Workout() {
 
   const handleShowOverview = () => {
     setEditExercises(false);
-    setShowOverview(true)
+    setShowOverview(true);
   };
 
   useEffect(() => {
@@ -92,7 +91,7 @@ export default function Workout() {
   }, []);
 
   useEffect(() => {
-    if (workoutExercises && workoutExercises.length > 0) return;
+    if (workoutExercises.length > 0) return;
     setEditExercises(false);
   }, [workoutExercises, editExercises])
 
@@ -103,7 +102,8 @@ export default function Workout() {
   if (loadableWorkoutExercises.state === 'loading') {
     return <LoadingScreen delay={1000}/>
   } else if (loadableWorkoutExercises.state === 'hasError') {
-    Alert.alert('error loading workout data');
+    Alert.alert('error loading current workout data');
+    setWorkoutExercises([]);
   }
 
   return (
@@ -169,6 +169,7 @@ export default function Workout() {
               <TouchableOpacity 
                 style={[commonStyles.textButton, editExercises && {borderColor: 'green', backgroundColor: 'green'}]}
                 onPress={() => setEditExercises(!editExercises)}
+                disabled={workoutExercises.length === 0}
               >
                 <Text style={{ color: "white"}}>edit exercises</Text>
               </TouchableOpacity>

@@ -6,13 +6,11 @@ import React from "react";
 import * as Font from 'expo-font';
 import { MaterialIcons, AntDesign, Ionicons } from '@expo/vector-icons';
 import { fetchWrapper } from "@/middleware/helpers";
-import { Alert, useColorScheme, View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 import * as SystemUI from "expo-system-ui"
-import { useAtom, useAtomValue } from "jotai";
-import { loadableWorkoutExercisesAtom, workoutExercisesAtom } from "@/store/general";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { ThemeProvider, DarkTheme } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAtom } from "jotai";
+import { workoutExercisesAtom } from "@/store/general";
 
 export interface DecodedJWT {
   email: string
@@ -25,9 +23,9 @@ export default function RootLayout() {
   const router = useRouter();
   const colorScheme = useColorScheme();
 
-  const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom);
+  const [,] = useAtom(workoutExercisesAtom); // to prevent screen flashbang  
 
-  SystemUI.setBackgroundColorAsync("black")
+  SystemUI.setBackgroundColorAsync("black");
 
   const checkUserState = async () => {
     // await SecureStore.deleteItemAsync("auth_token"); //!!!! for testing new user
@@ -83,8 +81,6 @@ export default function RootLayout() {
           router.replace("/validate");
         }
       } else if (data.account_state == "good") {
-        // await loadStoredData();
-        await loadFonts();
         router.replace("/(tabs)");
       } else {
         throw new Error("response not recognised");
@@ -95,30 +91,6 @@ export default function RootLayout() {
       router.replace("/sign-up");
     }
   };
-
-
-  // const loadStoredData = async () => {
-  //   const loadItems = [
-  //     [workoutExercises, setWorkoutExercises, 'workoutExercisesAtom'],
-  //   ]
-
-  //   for (const loadItem of loadItems) {
-  //     await loadStoredValue(loadItem[0], loadItem[1], loadItem[2])
-  //   }
-  // };
-
-  // const loadStoredValue = async (atom: any, setAtom: any, key: any) => {
-  //   try {
-  //     const value = await AsyncStorage.getItem(key);
-  //     if (value === null) {
-  //       console.log(`${key} has null value`);
-  //       return;
-  //     }
-  //     setAtom(value);
-  //   } catch (error) {
-  //     console.log(error)
-  //   }
-  // };
 
   const loadFonts = async () => {
     await Font.loadAsync({

@@ -28,12 +28,11 @@ export default function MuscleGroupSvg(props: MuscleGroupSvgProps) {
     if (num < 0 || num > 1) return "none";
 
     const colours = [
-        { pos: 0.0, color: { r: 0, g: 0, b: 255 } },     // Blue (cold)
-        { pos: 0.25, color: { r: 0, g: 255, b: 255 } },  // Cyan
-        { pos: 0.5, color: { r: 0, g: 255, b: 0 } },     // Green
-        { pos: 0.75, color: { r: 255, g: 255, b: 0 } },  // Yellow
-        { pos: 1.0, color: { r: 255, g: 0, b: 0 } }      // Red (hot)
-      ]
+      { pos: 0.0,  color: { r: 0,   g: 0,   b: 255 } },   // Blue
+      { pos: 0.33, color: { r: 75,  g: 0,   b: 130 } },   // Indigo
+      { pos: 0.66, color: { r: 128, g: 0,   b: 128 } },   // Purple
+      { pos: 1.0,  color: { r: 255, g: 0,   b: 0   } }
+    ]
 
     let startColor = colours[0];
     let endColor = colours[1];
@@ -435,9 +434,8 @@ export default function MuscleGroupSvg(props: MuscleGroupSvgProps) {
         <LinearGradient
           colors={[
             'rgb(0,0,255)',
-            'rgb(0,255,255)',
-            'rgb(0,255,0)',
-            'rgb(255,255,0)',
+            'rgb(75,0,130)',
+            'rgb(128,0,128)',
             'rgb(255,0,0)',
           ]}
           start={{ x: 0, y: 0 }}

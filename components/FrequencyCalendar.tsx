@@ -1,5 +1,4 @@
 import React from "react";
-import { ExerciseFrequencyData } from "@/store/general";
 import { Col, Row, Grid } from "react-native-easy-grid";
 import { View, Text, StyleSheet } from "react-native";
 

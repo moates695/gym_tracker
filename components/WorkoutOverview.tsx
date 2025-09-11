@@ -28,7 +28,7 @@ interface DisplayedDataOption {
 export default function WorkoutOverview(props: WorkoutOverviewProps) {
   const { onPress } = props;
   
-  const [overviewHistoricalStats, setOverviewHistoricalStats] = useAtom(overviewHistoricalStatsAtom);
+  const [, setOverviewHistoricalStats] = useAtom(overviewHistoricalStatsAtom);
 
   const displayedDataOptions: DisplayedDataOption[] = [
     { label: 'current workout', value: 'current' },

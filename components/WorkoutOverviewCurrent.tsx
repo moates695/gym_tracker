@@ -56,9 +56,9 @@ export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProp
       if (validSets.length > 0) stats.num_valid_exercises++;
 
       for (const set_data of validSets) {
-        const weight = exercise.is_body_weight ? getBodyWeight(exercise) : (set_data.weight ?? 0);
-        const tempReps = (set_data.reps ?? 0);
-        const tempSets = (set_data.num_sets ?? 0);
+        const weight = exercise.is_body_weight ? getBodyWeight(exercise) : set_data.weight;
+        const tempReps = set_data.reps;
+        const tempSets = set_data.num_sets;
 
         stats.volume += tempReps * weight * tempSets;
         stats.reps += tempReps;
@@ -75,9 +75,9 @@ export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProp
   ];
 
   const getMuscleStats = () => {
-    const ratios: Record<string, any> = {
+    const stats: Record<string, any> = {
       "volume": {},
-      "sets": {},
+      "num_sets": {},
       "reps": {},
     };
 
@@ -87,7 +87,7 @@ export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProp
 
       let contributions: Record<string, number> = {
         "volume": 0,
-        "sets": 0,
+        "num_sets": 0,
         "reps": 0,
       };
       for (const set_data of validSets) {
@@ -96,11 +96,11 @@ export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProp
         const reps = set_data.reps;
         
         contributions["volume"] += reps * weight * sets;
-        contributions["sets"] = sets;
+        contributions["num_sets"] = sets;
         contributions["reps"] = reps;
       }
 
-      for (const [ratioKey, ratioData] of Object.entries(ratios) as [string, any][]) {
+      for (const [ratioKey, ratioData] of Object.entries(stats) as [string, any][]) {
         for (const muscleData of exercise.muscle_data) {
           const groupName = muscleData.group_name;
 
@@ -117,22 +117,22 @@ export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProp
             if (!targets.hasOwnProperty(targetName)) {
               targets[targetName] = 0;
             }
-            const weightFactor = ratioKey !== 'volume' ? 1 : (targetData.ratio / 10)
-            targets[targetName] += contributions[ratioKey] * weightFactor;
+            const ratioFactor = ratioKey !== 'volume' ? 1 : (targetData.ratio / 10)
+            targets[targetName] += contributions[ratioKey] * ratioFactor;
           }
         }
       }
     }
 
-    for (const [ratioKey, ratioData] of Object.entries(ratios) as [string, any][]) {
-      for (const groupData of Object.values(ratioData) as Record<string, any>[]) {
+    for (const [statsKey, statsData] of Object.entries(stats) as [string, any][]) {
+      for (const groupData of Object.values(statsData) as Record<string, any>[]) {
         const targetValues: number[] = Object.values(groupData["targets"]);
         const sum: number = targetValues.reduce((a, b) => a + b, 0);
         groupData["value"] = sum / targetValues.length;
       }
     }
 
-    return ratios;
+    return stats;
   };
 
   const getValueMap = (): Record<string, number> => {
