@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { View, StyleSheet, Text, Platform, TouchableOpacity, ScrollView, FlatList, StyleProp, ViewStyle } from "react-native"
-import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData, TimestampValue, ExerciseHistory, loadableExercisesHistoricalDataAtom } from "@/store/general"
+import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData, TimestampValue, ExerciseHistory, loadableExercisesHistoricalDataAtom, emptyExerciseHistoricalData } from "@/store/general"
 import ThreeAxisGraph, { Point3D } from './ThreeAxisGraph'
 import { useEffect, useRef, useState } from "react";
 import { useAtom, useAtomValue } from "jotai";
@@ -10,6 +10,7 @@ import { Dropdown } from 'react-native-element-dropdown';
 import CarouselDataTable from './CarouselDataTable';
 import { fetchWrapper, getValidSets } from '@/middleware/helpers';
 import LoadingScreen from '@/app/loading';
+import { OptionsObject } from './ChooseExerciseModal';
 
 // WORKOUT OVERVIEW DATA
 // list of exercises in the workout
@@ -122,8 +123,9 @@ export default function ExerciseData(props: ExerciseDataProps) {
   const {exercise, exerciseIndex} = props;
 
   const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
-  const [exerciseData, setExerciseData] = useState<ExerciseHistoricalData>(exercisesHistoricalData[exercise.id]);
   const loadableExercisesHistoricalData = useAtomValue(loadableExercisesHistoricalDataAtom);
+
+  const exerciseData = exercisesHistoricalData[exercise.id] ?? emptyExerciseHistoricalData;
 
   const dataOptions: DataOptionObject[] = [
     { label: 'rep max', value: 'n_rep_max' },
@@ -139,24 +141,15 @@ export default function ExerciseData(props: ExerciseDataProps) {
   ]
   const [nRepMaxOptionValue, setNRepMaxOptionValue] = useState<NRepMaxDataOption>('all_time');
 
-  const [nRepMaxHistoryOptions, setNRepMaxHistoryOptions] = useState<any[]>([]);
-  const [nRepMaxHistoryOptionValue, setNRepMaxHistoryOptionValue] = useState<string | null>(nRepMaxHistoryOptions[0]?.value ?? null);
-
-  useEffect(() => {
-    try {
-      const temp: any[] = [];
-      for (const key in exerciseData['n_rep_max']['history']) {
-        temp.push({
-          label: key, value: key
-        })
-      }
-      setNRepMaxHistoryOptions(temp);
-      setNRepMaxHistoryOptionValue(temp[0]?.value ?? null);
-    } catch (error) {
-      console.log(error)
-      setNRepMaxHistoryOptions([]);
+  const nRepMaxHistoryOptions: OptionsObject[] = ((): OptionsObject[] => {
+    const options: OptionsObject[] = [];
+    for (const rep of Object.keys(exerciseData.n_rep_max.history)) {
+      options.push({ label: rep, value: rep });
     }
-  }, [exerciseData]);
+    return options;
+  })();
+
+  const [nRepMaxHistoryOptionValue, setNRepMaxHistoryOptionValue] = useState<string | null>(nRepMaxHistoryOptions[0]?.value ?? null );
 
   const volumeOptions: VolumeOptionObject[] = [
     { label: 'workout', value: 'workout' },
@@ -422,8 +415,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
         timestampToDateStr(value.timestamp)
       ])
     }
-    rows.reverse();
-    
+
     return [headers, rows];
   };
 
@@ -446,7 +438,6 @@ export default function ExerciseData(props: ExerciseDataProps) {
         timestampToDateStr(data.timestamp)
       ])
     }
-    rows.reverse();
 
     return [headers, rows];
   };
@@ -656,8 +647,6 @@ export default function ExerciseData(props: ExerciseDataProps) {
       setGraphScale('value');
     } else if (dataOptionValue === 'volume') {
       setGraphScale('time')
-    } else if (dataOptionValue === 'reps_sets_weight') {
-
     }
   }, [dataOptionValue, nRepMaxOptionValue]);
 
@@ -723,39 +712,46 @@ export default function ExerciseData(props: ExerciseDataProps) {
     'table': getTable()
   }
 
-  const loadExerciseData = () => { 
-    if (loadableExercisesHistoricalData.state === 'hasData') {
-      const temp = exercisesHistoricalData[exercise.id];
-      if (temp !== undefined) {
-        setExerciseData(temp);
-        return;
-      }
-    }
+  // const loadExerciseData = () => { 
+  //   if (loadableExercisesHistoricalData.state === 'hasData') {
+  //     const temp = exercisesHistoricalData[exercise.id];
+  //     if (temp !== undefined) {
+  //       setExerciseData(temp);
+  //       return;
+  //     }
+  //   }
 
-    if (loadableExercisesHistoricalData.state === 'loading' || exerciseData !== undefined) return;
+  //   if (loadableExercisesHistoricalData.state === 'loading' || exerciseData !== undefined) return;
 
-    const handleRefreshHistory = async () => {
-      const data = await fetchWrapper({
-        route: 'exercise/history',
-        method: 'GET',
-        params: {exercise_id: exercise.id}
-      })
-      setExercisesHistoricalData(prev => ({
-        ...prev,
-        [exercise.id]: data
-      }))
-    }
+  //   const handleRefreshHistory = async () => {
+  //     const data = await fetchWrapper({
+  //       route: 'exercise/history',
+  //       method: 'GET',
+  //       params: {exercise_id: exercise.id}
+  //     })
+  //     setExercisesHistoricalData(prev => ({
+  //       ...prev,
+  //       [exercise.id]: data
+  //     }))
+  //   }
 
-    handleRefreshHistory();
-  };
+  //   handleRefreshHistory();
+  // };
 
-  useEffect(() => {
-    loadExerciseData();
-  }, [loadableExercisesHistoricalData.state, exerciseData])
+  // useEffect(() => {
+  //   loadExerciseData();
+  // }, [loadableExercisesHistoricalData.state, exerciseData])
 
-  if (exerciseData === undefined) {
-    loadExerciseData();
+  // if (exerciseData === undefined) {
+  //   loadExerciseData();
+  //   return <LoadingScreen />
+  // }
+
+  if (loadableExercisesHistoricalData.state === 'loading') {
     return <LoadingScreen />
+  } else if (loadableExercisesHistoricalData.state === 'hasError') {
+    console.log('error loading historical data from storage');
+    setExercisesHistoricalData({});
   }
 
   return (

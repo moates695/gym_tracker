@@ -45,7 +45,6 @@ export default function ThreeAxisGraph(props: ThreeAxisGraphProps) {
   };
 
   const normalizedPoints = normalizePoints(points);
-  // const normalizedPoints = points;
 
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: () => true,
