@@ -3,7 +3,7 @@ import { View, StyleSheet, Text, TouchableOpacity, Modal, Switch } from "react-n
 import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
 import { useAtom, useAtomValue } from "jotai";
-import { loadableOverviewHistoricalStatsAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
+import { loadablePreviousWorkoutStatsAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
 import { fetchWrapper, getBodyWeight, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
 import { filterTimeSeries, timeSpanToMs, useDropdown } from "./ExerciseData";
@@ -37,8 +37,8 @@ interface ContributionTypeOption {
 export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoricalProps) {
   const exercises = useAtomValue(workoutExercisesAtom); 
   const muscleGroupToTargets = useAtomValue(muscleGroupToTargetsAtom);
-  const [overviewHistoricalStats, setOverviewHistoricalStats] = useAtom(overviewHistoricalStatsAtom);
-  const loadableOverviewHistoricalStats = useAtomValue(loadableOverviewHistoricalStatsAtom);
+  const [overviewHistoricalStats, setOverviewHistoricalStats] = useAtom(previousWorkoutStatsAtom);
+  const loadableOverviewHistoricalStats = useAtomValue(loadablePreviousWorkoutStatsAtom);
   const workoutStartTime = useAtomValue(workoutStartTimeAtom);
 
   const historyComparisonOptions: HistoryComparisonOption[] = [

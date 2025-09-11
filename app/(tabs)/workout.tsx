@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollVi
 import { useAtom, useAtomValue } from "jotai";
 import { StatusBar } from 'expo-status-bar';
 
-import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom, editWorkoutExercisesAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom, loadableWorkoutExercisesAtom, exercisesHistoricalDataAtom } from "@/store/general";
+import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom, editWorkoutExercisesAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, loadableWorkoutExercisesAtom, exercisesHistoricalDataAtom } from "@/store/general";
 import ChooseExercise from "@/components/ChooseExerciseModal";
 import WorkoutOverview from "@/components/WorkoutOverview";
 import { commonStyles } from "@/styles/commonStyles";
@@ -19,7 +19,7 @@ export default function Workout() {
   const [, setExerciseList] = useAtom(exerciseListAtom);
   const [showStartOptions, setShowStartOptions] = useAtom(showWorkoutStartOptionsAtom);
   const [editExercises, setEditExercises] = useAtom(editWorkoutExercisesAtom);
-  const [, setOverviewHistoricalStats] = useAtom(overviewHistoricalStatsAtom);
+  const [, setOverviewHistoricalStats] = useAtom(previousWorkoutStatsAtom);
   const [, setexercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
 
   const [, setGroupToTargets] = useAtom(muscleGroupToTargetsAtom);

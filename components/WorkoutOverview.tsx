@@ -3,7 +3,7 @@ import { View, StyleSheet, Text, TouchableOpacity, Modal, Switch } from "react-n
 import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
 import { useAtom, useAtomValue } from "jotai";
-import { exercisesHistoricalDataAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
+import { exercisesHistoricalDataAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
 import { fetchWrapper, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
 import { filterTimeSeries, timeSpanToMs, useDropdown } from "./ExerciseData";
@@ -28,7 +28,7 @@ interface DisplayedDataOption {
 export default function WorkoutOverview(props: WorkoutOverviewProps) {
   const { onPress } = props;
   
-  const [, setOverviewHistoricalStats] = useAtom(overviewHistoricalStatsAtom);
+  const [, setPreviousWorkoutStats] = useAtom(previousWorkoutStatsAtom);
 
   const displayedDataOptions: DisplayedDataOption[] = [
     { label: 'current workout', value: 'current' },
@@ -42,7 +42,7 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
       method: 'GET'
     });
     if (data === null) return;
-    setOverviewHistoricalStats(data.workouts);
+    setPreviousWorkoutStats(data.workouts);
   };
 
   const displayDataMap: Record<DisplayedDataType, JSX.Element> = {

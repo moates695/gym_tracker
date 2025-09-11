@@ -3,7 +3,7 @@ import { View, StyleSheet, Text, TouchableOpacity, Modal, Switch } from "react-n
 import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
 import { useAtom, useAtomValue } from "jotai";
-import { muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
+import { muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
 import { fetchWrapper, getBodyWeight, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
 import { filterTimeSeries, timeSpanToMs, useDropdown } from "./ExerciseData";
@@ -100,31 +100,31 @@ export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProp
         contributions["reps"] = reps;
       }
 
-      for (const [ratioKey, ratioData] of Object.entries(stats) as [string, any][]) {
+      for (const [statsKey, statsData] of Object.entries(stats) as [string, any][]) {
         for (const muscleData of exercise.muscle_data) {
           const groupName = muscleData.group_name;
 
-          if (!ratioData.hasOwnProperty(groupName)) {
-            ratioData[groupName] = {
+          if (!statsData.hasOwnProperty(groupName)) {
+            statsData[groupName] = {
               "targets": {}
             }
           }
 
           for (const targetData of muscleData.targets) {
             const targetName = targetData.target_name;
-            const targets = ratioData[groupName]["targets"];
+            const targets = statsData[groupName]["targets"];
 
             if (!targets.hasOwnProperty(targetName)) {
               targets[targetName] = 0;
             }
-            const ratioFactor = ratioKey !== 'volume' ? 1 : (targetData.ratio / 10)
-            targets[targetName] += contributions[ratioKey] * ratioFactor;
+            const ratioFactor = statsKey !== 'volume' ? 1 : (targetData.ratio / 10)
+            targets[targetName] += contributions[statsKey] * ratioFactor;
           }
         }
       }
     }
 
-    for (const [statsKey, statsData] of Object.entries(stats) as [string, any][]) {
+    for (const [, statsData] of Object.entries(stats) as [string, any][]) {
       for (const groupData of Object.values(statsData) as Record<string, any>[]) {
         const targetValues: number[] = Object.values(groupData["targets"]);
         const sum: number = targetValues.reduce((a, b) => a + b, 0);

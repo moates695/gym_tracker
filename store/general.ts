@@ -55,20 +55,6 @@ export interface WorkoutExercise extends Exercise {
   set_data: SetData[]
 }
 
-// export interface WorkoutExercise {
-//   id: string
-//   name: string
-//   muscle_data: MuscleData[]
-//   is_body_weight: boolean
-//   set_data: SetData[]
-//   description: string
-//   weight_type: WeightType
-//   is_custom: boolean
-//   frequency: Record<number, number>
-// }
-
-// AsyncStorage.clear(); //! for testing
-
 export const workoutExercisesAtom = atomWithStorage<WorkoutExercise[]>('workoutExercisesAtom', [], storage, { getOnInit: true });
 export const loadableWorkoutExercisesAtom = loadable(workoutExercisesAtom);
 
@@ -79,17 +65,6 @@ export const muscleTargetoGroupAtom = atomWithStorage<Record<string, string>>('m
 
 export const showWorkoutStartOptionsAtom = atom<boolean>(true);
 
-// export interface ExerciseListItem {
-//   id: string
-//   name: string
-//   muscle_data: MuscleData[]
-//   is_body_weight: boolean
-//   description: string
-//   weight_type: WeightType
-//   is_custom: boolean
-//   frequency: Record<number, number>
-// }
-
 export interface ExerciseListItem extends Exercise {
   frequency: Record<number, number>
 }
@@ -97,8 +72,6 @@ export interface ExerciseListItem extends Exercise {
 export const exerciseListAtom = atomWithStorage<ExerciseListItem[]>('exerciseListAtom', []);
 
 export const editWorkoutExercisesAtom = atom<boolean>(false);
-
-// export const openSetOptionsAtom = atom<boolean[][]>([]);
 
 export interface WeightTimestamp {
   weight: number
@@ -146,19 +119,19 @@ export const emptyExerciseHistoricalData: ExerciseHistoricalData = {
 export const exercisesHistoricalDataAtom = atomWithStorage<Record<string, ExerciseHistoricalData>>('exercisesHistoricalDataAtom', {}, storage);
 export const loadableExercisesHistoricalDataAtom = loadable(exercisesHistoricalDataAtom);
 
-export interface OverviewHistoricalStatsData {
+export interface PreviousWorkoutStatsData {
   volume: number
   num_sets: number
   reps: number
 }
 
-export interface OverviewHistoricalStats {
+export interface PreviousWorkoutStats {
   started_at: number
   duration: number
   num_exercises: number
-  totals: OverviewHistoricalStatsData
-  muscles: Record<string, Record<string, OverviewHistoricalStatsData>>
+  totals: PreviousWorkoutStatsData
+  muscles: Record<string, Record<string, PreviousWorkoutStatsData>>
 }
 
-export const overviewHistoricalStatsAtom = atomWithStorage<OverviewHistoricalStats[]>('overviewHistoricalStatsAtom', [], storage);
-export const loadableOverviewHistoricalStatsAtom = loadable(overviewHistoricalStatsAtom);
+export const previousWorkoutStatsAtom = atomWithStorage<PreviousWorkoutStats[]>('previousWorkoutStatsAtom', [], storage);
+export const loadablePreviousWorkoutStatsAtom = loadable(previousWorkoutStatsAtom);
