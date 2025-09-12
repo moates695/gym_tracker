@@ -588,11 +588,11 @@ export default function ExerciseData(props: ExerciseDataProps) {
           <Text style={styles.text}>older</Text>
         </TouchableOpacity>
       </View>
-      {exerciseData !== undefined &&
+      {exerciseData["history"][historyListIndex]?.timestamp &&
         <Text 
           style={[styles.text, {alignSelf: 'center', margin: 5}]}
         >
-          Workout on {timestampToDateStr(exerciseData["history"][historyListIndex].timestamp)}
+          Workout on {timestampToDateStr(exerciseData["history"][historyListIndex]?.timestamp)}
         </Text>
       }
     </>

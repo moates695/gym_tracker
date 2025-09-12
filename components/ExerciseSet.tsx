@@ -18,6 +18,11 @@ interface ExerciseSetProps {
   openOptions: boolean
 }
 
+interface SetClassOption {
+  label: string
+  value: SetClass
+}
+
 export default function ExerciseSet(props: ExerciseSetProps) {
   const { exercise, exerciseIndex, set_data, setIndex, openOptions } = props;
 
@@ -31,12 +36,7 @@ export default function ExerciseSet(props: ExerciseSetProps) {
 
   const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false);
   const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
-
-  interface SetClassOption {
-    label: string
-    value: SetClass
-  }
-
+  
   const classOptions: SetClassOption[] = [
     { label: 'working', value: 'working' },
     { label: 'dropset', value: 'dropset' },
