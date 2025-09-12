@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { View, StyleSheet, Text, Platform, TouchableOpacity, ScrollView, FlatList, StyleProp, ViewStyle } from "react-native"
-import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData, TimestampValue, ExerciseHistory, loadableExercisesHistoricalDataAtom, emptyExerciseHistoricalData } from "@/store/general"
+import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoryData, TimestampValue, ExerciseHistory, loadableExercisesHistoricalDataAtom, emptyExerciseHistoricalData } from "@/store/general"
 import ThreeAxisGraph, { Point3D } from './ThreeAxisGraph'
 import { useEffect, useRef, useState } from "react";
 import { useAtom, useAtomValue } from "jotai";
@@ -63,13 +63,13 @@ interface VolumeOptionObject {
   value: VolumeOption
 }
 
-type VolumeTimespan = 'week' | 'month' | '3_months' | '6_months' | 'year';
+export type VolumeTimespan = 'week' | 'month' | '3_months' | '6_months' | 'year';
 interface VolumeTimespanObject {
   label: string
   value: VolumeTimespan
 }
 
-type HistoryGraphOption = 'weight_per_set' | 'volume_per_set' | 'weight_per_rep';
+export type HistoryGraphOption = 'weight_per_set' | 'volume_per_set' | 'weight_per_rep';
 interface HistoryGraphObject {
   label: string
   value: HistoryGraphOption
