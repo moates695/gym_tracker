@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LineGraphPoint } from '@/components/LineGraph';
 import { HistoryGraphOption, VolumeTimespan } from '@/components/ExerciseData';
 import { Point3D } from '@/components/ThreeAxisGraph';
+import { TableData } from '@/components/DataTable';
 
 const storage = createJSONStorage(() => AsyncStorage) as any;
 
@@ -82,24 +83,21 @@ export const exerciseListAtom = atomWithStorage<ExerciseListItem[]>('exerciseLis
 
 export const editWorkoutExercisesAtom = atom<boolean>(false);
 
-// export interface WeightTimestamp {
-//   weight: number
-//   timestamp: number
-// }
+export interface ExerciseHistoryBaseData {
+  graph: LineGraphPoint[]
+  history: TableData<string[], string | number>
+}
 
 export interface HistoryNRepMaxData {
-  all_time: LineGraphPoint[]
-  history: Record<number,LineGraphPoint[]>
+  all_time: ExerciseHistoryBaseData
+  history: Record<number, ExerciseHistoryBaseData>
 }
 
 export interface HistoryVolumeData {
-  workout: LineGraphPoint[]
-  timespan: Record<VolumeTimespan, LineGraphPoint[]>
+  workout: ExerciseHistoryBaseData
+  timespan: Record<VolumeTimespan, ExerciseHistoryBaseData>
 }
 
-// export interface HistoryWorkoutData {
-
-// }
 
 export interface TimestampValue {
   value: number
@@ -117,13 +115,6 @@ export interface ExerciseHistory {
   timestamp: number
 }
 
-// export interface ExerciseHistoricalData {
-//   n_rep_max: NRepMaxData
-//   volume: TimestampValue[]
-//   history: ExerciseHistory[]
-//   reps_sets_weight: HistorySetData[]
-// }
-
 export interface ExerciseHistoryData {
   n_rep_max: HistoryNRepMaxData
   volume: HistoryVolumeData
@@ -131,28 +122,35 @@ export interface ExerciseHistoryData {
   reps_sets_weight: Point3D[]
 }
 
+export const emptyTableData = {
+  "headers": [],
+  "rows": []
+}
+
+export const emptyHistoryBaseData = {
+  "graph": [],
+  "table": emptyTableData
+}
+
 export const emptyExerciseHistoricalData: any = {
   "n_rep_max": {
-    "all_time": {
-      "graph": [],
-      "table": []
-    },
+    "all_time": emptyHistoryBaseData,
     "history": {}
   },
   "volume": {
-    "workout": [], 
+    "workout": emptyHistoryBaseData, 
     "timespan": {
-      "week": [],
-      "month": [],
-      "3_months": [],
-      "6_months": [],
-      "year": [],
+      "week": emptyHistoryBaseData,
+      "month": emptyHistoryBaseData,
+      "3_months": emptyHistoryBaseData,
+      "6_months": emptyHistoryBaseData,
+      "year": emptyHistoryBaseData,
     }
   },
   "history": {
-    "weight_per_set": [],
-    "volume_per_set": [],
-    "weight_per_rep": [],
+    "weight_per_set": emptyHistoryBaseData,
+    "volume_per_set": emptyHistoryBaseData,
+    "weight_per_rep": emptyHistoryBaseData,
   },
   "reps_sets_weight": []
 }
