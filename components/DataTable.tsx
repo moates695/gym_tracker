@@ -13,7 +13,7 @@ interface DataTableProps<H extends readonly string[], V> {
   capitalise?: boolean
 }
 
-export default function DataTable(props: DataTableProps<string[], string>) {
+export default function DataTable(props: DataTableProps<string[], string | number>) {
   const { tableData, capitalise = true } = props;
 
   return (

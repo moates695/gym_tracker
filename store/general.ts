@@ -85,7 +85,7 @@ export const editWorkoutExercisesAtom = atom<boolean>(false);
 
 export interface ExerciseHistoryBaseData {
   graph: LineGraphPoint[]
-  history: TableData<string[], string | number>
+  table: TableData<string[], string | number>
 }
 
 export interface HistoryNRepMaxData {
@@ -98,60 +98,45 @@ export interface HistoryVolumeData {
   timespan: Record<VolumeTimespan, ExerciseHistoryBaseData>
 }
 
-
-export interface TimestampValue {
-  value: number
-  timestamp: number
-}
-
-export interface HistorySetData {
-  reps: number
-  weight: number
-  num_sets: number
-}
-
-export interface ExerciseHistory {
-  set_data: HistorySetData[],
-  timestamp: number
+export interface HistoryData {
+  graph: Record<HistoryGraphOption, LineGraphPoint[]>
+  table: TableData<string[], string | number>
+  started_at: number
 }
 
 export interface ExerciseHistoryData {
   n_rep_max: HistoryNRepMaxData
   volume: HistoryVolumeData
-  history: Record<HistoryGraphOption, LineGraphPoint[]>
+  history: HistoryData[]
   reps_sets_weight: Point3D[]
 }
 
-export const emptyTableData = {
+export const emptyTableData: TableData<string[], string | number> = {
   "headers": [],
   "rows": []
 }
 
-export const emptyHistoryBaseData = {
+export const emptyHistoryBaseData: ExerciseHistoryBaseData = {
   "graph": [],
-  "table": emptyTableData
+  "table": {...emptyTableData}
 }
 
-export const emptyExerciseHistoricalData: any = {
+export const emptyExerciseHistoricalData: ExerciseHistoryData = {
   "n_rep_max": {
-    "all_time": emptyHistoryBaseData,
+    "all_time": {...emptyHistoryBaseData},
     "history": {}
   },
   "volume": {
-    "workout": emptyHistoryBaseData, 
+    "workout": {...emptyHistoryBaseData}, 
     "timespan": {
-      "week": emptyHistoryBaseData,
-      "month": emptyHistoryBaseData,
-      "3_months": emptyHistoryBaseData,
-      "6_months": emptyHistoryBaseData,
-      "year": emptyHistoryBaseData,
+      "week": {...emptyHistoryBaseData},
+      "month": {...emptyHistoryBaseData},
+      "3_months": {...emptyHistoryBaseData},
+      "6_months": {...emptyHistoryBaseData},
+      "year": {...emptyHistoryBaseData},
     }
   },
-  "history": {
-    "weight_per_set": emptyHistoryBaseData,
-    "volume_per_set": emptyHistoryBaseData,
-    "weight_per_rep": emptyHistoryBaseData,
-  },
+  "history": [],
   "reps_sets_weight": []
 }
 

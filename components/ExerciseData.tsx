@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { View, StyleSheet, Text, Platform, TouchableOpacity, ScrollView, FlatList, StyleProp, ViewStyle } from "react-native"
-import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoryData, TimestampValue, ExerciseHistory, loadableExercisesHistoricalDataAtom, emptyExerciseHistoricalData } from "@/store/general"
+import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoryData, loadableExercisesHistoricalDataAtom, emptyExerciseHistoricalData } from "@/store/general"
 import ThreeAxisGraph, { Point3D } from './ThreeAxisGraph'
 import { useEffect, useRef, useState } from "react";
 import { useAtom, useAtomValue } from "jotai";
@@ -12,6 +12,7 @@ import { fetchWrapper, getValidSets } from '@/middleware/helpers';
 import LoadingScreen from '@/app/loading';
 import { OptionsObject } from './ChooseExerciseModal';
 import { timestampToDateStr } from '../middleware/helpers'
+import DataTable, { TableData } from './DataTable';
 
 // WORKOUT OVERVIEW DATA
 // list of exercises in the workout
@@ -126,10 +127,10 @@ export default function ExerciseData(props: ExerciseDataProps) {
   const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
   const loadableExercisesHistoricalData = useAtomValue(loadableExercisesHistoricalDataAtom);
 
-  const exerciseData = exercisesHistoricalData[exercise.id] ?? emptyExerciseHistoricalData;
+  const exerciseHistory: ExerciseHistoryData = exercisesHistoricalData[exercise.id] ?? emptyExerciseHistoricalData;
 
   const dataOptions: DataOptionObject[] = [
-    { label: 'rep max', value: 'n_rep_max' },
+    { label: 'rep maxes', value: 'n_rep_max' },
     { label: 'volume', value: 'volume' },
     { label: 'history', value: 'history' },
     { label: '3D plot', value: 'reps_sets_weight' },
@@ -144,12 +145,11 @@ export default function ExerciseData(props: ExerciseDataProps) {
 
   const nRepMaxHistoryOptions: OptionsObject[] = ((): OptionsObject[] => {
     const options: OptionsObject[] = [];
-    for (const rep of Object.keys(exerciseData.n_rep_max.history)) {
+    for (const rep of Object.keys(exerciseHistory.n_rep_max.history)) {
       options.push({ label: rep, value: rep });
     }
     return options;
   })();
-
   const [nRepMaxHistoryOptionValue, setNRepMaxHistoryOptionValue] = useState<string | null>(nRepMaxHistoryOptions[0]?.value ?? null );
 
   const volumeOptions: VolumeOptionObject[] = [
@@ -225,11 +225,9 @@ export default function ExerciseData(props: ExerciseDataProps) {
   );
 
   const updateHistoryListIndex = (newIndex: number) => {
-    if (newIndex < 0 || newIndex >= (exerciseData?.history?.length ?? 0)) return;
+    if (newIndex < 0 || newIndex >= (exerciseHistory?.history?.length ?? 0)) return;
     setHistoryListIndex(newIndex);
   };
-
-  // todo graph for workout history, switch between graphs for each workout/day
 
   const nRepMaxComponent = (
     <>
@@ -244,9 +242,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
             {useDropdown(nRepMaxHistoryOptions, nRepMaxHistoryOptionValue, setNRepMaxHistoryOptionValue)}
           </View>
           {dataVisual === 'graph' &&
-            <>
-              {lookbackComponent}
-            </>
+            lookbackComponent
           } 
         </>
       }
@@ -293,28 +289,29 @@ export default function ExerciseData(props: ExerciseDataProps) {
           <Text style={styles.text}>older</Text>
         </TouchableOpacity>
       </View>
-      {exerciseData["history"][historyListIndex]?.timestamp &&
+      {exerciseHistory["history"][historyListIndex]?.started_at &&
         <Text 
           style={[styles.text, {alignSelf: 'center', margin: 5}]}
         >
-          Workout on {timestampToDateStr(exerciseData["history"][historyListIndex]?.timestamp)}
+          Workout on {timestampToDateStr(exerciseHistory["history"][historyListIndex]?.started_at)}
         </Text>
       }
     </>
   )
 
   const get3DGraphPoints = (): Point3D[] => {
-    if (exerciseData === undefined) return [];
-    
-    const points: Point3D[] = [];
-    for (const data of exerciseData["reps_sets_weight"]) {
-      points.push({
-        x: data.num_sets,
-        y: data.weight,
-        z: data.reps
-      })
-    }
-    return points;
+    if (exerciseHistory === undefined) return [];
+    return [];
+
+    // const points: Point3D[] = [];
+    // for (const data of exerciseHistory["reps_sets_weight"]) {
+    //   points.push({
+    //     x: data.num_sets,
+    //     y: data.weight,
+    //     z: data.reps
+    //   })
+    // }
+    // return points;
   };
 
   const points3D = get3DGraphPoints();
@@ -412,9 +409,41 @@ export default function ExerciseData(props: ExerciseDataProps) {
 
   }; 
 
+  // todo: filter time series points
+  const getPoints = (): LineGraphPoint[] => {
+    try {
+      if (dataOptionValue === 'n_rep_max') {
+        if (nRepMaxOptionValue === 'all_time') {
+          return exerciseHistory[dataOptionValue][nRepMaxOptionValue].graph;
+        } else if (nRepMaxHistoryOptionValue !== null) {
+          return exerciseHistory[dataOptionValue][nRepMaxOptionValue][Number(nRepMaxHistoryOptionValue)].graph;
+        } else {
+          return [];
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
+    return [];
+  };
+
+  const getTableData = (): TableData<string[], string | number> => {
+    try {
+
+    } catch (error) {
+      console.log(error);
+    }
+
+    return {
+      'headers': [],
+      'rows': []
+    };
+  };
+
   const dataVisualMap: Record<DataVisual, JSX.Element> = {
     'graph': <LineGraph points={getPoints()} scale_type={graphScale} barValue={getBarValue()} currentPoints={getCurrentPoints()}/>,
-    'table': getTable()
+    'table': <DataTable tableData={getTableData()} />
   }
 
   if (loadableExercisesHistoricalData.state === 'loading') {
@@ -422,6 +451,16 @@ export default function ExerciseData(props: ExerciseDataProps) {
   } else if (loadableExercisesHistoricalData.state === 'hasError') {
     console.log('error loading historical data from storage');
     setExercisesHistoricalData({});
+  }
+
+  if (exerciseHistory.history.length === 0) {
+    return (
+      <View>
+        <Text style={styles.text}>
+          this exercise has no historical data.
+        </Text>
+      </View>
+    )
   }
 
   return (
@@ -441,7 +480,6 @@ export default function ExerciseData(props: ExerciseDataProps) {
             <Text style={styles.text}>switch visual</Text>
           </TouchableOpacity>
         </>
-        
       }
       
     </View>
