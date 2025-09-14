@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { View, StyleSheet, Text, Platform, TouchableOpacity, ScrollView, FlatList, StyleProp, ViewStyle } from "react-native"
-import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoryData, loadableExercisesHistoricalDataAtom, emptyExerciseHistoricalData } from "@/store/general"
+import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoryData, loadableExercisesHistoricalDataAtom, emptyExerciseHistoricalData, HistoryData } from "@/store/general"
 import ThreeAxisGraph, { Point3D } from './ThreeAxisGraph'
 import { useEffect, useRef, useState } from "react";
 import { useAtom, useAtomValue } from "jotai";
@@ -13,6 +13,7 @@ import LoadingScreen from '@/app/loading';
 import { OptionsObject } from './ChooseExerciseModal';
 import { timestampToDateStr } from '../middleware/helpers'
 import DataTable, { TableData } from './DataTable';
+import Feather from '@expo/vector-icons/Feather';
 
 // WORKOUT OVERVIEW DATA
 // list of exercises in the workout
@@ -130,7 +131,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
   const exerciseHistory: ExerciseHistoryData = exercisesHistoricalData[exercise.id] ?? emptyExerciseHistoricalData;
 
   const dataOptions: DataOptionObject[] = [
-    { label: 'rep maxes', value: 'n_rep_max' },
+    { label: 'n rep max', value: 'n_rep_max' },
     { label: 'volume', value: 'volume' },
     { label: 'history', value: 'history' },
     { label: '3D plot', value: 'reps_sets_weight' },
@@ -150,7 +151,11 @@ export default function ExerciseData(props: ExerciseDataProps) {
     }
     return options;
   })();
-  const [nRepMaxHistoryOptionValue, setNRepMaxHistoryOptionValue] = useState<string | null>(nRepMaxHistoryOptions[0]?.value ?? null );
+  const [nRepMaxHistoryOptionValue, setNRepMaxHistoryOptionValue] = useState<string | null>(nRepMaxHistoryOptions[0]?.value ?? null);
+
+  useEffect(() => {
+    setNRepMaxHistoryOptionValue(nRepMaxHistoryOptions[0]?.value ?? null);
+  }, [exerciseHistory]);
 
   const volumeOptions: VolumeOptionObject[] = [
     { label: 'workout', value: 'workout' },
@@ -275,46 +280,63 @@ export default function ExerciseData(props: ExerciseDataProps) {
           {useDropdown(historyGraphOptions, historyGraphOptionValue, setHistoryGraphOptionValue)}
         </View>
       }
-      <View style={[styles.row, {marginTop: 10}]}>
-        <TouchableOpacity
-          onPress={() => updateHistoryListIndex(historyListIndex - 1)}
-          style={[commonStyles.thinTextButton, {width: 50}]}
-        >
-          <Text style={styles.text}>newer</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => updateHistoryListIndex(historyListIndex + 1)}
-          style={[commonStyles.thinTextButton, {width: 50}]}
-        >
-          <Text style={styles.text}>older</Text>
-        </TouchableOpacity>
+      <View style={{flexDirection: 'row', marginTop: 10, justifyContent: 'space-around'}}>
+        <View style={{flexDirection: 'row', justifyContent: 'center'}}>
+          <TouchableOpacity
+            onPress={() => setHistoryListIndex(0)}
+            style={[commonStyles.thinTextButton, {width: 30}]}
+          >
+            <Feather name="chevrons-left" size={14} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => updateHistoryListIndex(historyListIndex - 1)}
+            style={[commonStyles.thinTextButton, {width: 30, marginLeft: 4}]}
+          >
+            <Feather name="chevron-left" size={14} color="white" />
+          </TouchableOpacity>
+        </View>
+        <View style={{flexDirection: 'row', justifyContent: 'center'}}>
+          <TouchableOpacity
+            onPress={() => updateHistoryListIndex(historyListIndex + 1)}
+            style={[commonStyles.thinTextButton, {width: 30}]}
+          >
+            <Feather name="chevron-right" size={14} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setHistoryListIndex(exerciseHistory.history.length - 1)}
+            style={[commonStyles.thinTextButton, {width: 30, marginLeft: 4}]}
+          >
+            <Feather name="chevrons-right" size={14} color="white" />
+          </TouchableOpacity>
+        </View>
       </View>
       {exerciseHistory["history"][historyListIndex]?.started_at &&
         <Text 
           style={[styles.text, {alignSelf: 'center', margin: 5}]}
         >
-          Workout on {timestampToDateStr(exerciseHistory["history"][historyListIndex]?.started_at)}
+          Workout on {exerciseHistory["history"][historyListIndex]?.started_at}
         </Text>
       }
     </>
   )
 
-  const get3DGraphPoints = (): Point3D[] => {
-    if (exerciseHistory === undefined) return [];
-    return [];
+  // const get3DGraphPoints = (): Point3D[] => {
+  //   if (exerciseHistory === undefined) return [];
+  //   return [];
 
-    // const points: Point3D[] = [];
-    // for (const data of exerciseHistory["reps_sets_weight"]) {
-    //   points.push({
-    //     x: data.num_sets,
-    //     y: data.weight,
-    //     z: data.reps
-    //   })
-    // }
-    // return points;
-  };
+  //   // const points: Point3D[] = [];
+  //   // for (const data of exerciseHistory["reps_sets_weight"]) {
+  //   //   points.push({
+  //   //     x: data.num_sets,
+  //   //     y: data.weight,
+  //   //     z: data.reps
+  //   //   })
+  //   // }
+  //   // return points;
+  // };
 
-  const points3D = get3DGraphPoints();
+  // const points3D = get3DGraphPoints();
+  
   const repsSetsWeightComponent = (
     <>
       <View style={styles.row}>
@@ -323,11 +345,11 @@ export default function ExerciseData(props: ExerciseDataProps) {
         <Text style={{color: 'green'}}>weight</Text>
       </View>
       <Text style={styles.text}>data is normalised</Text>
-      {points3D.length < 0 ? 
+      {exerciseHistory.reps_sets_weight.length < 0 ? 
         <Text style={styles.text}>not enough data</Text>
       :
         <View style={{height: 350}}>
-          <ThreeAxisGraph points={get3DGraphPoints()}/>
+          <ThreeAxisGraph points={exerciseHistory.reps_sets_weight}/>
         </View>
       }
     </>
@@ -411,33 +433,65 @@ export default function ExerciseData(props: ExerciseDataProps) {
 
   // todo: filter time series points
   const getPoints = (): LineGraphPoint[] => {
+    let points: LineGraphPoint[] = [];
+    let filterSeries = false;
     try {
       if (dataOptionValue === 'n_rep_max') {
         if (nRepMaxOptionValue === 'all_time') {
-          return exerciseHistory[dataOptionValue][nRepMaxOptionValue].graph;
+          points = exerciseHistory[dataOptionValue][nRepMaxOptionValue].graph;
         } else if (nRepMaxHistoryOptionValue !== null) {
-          return exerciseHistory[dataOptionValue][nRepMaxOptionValue][Number(nRepMaxHistoryOptionValue)].graph;
-        } else {
-          return [];
+          points = exerciseHistory[dataOptionValue][nRepMaxOptionValue][Number(nRepMaxHistoryOptionValue)].graph;
+          filterSeries = true;
         }
+      } else if (dataOptionValue === 'volume') {
+        if (volumeOptionValue === 'workout') {
+          points = exerciseHistory[dataOptionValue][volumeOptionValue].graph;
+          filterSeries = true;
+        } else {
+          points = exerciseHistory[dataOptionValue][volumeOptionValue][volumeTimespanOptionValue].graph;
+        }
+      } else if (dataOptionValue === 'history') {
+        points = exerciseHistory[dataOptionValue][historyListIndex].graph[historyGraphOptionValue];
       }
     } catch (error) {
       console.log(error);
     }
 
-    return [];
+    if (filterSeries) {
+      points = filterTimeSeries(points, timeSpanOptionValue);
+    }
+
+    return points;
   };
 
   const getTableData = (): TableData<string[], string | number> => {
+    let tableData: TableData<string[], string | number> = {
+      headers: [],
+      rows: []
+    };
     try {
-
+      if (dataOptionValue === 'n_rep_max') {
+        if (nRepMaxOptionValue === 'all_time') {
+          tableData = exerciseHistory[dataOptionValue][nRepMaxOptionValue].table;
+        } else if (nRepMaxHistoryOptionValue !== null) {
+          tableData = exerciseHistory[dataOptionValue][nRepMaxOptionValue][Number(nRepMaxHistoryOptionValue)].table;
+        }
+      } else if (dataOptionValue === 'volume') {
+        if (volumeOptionValue === 'workout') {
+          tableData = exerciseHistory[dataOptionValue][volumeOptionValue].table;
+        } else {
+          tableData = exerciseHistory[dataOptionValue][volumeOptionValue][volumeTimespanOptionValue].table;
+        }
+      } else if (dataOptionValue === 'history') {
+        tableData = exerciseHistory[dataOptionValue][historyListIndex].table;
+      }
     } catch (error) {
       console.log(error);
     }
 
     return {
-      'headers': [],
-      'rows': []
+      'headers': tableData.headers,
+      'rows': tableData.rows
     };
   };
 

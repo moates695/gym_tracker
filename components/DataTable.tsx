@@ -13,6 +13,9 @@ interface DataTableProps<H extends readonly string[], V> {
   capitalise?: boolean
 }
 
+// todo: add page scroll, take num_rows as prop with default
+// todo: for low number of points (say 2), do not need to repear X axis markings
+
 export default function DataTable(props: DataTableProps<string[], string | number>) {
   const { tableData, capitalise = true } = props;
 
