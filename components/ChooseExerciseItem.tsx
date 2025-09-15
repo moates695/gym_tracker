@@ -108,24 +108,29 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
   return (
     <View style={styles.box}>
       <View style={styles.row}>
-        <TouchableOpacity
-          onPress={() => setIsExpanded(!isExpanded)}
-        >
-          <View style={{flexDirection: 'row', alignItems: 'center'}}>
-            <Text style={styles.text}>{exercise.name}</Text>
-            <MaterialIcons 
-              name={isExpanded ? "expand-less" : "expand-more"} 
-              size={16} 
-              color="white" 
-              style={{paddingLeft: 4, paddingBottom: 4}}
-            />
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          onPress={handleChooseExercise}
-        >
-          <Text style={[styles.text, commonStyles.textButton]}>add</Text> 
-        </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setIsExpanded(!isExpanded)}
+          >
+            <View 
+              style={{
+                flexDirection: 'row', 
+                alignItems: 'center', 
+              }}
+            >
+              <Text style={[styles.text]}>{exercise.name}</Text>
+              <MaterialIcons 
+                name={isExpanded ? "expand-less" : "expand-more"} 
+                size={16} 
+                color="gray" 
+                style={{paddingLeft: 4, paddingBottom: 4}}
+              />
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={handleChooseExercise}
+          >
+            <Text style={[styles.text, commonStyles.textButton]}>add</Text> 
+          </TouchableOpacity>
       </View>
       {isExpanded &&
         <>
