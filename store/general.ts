@@ -1,6 +1,10 @@
 import { atom } from 'jotai'
 import { atomWithStorage, createJSONStorage, loadable } from 'jotai/utils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LineGraphPoint } from '@/components/LineGraph';
+import { HistoryGraphOption, VolumeTimespan } from '@/components/ExerciseData';
+import { Point3D } from '@/components/ThreeAxisGraph';
+import { TableData } from '@/components/DataTable';
 
 const storage = createJSONStorage(() => AsyncStorage) as any;
 
@@ -79,50 +83,64 @@ export const exerciseListAtom = atomWithStorage<ExerciseListItem[]>('exerciseLis
 
 export const editWorkoutExercisesAtom = atom<boolean>(false);
 
-export interface WeightTimestamp {
-  weight: number
-  timestamp: number
+export interface ExerciseHistoryBaseData {
+  graph: LineGraphPoint[]
+  table: TableData<string[], string | number>
 }
 
-export interface NRepMaxData {
-  all_time: Record<string, WeightTimestamp>
-  history: Record<string, WeightTimestamp[]>
+export interface HistoryNRepMaxData {
+  all_time: ExerciseHistoryBaseData
+  history: Record<number, ExerciseHistoryBaseData>
 }
 
-export interface TimestampValue {
-  value: number
-  timestamp: number
+export interface HistoryVolumeData {
+  workout: ExerciseHistoryBaseData
+  timespan: Record<VolumeTimespan, ExerciseHistoryBaseData>
 }
 
-export interface HistorySetData {
-  reps: number
-  weight: number
-  num_sets: number
+export interface HistoryData {
+  graph: Record<HistoryGraphOption, LineGraphPoint[]>
+  table: TableData<string[], string | number>
+  started_at: number
 }
 
-export interface ExerciseHistory {
-  set_data: HistorySetData[],
-  timestamp: number
+export interface ExerciseHistoryData {
+  n_rep_max: HistoryNRepMaxData
+  volume: HistoryVolumeData
+  history: HistoryData[]
+  reps_sets_weight: Point3D[]
 }
 
-export interface ExerciseHistoricalData {
-  n_rep_max: NRepMaxData
-  volume: TimestampValue[]
-  history: ExerciseHistory[]
-  reps_sets_weight: HistorySetData[]
+export const emptyTableData: TableData<string[], string | number> = {
+  "headers": [],
+  "rows": []
 }
 
-export const emptyExerciseHistoricalData: ExerciseHistoricalData = {
+export const emptyHistoryBaseData: ExerciseHistoryBaseData = {
+  "graph": [],
+  "table": {...emptyTableData}
+}
+
+export const emptyExerciseHistoricalData: ExerciseHistoryData = {
   "n_rep_max": {
-    "all_time": {},
+    "all_time": {...emptyHistoryBaseData},
     "history": {}
   },
-  "volume": [],
+  "volume": {
+    "workout": {...emptyHistoryBaseData}, 
+    "timespan": {
+      "week": {...emptyHistoryBaseData},
+      "month": {...emptyHistoryBaseData},
+      "3_months": {...emptyHistoryBaseData},
+      "6_months": {...emptyHistoryBaseData},
+      "year": {...emptyHistoryBaseData},
+    }
+  },
   "history": [],
   "reps_sets_weight": []
 }
 
-export const exercisesHistoricalDataAtom = atomWithStorage<Record<string, ExerciseHistoricalData>>('exercisesHistoricalDataAtom', {}, storage);
+export const exercisesHistoricalDataAtom = atomWithStorage<Record<string, ExerciseHistoryData>>('exercisesHistoricalDataAtom', {}, storage);
 export const loadableExercisesHistoricalDataAtom = loadable(exercisesHistoricalDataAtom);
 
 export interface PreviousWorkoutStatsData {

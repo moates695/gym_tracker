@@ -10,7 +10,6 @@ import InputField from "./InputField";
 import workoutExercise from "./WorkoutExercise";
 import { Dropdown } from "react-native-element-dropdown";
 import { useDropdown } from "./ExerciseData";
-import { ErrorBoundary } from "./ErrorBoundary";
 
 interface ChooseExerciseProps {
   onChoose: () => void
@@ -60,9 +59,9 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
   }
   
   const ratioOptions: RatioTypeOption[] = [
-    { label: 'primary', value: '7' },
-    { label: 'secondary', value: '4' },
-    { label: 'stabiliser', value: '1' },
+    { label: 'primary (7)', value: '7' },
+    { label: 'secondary (4)', value: '4' },
+    { label: 'stabiliser (1)', value: '1' },
   ]
   const [ratioOptionsValue, setRatioOptionsValue] = useState<RatioType>('disabled');
 
@@ -97,6 +96,8 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
       setSearchBar('');
       setMuscleGroupValue('all');
       setMuscleTargetValue('disabled');
+      setRatioOptionsValue('disabled');
+      setCustomOnly(false);
     }
     setShowFilters(!showFilters);
   };
@@ -199,6 +200,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
   };
 
   const applyFilters = () => {
+    if (!showFilters) return;
     let tempExercises: ExerciseListItem[] = [...exercisesList];
     tempExercises = searchBarFilter(tempExercises);
     tempExercises = muscleFilter(tempExercises);
@@ -338,7 +340,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 16,
     backgroundColor: 'black',
-    color: "white"
+    color: "white",
+    marginBottom: 5
   },
   row: {
     flexDirection: 'row',

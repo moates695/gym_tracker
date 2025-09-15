@@ -9,7 +9,7 @@ import MuscleGroupSvg from "./MuscleGroupSvg";
 import { filterTimeSeries, timeSpanToMs, useDropdown } from "./ExerciseData";
 import { TimeSpanOption, TimeSpanOptionObject } from "./ExerciseData";
 import { Dropdown } from "react-native-element-dropdown";
-import DataTable from "./DataTable";
+import DataTable, { TableData } from "./DataTable";
 import LineGraph, { LineGraphPoint } from "./LineGraph";
 import { OptionsObject } from "./ChooseExerciseModal";
 
@@ -68,11 +68,16 @@ export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProp
 
     return stats;
   })();
-  
-  const currentDataTableHeaders: string[] = ['Volume', 'Reps', 'Sets', 'Exercises'];
-  const currentDataTableRows: (number | string)[][] = [
-    [currentStats.volume, currentStats.reps, currentStats.num_sets, currentStats.num_valid_exercises]
-  ];
+
+  const currentTableData: TableData<string[], string | number> = {
+    'headers': ['volume', 'reps', 'sets', 'exercises'],
+    'rows': [{
+      volume: currentStats.volume,
+      reps: currentStats.reps,
+      sets: currentStats.num_sets,
+      exercises: currentStats.num_valid_exercises,
+    }]
+   }
 
   const getMuscleStats = () => {
     const stats: Record<string, any> = {
@@ -155,10 +160,7 @@ export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProp
   return (
     <>
       <View style={styles.dataTableContainer}>
-        <DataTable 
-          headers={currentDataTableHeaders}
-          rows={currentDataTableRows}
-        />
+        <DataTable tableData={currentTableData}/>
       </View>
       <Text style={styles.text}>Choose a muscle level:</Text>
       {useDropdown(muscleTypeOptions, muscleTypeValue, setMuscleTypeValue)}

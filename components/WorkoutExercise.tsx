@@ -52,7 +52,6 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
       ...prev,
       [exercise.id]: data
     }))
-    console.log('here331')
   }
 
   const handleDataExpanded = (option: DataOption) => {
