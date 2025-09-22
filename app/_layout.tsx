@@ -112,7 +112,7 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <SafeAreaProvider>
+    <SafeAreaProvider style={{ backgroundColor: 'black' }}>
       <View style={{ flex: 1, backgroundColor: 'black' }}>
         <Stack
           screenOptions={{

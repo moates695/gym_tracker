@@ -112,92 +112,92 @@ export default function Workout() {
 
   return (
     <Suspense fallback={<View style={{ flex: 1, backgroundColor: 'black' }} />}>
-    <SafeAreaView style={styles.container}> 
-      {Platform.OS == 'android' &&
-        <StatusBar style="light" backgroundColor="black" translucent={false} />
-      }
-      {showStartOptions ?
-        <View>
-          {Object.keys(workoutExercises).length !== 0 &&
+      <SafeAreaView style={styles.container}> 
+        {Platform.OS == 'android' &&
+          <StatusBar style="light" backgroundColor="black" translucent={false} />
+        }
+        {showStartOptions ?
+          <View>
+            {Object.keys(workoutExercises).length !== 0 &&
+              <TouchableOpacity 
+                style={styles.button}
+                onPress={() => handleContinueWorkout()}
+              >
+                <Text style={{ color: "white"}}>continue workout</Text>
+              </TouchableOpacity>
+            }
             <TouchableOpacity 
               style={styles.button}
-              onPress={() => handleContinueWorkout()}
+              onPress={() => handleStartNewWorkout()}
             >
-              <Text style={{ color: "white"}}>continue workout</Text>
+              <Text style={{ color: "white"}}>start new workout</Text>
             </TouchableOpacity>
-          }
-          <TouchableOpacity 
-            style={styles.button}
-            onPress={() => handleStartNewWorkout()}
-          >
-            <Text style={{ color: "white"}}>start new workout</Text>
-          </TouchableOpacity>
-        </View> 
-      : 
-        <View style={styles.workoutContainer}>
-          {workoutExercises.length === 0 &&
-            <Text style={{color:'white'}}>no exercises yet</Text>
-          }
-          <ScrollView 
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollViewContainer}
-          >
-              {workoutExercises.map((exercise, i) => {
-                return (
-                  <WorkoutExerciseRow 
-                    key={i}
-                    exercise={exercise} 
-                    exerciseIndex={i}
-                  />
-                )
-              })}
-          </ScrollView>
-          <View style={styles.row}>
-            <View style={styles.textContainer}>
-              <TouchableOpacity 
-                style={commonStyles.textButton}
-                onPress={() => handleAddNewExercise()}
-              >
-                <Text style={{ color: "white"}}>add new exercise</Text>
-              </TouchableOpacity>
+          </View> 
+        : 
+          <View style={styles.workoutContainer}>
+            {workoutExercises.length === 0 &&
+              <Text style={{color:'white'}}>no exercises yet</Text>
+            }
+            <ScrollView 
+              style={styles.scrollView}
+              contentContainerStyle={styles.scrollViewContainer}
+            >
+                {workoutExercises.map((exercise, i) => {
+                  return (
+                    <WorkoutExerciseRow 
+                      key={i}
+                      exercise={exercise} 
+                      exerciseIndex={i}
+                    />
+                  )
+                })}
+            </ScrollView>
+            <View style={styles.row}>
+              <View style={styles.textContainer}>
+                <TouchableOpacity 
+                  style={commonStyles.textButton}
+                  onPress={() => handleAddNewExercise()}
+                >
+                  <Text style={{ color: "white"}}>add new exercise</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.textContainer}>
+                <TouchableOpacity 
+                  style={commonStyles.textButton}
+                  onPress={handleShowOverview}
+                >
+                  <Text style={{ color: "white"}}>overview</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.textContainer}>
+                <TouchableOpacity 
+                  style={[commonStyles.textButton, editExercises && {borderColor: 'green', backgroundColor: 'green'}]}
+                  onPress={() => setEditExercises(!editExercises)}
+                  disabled={workoutExercises.length === 0}
+                >
+                  <Text style={{ color: "white"}}>edit exercises</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            <View style={styles.textContainer}>
-              <TouchableOpacity 
-                style={commonStyles.textButton}
-                onPress={handleShowOverview}
-              >
-                <Text style={{ color: "white"}}>overview</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.textContainer}>
-              <TouchableOpacity 
-                style={[commonStyles.textButton, editExercises && {borderColor: 'green', backgroundColor: 'green'}]}
-                onPress={() => setEditExercises(!editExercises)}
-                disabled={workoutExercises.length === 0}
-              >
-                <Text style={{ color: "white"}}>edit exercises</Text>
-              </TouchableOpacity>
-            </View>
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={chooseNewExercise}
+              onRequestClose={() => setChooseNewExercise(false)}
+            >
+              <ChooseExercise onChoose={() => setChooseNewExercise(false)}/>
+            </Modal>
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={showOverview}
+              onRequestClose={() => setShowOverview(false)}
+            >
+              <WorkoutOverview onPress={() => setShowOverview(false)}/>
+            </Modal>
           </View>
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={chooseNewExercise}
-            onRequestClose={() => setChooseNewExercise(false)}
-          >
-            <ChooseExercise onChoose={() => setChooseNewExercise(false)}/>
-          </Modal>
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={showOverview}
-            onRequestClose={() => setShowOverview(false)}
-          >
-            <WorkoutOverview onPress={() => setShowOverview(false)}/>
-          </Modal>
-        </View>
-      }    
-    </SafeAreaView>
+        }    
+      </SafeAreaView>
     </Suspense>
   )
 }
