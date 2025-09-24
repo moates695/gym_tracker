@@ -13,7 +13,7 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://subtly-ample-bluebird.ngrok-free.app",
-        "USE_REAL": "false"
+        "USE_REAL": "true"
       }
     },
     "testing": {

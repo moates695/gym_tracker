@@ -197,7 +197,6 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
         y: Object.values(stats.muscles[muscleGroupValue]).reduce((acc, val) => acc + val[contributionTypeValue], 0)
       })
     }
-    console.log(points)
     return points;
   };
 
@@ -213,7 +212,6 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
         })
       }
     }
-    console.log(points)
     return points;
   };
 
