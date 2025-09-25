@@ -124,6 +124,7 @@ export default function RootLayout() {
             contentStyle: {
               backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
             },
+            animation: "none"
           }}
         >
           <Stack.Screen name="loading"/>

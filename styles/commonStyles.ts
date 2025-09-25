@@ -39,4 +39,7 @@ export const commonStyles = StyleSheet.create({
     minWidth: 80,
     alignItems: 'center'
   },
+  text: {
+    color: 'white'
+  }
 })
