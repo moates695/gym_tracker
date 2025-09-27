@@ -3,6 +3,10 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 
+// get workout stat + muscle stat
+// get actual workout set_data
+// show muscle distribution on svg and chart
+
 export default function StatsDistribution() {
   const router = useRouter();
   

@@ -159,3 +159,14 @@ export interface PreviousWorkoutStats {
 
 export const previousWorkoutStatsAtom = atomWithStorage<PreviousWorkoutStats[]>('previousWorkoutStatsAtom', [], storage);
 export const loadablePreviousWorkoutStatsAtom = loadable(previousWorkoutStatsAtom);
+
+export interface WorkoutTotalStats {
+  volume: number
+  num_sets: number
+  reps: number
+  duration: number
+  num_workouts: number
+  num_exercises: number
+}
+
+export const workoutTotalStatsAtom = atom<WorkoutTotalStats | null>(null)

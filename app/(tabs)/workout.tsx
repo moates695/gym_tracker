@@ -83,12 +83,16 @@ export default function Workout() {
 
   useEffect(() => {
     const getData = async () => {
-      const data = await fetchWrapper({
-        route: 'exercises/list/all',
-        method: 'GET'
-      });
-      if (data === null) return;
-      setExerciseList(data.exercises)
+      try {
+        const data = await fetchWrapper({
+          route: 'exercises/list/all',
+          method: 'GET'
+        });
+        if (data === null) return;
+        setExerciseList(data.exercises)
+      } catch (error) {
+        console.log(error);
+      }
     };
 
     getData();
