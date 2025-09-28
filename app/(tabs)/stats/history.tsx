@@ -6,10 +6,6 @@ import { useAtom } from "jotai";
 import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity, SafeAreaView, ScrollView } from "react-native";
 
-// get workout stat + muscle stat
-// get actual workout set_data
-// show muscle distribution on svg and chart
-
 export default function StatsDistribution() {
   const [workoutHistoryStats, setWorkoutHistoryStats] = useAtom(workoutHistoryStatsAtom);
     
@@ -41,16 +37,27 @@ export default function StatsDistribution() {
       {workoutHistoryStats === null ?
         <Text style={commonStyles.text}>no previous workouts!</Text>
       :
-        <ScrollView>
-          {workoutHistoryStats.map((historyStats, i) => {
-            return (
-              <HistoryStatsItem 
-                key={i}
-                stats={historyStats}
-              />
-            )
-          })}
-        </ScrollView>
+        <View>
+          <TouchableOpacity
+            style={[commonStyles.button, {width: 50}]}
+          >
+            <Text style={commonStyles.text}>refresh</Text>
+          </TouchableOpacity>
+          <ScrollView
+            style={{
+              marginBottom: 30
+            }}
+          >
+            {workoutHistoryStats.map((historyStats, i) => {
+              return (
+                <HistoryStatsItem 
+                  key={i}
+                  stats={historyStats}
+                />
+              )
+            })}
+          </ScrollView>
+        </View>
       }      
     </SafeAreaView>
   )
