@@ -8,15 +8,13 @@ import { useAtom } from "jotai";
 import DataTable from "./DataTable";
 import { OptionsObject } from "./ChooseExerciseModal";
 import { useDropdown } from "./ExerciseData";
+import MuscleGroupSvg from "./MuscleGroupSvg";
 
 interface HistoryStatsItemProps {
   stats: WorkoutHistoryStats
 }
 
-// workout stats (table)
-// radar graph: groups, targets
-// muscle svg (groups, targets)
-// workout replay
+// todo: workout replay list
 
 type DisplayOptionValue = 'radar' | 'heatmap' | 'replay'
 interface DisplayOption {
@@ -24,11 +22,16 @@ interface DisplayOption {
   value: DisplayOptionValue
 }
 
-
 type MuscleOptionValue = 'group' | 'target'
 interface MuscleOption {
   label: string
   value: MuscleOptionValue
+}
+
+type StatOptionValue = 'volume' | 'num_sets' | 'reps'
+interface StatOption {
+  label: string
+  value: StatOptionValue
 }
 
 export default function HistoryStatsItem(props: HistoryStatsItemProps) {
@@ -37,17 +40,24 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   const displayOptions: DisplayOption[] = [
-    { label: 'radar chart', value: 'radar' },
     { label: 'heatmap', value: 'heatmap' },
+    { label: 'radar chart', value: 'radar' },
     { label: 'workout replay', value: 'replay' },
   ]
   const [displayOptionValue, setDisplayOptionValue] = useState<DisplayOptionValue>('radar');
 
-  const muscleOptions: MuscleOption[] = [
-    { label: 'muscle groups', value: 'group' },
-    { label: 'muscle targets', value: 'target' },
+  const statOptions: StatOption[] = [
+    { label: 'volume', value: 'volume' },
+    { label: 'sets', value: 'num_sets' },
+    { label: 'reps', value: 'reps' },
   ]
-  const [muscleOptionValue, setMuscleOptionValue] = useState<MuscleOptionValue>('group');
+  const [statOptionValue, setStatOptionValue] = useState<StatOptionValue>('volume');
+
+  const muscleOptions: MuscleOption[] = [
+    { label: 'muscle targets', value: 'target' },
+    { label: 'muscle groups', value: 'group' },
+  ]
+  const [muscleOptionValue, setMuscleOptionValue] = useState<MuscleOptionValue>('target');
 
   const getFriendlyDuration = (duration_secs: number): string => {
     const seconds = duration_secs % 60;
@@ -78,10 +88,30 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
     for (const [group, groupStats] of Object.entries(stats.workout_muscle_stats)) {
       data.push({
         label: group,
-        value: groupStats.volume
+        value: groupStats[statOptionValue]
       })
     }
     return data;
+  };
+
+  const getValueMap = (): Record<string, number> => {
+    const map: Record<string, number> = {};
+    try {
+      for (const [groupName, groupStats] of Object.entries(stats.workout_muscle_stats)) {
+        if (muscleOptionValue === 'group') {
+          if (groupStats[statOptionValue] === 0) continue;
+          map[groupName] = groupStats[statOptionValue];
+        } else {
+          for (const [targetName, targetStats] of Object.entries(groupStats.targets)) {
+            if (targetStats[statOptionValue] === 0) continue;
+            map[`${groupName}/${targetName}`] = targetStats[statOptionValue]
+          }
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    return map;
   };
 
   return (
@@ -113,9 +143,9 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
           </TouchableOpacity>
           <DataTable tableData={getTableData()} />
           {useDropdown(displayOptions, displayOptionValue, setDisplayOptionValue)}
-          {displayOptionValue === 'heatmap' &&
+          {displayOptionValue !== 'replay' &&
             <>
-              {useDropdown(muscleOptions, muscleOptionValue, setMuscleOptionValue)}
+              {useDropdown(statOptions, statOptionValue, setStatOptionValue)}
             </>
           }
           <View
@@ -143,7 +173,16 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
               />
             }
             {displayOptionValue === 'heatmap' &&
-              <></>
+              <>
+                <View
+                  style={{
+                    alignSelf: 'flex-start'
+                  }}
+                >
+                  {useDropdown(muscleOptions, muscleOptionValue, setMuscleOptionValue)}
+                </View>
+                <MuscleGroupSvg valueMap={getValueMap()} showGroups={muscleOptionValue === 'group'}/>
+              </>
             }   
             {displayOptionValue === 'replay' &&
               <></>
