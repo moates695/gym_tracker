@@ -49,7 +49,7 @@ export default function Stats() {
         
         <TouchableOpacity
           style={[styles.button, {width: 150}]}
-          onPress={() => router.replace('/(tabs)/stats/distribution')}
+          onPress={() => router.replace('/(tabs)/stats/distributions')}
         >
           <Text style={styles.text}>Distributions</Text>
         </TouchableOpacity>

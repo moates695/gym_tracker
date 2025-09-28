@@ -1,18 +1,16 @@
+import HistoryStatsItem from "@/components/HistoryStatsItem";
 import { fetchWrapper } from "@/middleware/helpers";
 import { workoutHistoryStatsAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
-import { useRouter } from "expo-router";
 import { useAtom } from "jotai";
 import React, { useEffect } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, SafeAreaView, ScrollView } from "react-native";
 
 // get workout stat + muscle stat
 // get actual workout set_data
 // show muscle distribution on svg and chart
 
 export default function StatsDistribution() {
-  const router = useRouter();
-
   const [workoutHistoryStats, setWorkoutHistoryStats] = useAtom(workoutHistoryStatsAtom);
     
   const fetchWorkoutTotalStats = async () => {
@@ -34,19 +32,26 @@ export default function StatsDistribution() {
   }, []);
 
   return (
-    <View 
+    <SafeAreaView 
       style={{
         flex: 1,
         backgroundColor: 'black',
       }}
     >
-      <TouchableOpacity
-        style={commonStyles.button}
-        onPress={() => router.replace('/(tabs)/stats')}
-      >
-        <Text style={commonStyles.text}>back</Text>
-      </TouchableOpacity>
-      <Text style={commonStyles.text}>history</Text>
-    </View>
+      {workoutHistoryStats === null ?
+        <Text style={commonStyles.text}>no previous workouts!</Text>
+      :
+        <ScrollView>
+          {workoutHistoryStats.map((historyStats, i) => {
+            return (
+              <HistoryStatsItem 
+                key={i}
+                stats={historyStats}
+              />
+            )
+          })}
+        </ScrollView>
+      }      
+    </SafeAreaView>
   )
 }

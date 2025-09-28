@@ -2257,6 +2257,13 @@
   dependencies:
     nanoid "^3.3.11"
 
+"@salmonco/react-native-radar-chart@^0.0.26":
+  version "0.0.26"
+  resolved "https://registry.yarnpkg.com/@salmonco/react-native-radar-chart/-/react-native-radar-chart-0.0.26.tgz#323a0c85e58cf5d4a688291e32af0d37436b1d82"
+  integrity sha512-CMHwBMvXUQj+F0H19NibayLpSNHrTTOhiDVPYYhhz2+/5bYLaZGb+USR5YlTBZ+4ZW3hihVowgr9IAGkZpsGgg==
+  dependencies:
+    color "^4.2.3"
+
 "@segment/ajv-human-errors@^2.1.2":
   version "2.15.0"
   resolved "https://registry.yarnpkg.com/@segment/ajv-human-errors/-/ajv-human-errors-2.15.0.tgz#dfe86a0d869b0ee286e1db7aa736eb9d5aa39a9d"

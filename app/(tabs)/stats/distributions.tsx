@@ -15,12 +15,6 @@ export default function StatsDistribution() {
         backgroundColor: 'black',
       }}
     >
-      <TouchableOpacity
-        style={commonStyles.button}
-        onPress={() => router.replace('/(tabs)/stats')}
-      >
-        <Text style={commonStyles.text}>back</Text>
-      </TouchableOpacity>
       <Text style={commonStyles.text}>distributions</Text>
     </View>
   )

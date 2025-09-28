@@ -186,6 +186,7 @@ export interface WorkoutHistoryStats {
   metadata: {
     started_at: number
     duration: number
+    top_groups: string[]
   }
   workout_stats: PreviousWorkoutStatsData
   workout_muscle_stats: Record<string, WorkoutHistoryStatsMuscleValue>
