@@ -9,7 +9,7 @@ import { SafeAreaView, View, StyleSheet, Text, TouchableOpacity } from "react-na
 export default function Stats() {
   const router = useRouter();
 
-  const [workoutTotalStats, setWorkoutTotalStatsAtom] = useAtom(workoutTotalStatsAtom);
+  const [workoutTotalStats, setWorkoutTotalStats] = useAtom(workoutTotalStatsAtom);
   
   const fetchWorkoutTotalStats = async () => {
     try {
@@ -18,7 +18,7 @@ export default function Stats() {
         method: 'GET'
       });
       if (data === null || data.totals == null) throw new Error('result is empty');
-      setWorkoutTotalStatsAtom(data.totals);
+      setWorkoutTotalStats(data.totals);
     } catch (error) {
       console.log(error);
     }
@@ -72,7 +72,7 @@ export default function Stats() {
           <Text style={styles.text}>History</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[commonStyles.thinTextButton, {width: 150}]}
+          style={[commonStyles.thinTextButton, {width: 50}]}
           onPress={() => fetchWorkoutTotalStats()}
         >
           <Text style={styles.text}>refresh</Text>

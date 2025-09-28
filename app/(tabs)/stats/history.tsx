@@ -1,6 +1,9 @@
+import { fetchWrapper } from "@/middleware/helpers";
+import { workoutHistoryStatsAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useRouter } from "expo-router";
-import React from "react";
+import { useAtom } from "jotai";
+import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 
 // get workout stat + muscle stat
@@ -9,7 +12,27 @@ import { View, Text, TouchableOpacity } from "react-native";
 
 export default function StatsDistribution() {
   const router = useRouter();
-  
+
+  const [workoutHistoryStats, setWorkoutHistoryStats] = useAtom(workoutHistoryStatsAtom);
+    
+  const fetchWorkoutTotalStats = async () => {
+    try {
+      const data = await fetchWrapper({
+        route: 'stats/history',
+        method: 'GET'
+      });
+      if (data === null || data.stats == null) throw new Error('result is empty');
+      setWorkoutHistoryStats(data.stats);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    if (workoutHistoryStats !== null) return;
+    fetchWorkoutTotalStats();
+  }, []);
+
   return (
     <View 
       style={{

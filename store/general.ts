@@ -170,3 +170,27 @@ export interface WorkoutTotalStats {
 }
 
 export const workoutTotalStatsAtom = atom<WorkoutTotalStats | null>(null)
+
+export interface WorkoutHistoryStatsMuscleValue extends PreviousWorkoutStatsData {
+  targets: Record<string, PreviousWorkoutStatsData>
+}
+
+export interface WorkoutHistoryStatsReplay {
+  exercise_id: string
+  exercise_name: string
+  variation_name: string | null
+  set_data: ValidSetData[]
+}
+
+export interface WorkoutHistoryStats {
+  metadata: {
+    started_at: number
+    duration: number
+  }
+  workout_stats: PreviousWorkoutStatsData
+  workout_muscle_stats: Record<string, WorkoutHistoryStatsMuscleValue>
+  replay: WorkoutHistoryStatsReplay[]
+}
+
+export const workoutHistoryStatsAtom = atom<WorkoutHistoryStats[] | null>(null)
+
