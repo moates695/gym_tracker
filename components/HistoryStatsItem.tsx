@@ -42,9 +42,9 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
   const displayOptions: DisplayOption[] = [
     { label: 'heatmap', value: 'heatmap' },
     { label: 'radar chart', value: 'radar' },
-    { label: 'workout replay', value: 'replay' },
+    { label: 'workout details', value: 'replay' },
   ]
-  const [displayOptionValue, setDisplayOptionValue] = useState<DisplayOptionValue>('radar');
+  const [displayOptionValue, setDisplayOptionValue] = useState<DisplayOptionValue>('heatmap');
 
   const statOptions: StatOption[] = [
     { label: 'volume', value: 'volume' },
@@ -54,8 +54,8 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
   const [statOptionValue, setStatOptionValue] = useState<StatOptionValue>('volume');
 
   const muscleOptions: MuscleOption[] = [
-    { label: 'muscle targets', value: 'target' },
     { label: 'muscle groups', value: 'group' },
+    { label: 'muscle targets', value: 'target' },
   ]
   const [muscleOptionValue, setMuscleOptionValue] = useState<MuscleOptionValue>('target');
 
@@ -72,10 +72,11 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
 
   const getTableData = () => {
     return {
-      "headers": ["volume", "sets", "reps"],
+      "headers": ["volume", "exercises", "sets", "reps"],
       "rows": [
         {
           "volume": stats.workout_stats.volume,
+          "exercises": stats.workout_stats.num_exercises,
           "sets": stats.workout_stats.num_sets,
           "reps": stats.workout_stats.reps,
         }
@@ -185,7 +186,73 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
               </>
             }   
             {displayOptionValue === 'replay' &&
-              <></>
+              <>
+                {stats.replay.map((exerciseStats, i) => {
+                  return (
+                    <View 
+                      key={i}
+                      style={{
+                        borderColor: 'gray',
+                        borderWidth: 1,
+                        borderRadius: 5,
+                        padding: 5,
+                        margin: 2,
+                        width: '90%',
+                      }}
+                    >
+                      <Text style={commonStyles.text}>{exerciseStats.exercise_name}</Text>
+                      {exerciseStats.variation_name !== null &&
+                        <Text style={commonStyles.text}>{exerciseStats.variation_name}</Text>
+                      }
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          justifyContent: 'space-around',
+                          width: '100%',
+                        }}
+                      >
+                        <Text style={[commonStyles.text, {width: '25%', textAlign: 'center'}]}>
+                          Reps
+                        </Text>
+                        <Text style={[commonStyles.text, {width: '25%', textAlign: 'center'}]}>
+                          Weight
+                        </Text>
+                        <Text style={[commonStyles.text, {width: '25%', textAlign: 'center'}]}>
+                          Sets
+                        </Text>
+                        <Text style={[commonStyles.text, {width: '25%', textAlign: 'center'}]}>
+                          Class
+                        </Text>
+                      </View>
+                      {exerciseStats.set_data.map((setData, j) => {
+                        return (
+                          <View
+                            key={j}
+                            style={{
+                              flexDirection: 'row',
+                              justifyContent: 'space-around',
+                              width: '100%',
+                            }}
+                          >
+                            <Text style={[commonStyles.text, {width: '25%', textAlign: 'center'}]}>
+                              {setData.reps}
+                            </Text>
+                            <Text style={[commonStyles.text, {width: '25%', textAlign: 'center'}]}>
+                              {setData.weight}
+                            </Text>
+                            <Text style={[commonStyles.text, {width: '25%', textAlign: 'center'}]}>
+                              {setData.num_sets}
+                            </Text>
+                            <Text style={[commonStyles.text, {width: '25%', textAlign: 'center'}]}>
+                              {setData.class}
+                            </Text>
+                          </View>
+                        )
+                      })}
+                    </View>
+                  )
+                })}
+              </>
             } 
           </View>
         </View>

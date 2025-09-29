@@ -182,13 +182,17 @@ export interface WorkoutHistoryStatsReplay {
   set_data: ValidSetData[]
 }
 
+export interface HistoryWorkoutStats extends PreviousWorkoutStatsData {
+  num_exercises: number
+}
+
 export interface WorkoutHistoryStats {
   metadata: {
     started_at: number
     duration: number
     top_groups: string[]
   }
-  workout_stats: PreviousWorkoutStatsData
+  workout_stats: HistoryWorkoutStats
   workout_muscle_stats: Record<string, WorkoutHistoryStatsMuscleValue>
   replay: WorkoutHistoryStatsReplay[]
 }

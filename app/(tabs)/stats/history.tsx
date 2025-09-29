@@ -1,15 +1,19 @@
+import LoadingScreen from "@/app/loading";
 import HistoryStatsItem from "@/components/HistoryStatsItem";
 import { fetchWrapper } from "@/middleware/helpers";
 import { workoutHistoryStatsAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useAtom } from "jotai";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, SafeAreaView, ScrollView } from "react-native";
 
 export default function StatsDistribution() {
   const [workoutHistoryStats, setWorkoutHistoryStats] = useAtom(workoutHistoryStatsAtom);
     
-  const fetchWorkoutTotalStats = async () => {
+  const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
+
+  const fetchWorkoutHistoryStats = async () => {
+    setLoadingHistory(true);
     try {
       const data = await fetchWrapper({
         route: 'stats/history',
@@ -20,11 +24,12 @@ export default function StatsDistribution() {
     } catch (error) {
       console.log(error);
     }
+    setLoadingHistory(false);
   };
 
   useEffect(() => {
     if (workoutHistoryStats !== null) return;
-    fetchWorkoutTotalStats();
+    fetchWorkoutHistoryStats();
   }, []);
 
   return (
@@ -34,31 +39,47 @@ export default function StatsDistribution() {
         backgroundColor: 'black',
       }}
     >
-      {workoutHistoryStats === null ?
-        <Text style={commonStyles.text}>no previous workouts!</Text>
+      <TouchableOpacity
+        style={[commonStyles.button, {width: 50}]}
+        onPress={() => fetchWorkoutHistoryStats()}
+        disabled={loadingHistory}
+      >
+        <Text style={commonStyles.text}>refresh</Text>
+      </TouchableOpacity>
+      {loadingHistory ?
+        <LoadingScreen />
       :
-        <View>
-          <TouchableOpacity
-            style={[commonStyles.button, {width: 50}]}
-          >
-            <Text style={commonStyles.text}>refresh</Text>
-          </TouchableOpacity>
-          <ScrollView
-            style={{
-              marginBottom: 30
-            }}
-          >
-            {workoutHistoryStats.map((historyStats, i) => {
-              return (
-                <HistoryStatsItem 
-                  key={i}
-                  stats={historyStats}
-                />
-              )
-            })}
-          </ScrollView>
-        </View>
-      }      
+        <>
+          {workoutHistoryStats === null ?
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
+            >
+              <Text style={commonStyles.text}>no previous workouts!</Text>
+            </View>
+          :
+            <View>
+              <ScrollView
+                style={{
+                  marginBottom: 30
+                }}
+              >
+                {workoutHistoryStats.map((historyStats, i) => {
+                  return (
+                    <HistoryStatsItem 
+                      key={i}
+                      stats={historyStats}
+                    />
+                  )
+                })}
+              </ScrollView>
+            </View>
+          }      
+        </>
+      }
     </SafeAreaView>
   )
 }
