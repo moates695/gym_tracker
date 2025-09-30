@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollVi
 import { useAtom, useAtomValue } from "jotai";
 import { StatusBar } from 'expo-status-bar';
 
-import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom, editWorkoutExercisesAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, loadableWorkoutExercisesAtom, exercisesHistoricalDataAtom } from "@/store/general";
+import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom, editWorkoutExercisesAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, loadableWorkoutExercisesAtom, exercisesHistoricalDataAtom, userDataAtom, loadableUserDataAtom } from "@/store/general";
 import ChooseExercise from "@/components/ChooseExerciseModal";
 import WorkoutOverview from "@/components/WorkoutOverview";
 import { commonStyles } from "@/styles/commonStyles";
@@ -15,6 +15,8 @@ export default function Workout() {
   const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom);
   const loadableWorkoutExercises = useAtomValue(loadableWorkoutExercisesAtom);
   const [, setWorkoutStartTime] = useAtom(workoutStartTimeAtom);
+  const [userData, setUserData] = useAtom(userDataAtom);
+  const loadableUserData = useAtomValue(loadableUserDataAtom);
 
   const [, setExerciseList] = useAtom(exerciseListAtom);
   const [showStartOptions, setShowStartOptions] = useAtom(showWorkoutStartOptionsAtom);
@@ -107,11 +109,43 @@ export default function Workout() {
     getMuscleMaps();
   }, []);
 
-  if (loadableWorkoutExercises.state === 'loading') {
+  const fetchUserData = async () => {
+    try {
+      const data = await fetchWrapper({
+        route: 'users/data/get',
+        method: 'GET'
+      })
+      if (data === null) return;
+      setUserData(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  if (loadableWorkoutExercises.state === 'loading' || loadableUserData.state === 'loading') {
     return <LoadingScreen delay={1000}/>
-  } else if (loadableWorkoutExercises.state === 'hasError') {
+  }
+  if (loadableWorkoutExercises.state === 'hasError') {
     Alert.alert('error loading current workout data');
     setWorkoutExercises([]);
+  }
+  if (loadableUserData.state === 'hasError') {
+    Alert.alert('error loading user data');
+    fetchUserData();
+  } else if (loadableUserData.state === 'hasData' && userData === null) {
+    return (
+      <Suspense fallback={<View style={{ flex: 1, backgroundColor: 'black' }} />}>
+        <SafeAreaView style={styles.container}> 
+          <Text style={commonStyles.text}>could not load user data</Text>
+          <TouchableOpacity 
+            style={styles.button}
+            onPress={fetchUserData}
+          >
+            <Text style={{ color: "white"}}>refresh</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+    </Suspense>
+    )
   }
 
   return (
@@ -162,7 +196,7 @@ export default function Workout() {
                   style={commonStyles.textButton}
                   onPress={() => handleAddNewExercise()}
                 >
-                  <Text style={{ color: "white"}}>add new exercise</Text>
+                  <Text style={{ color: "white"}}>choose exercise</Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.textContainer}>

@@ -5,6 +5,7 @@ import { LineGraphPoint } from '@/components/LineGraph';
 import { HistoryGraphOption, VolumeTimespan } from '@/components/ExerciseData';
 import { Point3D } from '@/components/ThreeAxisGraph';
 import { TableData } from '@/components/DataTable';
+import { Gender, GoalStatus, PedStatus } from '@/app/sign-up';
 
 const storage = createJSONStorage(() => AsyncStorage) as any;
 
@@ -199,3 +200,16 @@ export interface WorkoutHistoryStats {
 
 export const workoutHistoryStatsAtom = atom<WorkoutHistoryStats[] | null>(null)
 
+
+export interface UserData {
+  first_name: string
+  last_name: string
+  gender: Gender
+  goal_status: GoalStatus
+  height: number
+  ped_status: PedStatus
+  weight: number
+}
+
+export const userDataAtom = atomWithStorage<UserData | null>('userData', null, storage, { getOnInit: true })
+export const loadableUserDataAtom = loadable(userDataAtom);

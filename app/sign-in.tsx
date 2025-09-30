@@ -10,6 +10,8 @@ import { StatusBar } from "expo-status-bar";
 import { commonStyles } from "@/styles/commonStyles";
 import { fetchWrapper } from "@/middleware/helpers";
 import Constants from 'expo-constants';
+import { useAtom } from "jotai";
+import { userDataAtom } from "@/store/general";
 
 interface FormData {
   email: string,
@@ -20,6 +22,8 @@ interface FormData {
 
 export default function SignInScreen() {
   const router = useRouter();
+
+  const [, setUserData] = useAtom(userDataAtom);
 
   const [formData, setFormData] = useState<FormData>({
     email: "moates695@gmail.com",
@@ -95,6 +99,7 @@ export default function SignInScreen() {
       } else if (data.status === "signed-in") {
         await SecureStore.deleteItemAsync("temp_token");
         await SecureStore.setItemAsync("auth_token", data.token);
+        // setUserData(data.user_data);
         router.replace('/(tabs)');
       } else {
         throw new Error("Return status not recognised")

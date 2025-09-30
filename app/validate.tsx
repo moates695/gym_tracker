@@ -8,6 +8,8 @@ import { jwtDecode } from "jwt-decode";
 import { fetchWrapper } from "@/middleware/helpers";
 import { commonStyles } from "@/styles/commonStyles";
 import { StatusBar } from "expo-status-bar";
+import { useAtom } from "jotai";
+import { userDataAtom } from "@/store/general";
 
 // todo resend validate email button if temp token valid
 // TODO: fix rest of this file and refactor others
@@ -15,6 +17,8 @@ import { StatusBar } from "expo-status-bar";
 export default function Validate() {
   const router = useRouter();
   
+  const [userData, setUserData] = useAtom(userDataAtom);
+
   const [tempToken, setTempToken] = useState<DecodedJWT | null>(null);
   const intervalRef = useRef<number | null>(null);
   const pathname = usePathname();
@@ -60,6 +64,7 @@ export default function Validate() {
       } else if (data.account_state === "good") {
         await SecureStore.deleteItemAsync("temp_token");
         await SecureStore.setItemAsync("auth_token", data.auth_token);
+        setUserData(data.user_data);
         router.replace("/(tabs)");
       }
     };

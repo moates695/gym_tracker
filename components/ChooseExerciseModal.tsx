@@ -226,13 +226,6 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
     handleExercisesRefresh();
   }, [exercisesList]);
 
-  useEffect(() => {
-    for (const exercise of displayedExercises) {
-      console.log(exercise.name);
-    }
-    console.log('done112')
-  }, [displayedExercises])
-
   return (
     <View style={styles.modalBackground}>
       <View style={styles.modalContainer}>

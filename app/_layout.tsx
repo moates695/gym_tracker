@@ -11,6 +11,7 @@ import * as SystemUI from "expo-system-ui"
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAtom } from "jotai";
 import { workoutExercisesAtom } from "@/store/general";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface DecodedJWT {
   email: string
@@ -29,7 +30,8 @@ export default function RootLayout() {
 
   const checkUserState = async () => {
     // await SecureStore.deleteItemAsync("auth_token"); //!!!! for testing new user
-    
+    // await AsyncStorage.clear(); //!!!!! clear storage
+
     router.replace("/loading");
 
     const auth_token = await SecureStore.getItemAsync("auth_token");

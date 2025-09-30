@@ -12,9 +12,9 @@ import { useDropdown } from "@/components/ExerciseData";
 import { fetchWrapper } from "@/middleware/helpers";
 import Constants from 'expo-constants';
 
-type Gender = "male" | "female" | "other";
-type GoalStatus = "bulking" | "cutting" | "maintaining";
-type PedStatus = "natural" | "juicing" | "silent";
+export type Gender = "male" | "female" | "other";
+export type GoalStatus = "bulking" | "cutting" | "maintaining";
+export type PedStatus = "natural" | "juicing" | "silent";
 
 interface FormData {
   email: string,
