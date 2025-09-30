@@ -1,4 +1,4 @@
-import { ExerciseListItem, SetData, ValidSetData, WorkoutExercise } from "@/store/general";
+import { BodyWeightRatios, ExerciseListItem, SetData, UserData, ValidSetData, WorkoutExercise } from "@/store/general";
 import * as SecureStore from "expo-secure-store";
 import Constants from 'expo-constants';
 
@@ -74,9 +74,8 @@ export const getExerciseValueMap = (exercise: WorkoutExercise | ExerciseListItem
   return valueMap;
 }
 
-export const getBodyWeight = (exercise: WorkoutExercise): number => {
-  // send request or do locally?
-  return 18.25;
+export const calcBodyWeight = (userData: UserData, ratios: BodyWeightRatios, additional: number | null): number => {
+  return userData.weight * ratios[userData.gender] + (additional || 0);
 };
 
 export const timestampToDateStr = (timestamp: number): string => {

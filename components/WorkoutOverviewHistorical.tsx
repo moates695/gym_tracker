@@ -3,8 +3,8 @@ import { View, StyleSheet, Text, TouchableOpacity, Modal, Switch } from "react-n
 import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
 import { useAtom, useAtomValue } from "jotai";
-import { loadablePreviousWorkoutStatsAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
-import { fetchWrapper, getBodyWeight, getValidSets } from "@/middleware/helpers";
+import { loadablePreviousWorkoutStatsAtom, loadingPreviousWorkoutStatsAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, userDataAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
+import { calcBodyWeight, fetchWrapper, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
 import { filterTimeSeries, timeSpanToMs, useDropdown } from "./ExerciseData";
 import { TimeSpanOption, TimeSpanOptionObject } from "./ExerciseData";
@@ -40,6 +40,8 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
   const [overviewHistoricalStats, setOverviewHistoricalStats] = useAtom(previousWorkoutStatsAtom);
   const loadableOverviewHistoricalStats = useAtomValue(loadablePreviousWorkoutStatsAtom);
   const workoutStartTime = useAtomValue(workoutStartTimeAtom);
+  const loadingPreviousWorkoutStats = useAtomValue(loadingPreviousWorkoutStatsAtom);
+  const userData = useAtomValue(userDataAtom);
 
   const historyComparisonOptions: HistoryComparisonOption[] = [
     { label: 'workout totals', value: 'workout' },
@@ -223,22 +225,48 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
   };
 
   const getBarValueWorkout = (): number => {
-    const validExercises = [];
-    for (const exercise of exercises) {
-      validExercises.push(getValidSets(exercise));
-    }
+    // const validExercises = [];
+    // for (const exercise of exercises) {
+    //   validExercises.push(getValidSets(exercise));
+    // }
+
+    // if (totalsContributionValue === 'duration') {
+    //   return workoutDuration;
+    // } else if (totalsContributionValue === 'num_exercises') {
+    //   return validExercises.length;
+    // }
+
+    // let value = 0;
+    // for (const set_data_list of validExercises) {
+    //   for (const set_data of set_data_list) {
+    //     if (totalsContributionValue === 'volume') {
+    //       const weight = 0; // tod
+    //       value += set_data.reps * weight * set_data.num_sets;
+    //     } else if (totalsContributionValue === 'reps') {
+    //       value += set_data.reps * set_data.num_sets;
+    //     } else {
+    //       value += set_data.num_sets;
+    //     }
+    //   }
+    // }
+
+    // return value;
 
     if (totalsContributionValue === 'duration') {
       return workoutDuration;
-    } else if (totalsContributionValue === 'num_exercises') {
-      return validExercises.length;
     }
 
-    let value = 0;
-    for (const set_data_list of validExercises) {
-      for (const set_data of set_data_list) {
+    let numValidExercises = 0
+    let value = 0
+    for (const exercise of exercises) {
+      const validSets = getValidSets(exercise);
+      if (validSets.length > 0) numValidExercises++; 
+
+      for (const set_data of validSets) {
         if (totalsContributionValue === 'volume') {
-          value += set_data.reps * set_data.weight * set_data.num_sets;
+          const weight = exercise.is_body_weight ? calcBodyWeight(userData!, exercise.ratios!, set_data.weight) : set_data.weight!;
+          console.log(weight)
+          value += set_data.reps * weight * set_data.num_sets;
         } else if (totalsContributionValue === 'reps') {
           value += set_data.reps * set_data.num_sets;
         } else {
@@ -247,6 +275,9 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
       }
     }
 
+    if (totalsContributionValue === 'num_exercises') {
+      return numValidExercises;
+    }
     return value;
   };
 
@@ -271,7 +302,7 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
 
       for (const set_data of getValidSets(exercise)) {
         if (contributionTypeValue === 'volume') {
-          const weight = exercise.is_body_weight ? getBodyWeight(exercise) : set_data.weight
+          const weight = exercise.is_body_weight ? calcBodyWeight(userData!, exercise.ratios!, set_data.weight) : set_data.weight!
           value += set_data.reps * weight * set_data.num_sets * (maxRatio / 10);
         } else if (contributionTypeValue === 'reps') {
           value += set_data.reps * set_data.num_sets;
@@ -283,8 +314,8 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
 
     return value;
   };
-  
-  if (loadableOverviewHistoricalStats.state === 'loading') {
+
+  if (loadableOverviewHistoricalStats.state === 'loading' || loadingPreviousWorkoutStats) {
     return <LoadingScreen />
   } else if (loadableOverviewHistoricalStats.state === 'hasError') {
     console.log('error getting overview historical stats from storage');

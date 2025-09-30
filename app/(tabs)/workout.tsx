@@ -30,10 +30,6 @@ export default function Workout() {
   const [chooseNewExercise, setChooseNewExercise] = useState<boolean>(false);
   const [showOverview, setShowOverview] = useState<boolean>(false);
 
-  // useEffect(() => {
-  //   console.log(JSON.stringify(workoutExercises, null, 2))
-  // }, [workoutExercises])
-
   const getMuscleMaps = async () => {
     const data = await fetchWrapper({
       route: 'muscles/get_maps',
@@ -116,7 +112,7 @@ export default function Workout() {
         method: 'GET'
       })
       if (data === null) return;
-      setUserData(data);
+      setUserData(data.user_data);
     } catch (error) {
       console.log(error);
     }

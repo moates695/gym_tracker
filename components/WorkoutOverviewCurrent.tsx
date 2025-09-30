@@ -3,8 +3,8 @@ import { View, StyleSheet, Text, TouchableOpacity, Modal, Switch } from "react-n
 import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
 import { useAtom, useAtomValue } from "jotai";
-import { muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
-import { fetchWrapper, getBodyWeight, getValidSets } from "@/middleware/helpers";
+import { muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, userDataAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
+import { calcBodyWeight, fetchWrapper, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
 import { filterTimeSeries, timeSpanToMs, useDropdown } from "./ExerciseData";
 import { TimeSpanOption, TimeSpanOptionObject } from "./ExerciseData";
@@ -29,6 +29,7 @@ interface ContributionTypeOption {
 
 export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProps) {
   const exercises = useAtomValue(workoutExercisesAtom);
+  const userData = useAtomValue(userDataAtom);
 
   const muscleTypeOptions: MuscleTypeOption[] = [
     { label: 'muscle heads', value: 'target' },
@@ -56,7 +57,7 @@ export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProp
       if (validSets.length > 0) stats.num_valid_exercises++;
 
       for (const set_data of validSets) {
-        const weight = exercise.is_body_weight ? getBodyWeight(exercise) : set_data.weight;
+        const weight = exercise.is_body_weight ? calcBodyWeight(userData!, exercise.ratios!, set_data.weight) : set_data.weight!;
         const tempReps = set_data.reps;
         const tempSets = set_data.num_sets;
 
@@ -72,7 +73,7 @@ export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProp
   const currentTableData: TableData<string[], string | number> = {
     'headers': ['volume', 'reps', 'sets', 'exercises'],
     'rows': [{
-      volume: currentStats.volume,
+      volume: parseFloat(currentStats.volume.toFixed(2)),
       reps: currentStats.reps,
       sets: currentStats.num_sets,
       exercises: currentStats.num_valid_exercises,
@@ -96,7 +97,7 @@ export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProp
         "reps": 0,
       };
       for (const set_data of validSets) {
-        const weight = exercise.is_body_weight ? getBodyWeight(exercise) : set_data.weight;
+        const weight = exercise.is_body_weight ? calcBodyWeight(userData!, exercise.ratios!, set_data.weight) : set_data.weight!;
         const sets = set_data.num_sets;
         const reps = set_data.reps;
         

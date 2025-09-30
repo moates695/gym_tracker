@@ -76,6 +76,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
     { label: 'free', value: 'free' },
     { label: 'cable', value: 'cable' },
     { label: 'machine', value: 'machine' },
+    { label: 'calisthenic', value: 'calisthenic' },
   ]
   const [weightTypeValue, setWeightTypeValue] = useState<WeightTypeExtended>('all');
 

@@ -10,7 +10,7 @@ import { useColorScheme, View } from 'react-native';
 import * as SystemUI from "expo-system-ui"
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAtom } from "jotai";
-import { workoutExercisesAtom } from "@/store/general";
+import { userDataAtom, workoutExercisesAtom } from "@/store/general";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface DecodedJWT {
@@ -25,6 +25,7 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   const [,] = useAtom(workoutExercisesAtom); // to prevent screen flashbang  
+  const [userData, setUserData] = useAtom(userDataAtom);
 
   SystemUI.setBackgroundColorAsync("black");
 
@@ -83,6 +84,14 @@ export default function RootLayout() {
           router.replace("/validate");
         }
       } else if (data.account_state == "good") {
+        if (userData === null) {
+          const data = await fetchWrapper({
+            route: 'users/data/get',
+            method: 'GET'
+          })
+          if (data === null) throw new Error('error fetching user data');
+          setUserData(data.user_data);
+        }
         router.replace("/(tabs)");
       } else {
         throw new Error("response not recognised");
