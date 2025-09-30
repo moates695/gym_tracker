@@ -79,7 +79,7 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
       
       if (exercise.is_body_weight) {
         for (const set_data of updatedValidSets) {
-          set_data.weight = calcBodyWeight(userData!, exercise.ratios!, set_data.weight);
+          set_data.weight = calcBodyWeight(userData, exercise.ratios!, set_data.weight);
         }
       }
 

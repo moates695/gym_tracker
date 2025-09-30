@@ -4,7 +4,7 @@ import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
 import { useAtom, useAtomValue } from "jotai";
 import { muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, userDataAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
-import { calcBodyWeight, fetchWrapper, getValidSets } from "@/middleware/helpers";
+import { calcBodyWeight, calcValidWeight, fetchWrapper, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
 import { filterTimeSeries, timeSpanToMs, useDropdown } from "./ExerciseData";
 import { TimeSpanOption, TimeSpanOptionObject } from "./ExerciseData";
@@ -57,7 +57,7 @@ export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProp
       if (validSets.length > 0) stats.num_valid_exercises++;
 
       for (const set_data of validSets) {
-        const weight = exercise.is_body_weight ? calcBodyWeight(userData!, exercise.ratios!, set_data.weight) : set_data.weight!;
+        const weight = calcValidWeight(exercise, userData, set_data);
         const tempReps = set_data.reps;
         const tempSets = set_data.num_sets;
 
@@ -97,7 +97,7 @@ export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProp
         "reps": 0,
       };
       for (const set_data of validSets) {
-        const weight = exercise.is_body_weight ? calcBodyWeight(userData!, exercise.ratios!, set_data.weight) : set_data.weight!;
+        const weight = calcValidWeight(exercise, userData, set_data);
         const sets = set_data.num_sets;
         const reps = set_data.reps;
         

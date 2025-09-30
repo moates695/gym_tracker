@@ -4,7 +4,7 @@ import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
 import { useAtom, useAtomValue } from "jotai";
 import { loadablePreviousWorkoutStatsAtom, loadingPreviousWorkoutStatsAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, userDataAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
-import { calcBodyWeight, fetchWrapper, getValidSets } from "@/middleware/helpers";
+import { calcBodyWeight, calcValidWeight, fetchWrapper, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
 import { filterTimeSeries, timeSpanToMs, useDropdown } from "./ExerciseData";
 import { TimeSpanOption, TimeSpanOptionObject } from "./ExerciseData";
@@ -264,8 +264,7 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
 
       for (const set_data of validSets) {
         if (totalsContributionValue === 'volume') {
-          const weight = exercise.is_body_weight ? calcBodyWeight(userData!, exercise.ratios!, set_data.weight) : set_data.weight!;
-          console.log(weight)
+          const weight = calcValidWeight(exercise, userData, set_data);
           value += set_data.reps * weight * set_data.num_sets;
         } else if (totalsContributionValue === 'reps') {
           value += set_data.reps * set_data.num_sets;
@@ -302,7 +301,7 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
 
       for (const set_data of getValidSets(exercise)) {
         if (contributionTypeValue === 'volume') {
-          const weight = exercise.is_body_weight ? calcBodyWeight(userData!, exercise.ratios!, set_data.weight) : set_data.weight!
+          const weight = calcValidWeight(exercise, userData, set_data);
           value += set_data.reps * weight * set_data.num_sets * (maxRatio / 10);
         } else if (contributionTypeValue === 'reps') {
           value += set_data.reps * set_data.num_sets;
