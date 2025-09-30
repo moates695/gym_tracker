@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { View, StyleSheet, TouchableOpacity, Text, Alert } from "react-native";
 import ConfirmationModal from "./ConfirmationModal";
-import { useAtom } from "jotai";
-import { SetData, showWorkoutStartOptionsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
+import { useAtom, useAtomValue } from "jotai";
+import { SetData, showWorkoutStartOptionsAtom, userDataAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
 import { useRouter } from "expo-router";
-import { fetchWrapper, getValidSets, isValidSet } from "@/middleware/helpers";
+import { calcBodyWeight, fetchWrapper, getValidSets, isValidSet } from "@/middleware/helpers";
 
 interface WorkoutFinishOptionsProps {
   onPress: () => void
@@ -14,6 +14,8 @@ type ConfirmationType = 'save' | 'discard'
 
 export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
   const { onPress } = props;
+
+  const userData = useAtomValue(userDataAtom);
 
   const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
   const [modalMessage, setModalMessage] = useState<string>('');
@@ -75,6 +77,12 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
         set_class
       }));
       
+      if (exercise.is_body_weight) {
+        for (const set_data of updatedValidSets) {
+          set_data.weight = calcBodyWeight(userData, exercise.ratios!, set_data.weight);
+        }
+      }
+
       exerciseData.push({
         "id": exercise.id,
         "set_data": updatedValidSets,

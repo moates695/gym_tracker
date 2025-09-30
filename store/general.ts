@@ -1,4 +1,4 @@
-import { atom } from 'jotai'
+import { atom, useAtom } from 'jotai'
 import { atomWithStorage, createJSONStorage, loadable } from 'jotai/utils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LineGraphPoint } from '@/components/LineGraph';
@@ -32,7 +32,7 @@ export interface SetData {
 
 export interface ValidSetData {
   reps: number
-  weight: number
+  weight: number | null
   num_sets: number
   class: SetClass
 }
@@ -44,7 +44,9 @@ export const emptySetData: SetData = {
   "class": "working"
 }
 
-export type WeightType = 'free' | 'machine' | 'cable';
+export type WeightType = 'free' | 'machine' | 'cable' | 'calisthenic';
+
+export type BodyWeightRatios = Record<Gender, number>
 
 export interface Exercise {
   id: string
@@ -54,6 +56,7 @@ export interface Exercise {
   description: string
   weight_type: WeightType
   is_custom: boolean
+  ratios?: BodyWeightRatios
 }
 
 //? base exercise: `variation_name` = undefined
@@ -160,6 +163,7 @@ export interface PreviousWorkoutStats {
 
 export const previousWorkoutStatsAtom = atomWithStorage<PreviousWorkoutStats[]>('previousWorkoutStatsAtom', [], storage);
 export const loadablePreviousWorkoutStatsAtom = loadable(previousWorkoutStatsAtom);
+export const loadingPreviousWorkoutStatsAtom = atom<boolean>(false);
 
 export interface WorkoutTotalStats {
   volume: number
@@ -202,6 +206,8 @@ export const workoutHistoryStatsAtom = atom<WorkoutHistoryStats[] | null>(null)
 
 
 export interface UserData {
+  email: string
+  username: string
   first_name: string
   last_name: string
   gender: Gender

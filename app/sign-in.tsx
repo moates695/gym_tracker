@@ -99,7 +99,7 @@ export default function SignInScreen() {
       } else if (data.status === "signed-in") {
         await SecureStore.deleteItemAsync("temp_token");
         await SecureStore.setItemAsync("auth_token", data.token);
-        // setUserData(data.user_data);
+        setUserData(data.user_data);
         router.replace('/(tabs)');
       } else {
         throw new Error("Return status not recognised")
