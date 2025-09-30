@@ -108,7 +108,6 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
       setMuscleTargetValue('disabled');
       setRatioOptionsValue('disabled');
     } else {
-      // setMuscleTargetValue(muscleTargetOptions[value][0].value);
       setMuscleTargetValue('all');
       setRatioOptionsValue('7');
     }
@@ -218,13 +217,21 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
     ratioOptionsValue, 
     weightTypeValue,
     customOnly,
-    exercisesList
+    exercisesList,
+    showFilters
   ]);
 
   useEffect(() => {
     if (exercisesList.length > 0) return;
     handleExercisesRefresh();
   }, [exercisesList]);
+
+  useEffect(() => {
+    for (const exercise of displayedExercises) {
+      console.log(exercise.name);
+    }
+    console.log('done112')
+  }, [displayedExercises])
 
   return (
     <View style={styles.modalBackground}>
@@ -282,9 +289,13 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
           <Text style={styles.text}>no exercises</Text>
         }
         <ScrollView style={styles.scrollView}>
-          {displayedExercises.map((exercise, i) => {
+          {displayedExercises.map((displayedExercise, i) => {
             return (
-              <ChooseExerciseItem key={i} exercise={exercise} onChoose={onChoose}/>
+              <ChooseExerciseItem 
+                key={displayedExercise.id} 
+                exercise={displayedExercise} 
+                onChoose={onChoose}
+              />
             )
           })}
         </ScrollView>

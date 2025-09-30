@@ -30,10 +30,9 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
 
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [workoutExercises, setWorkoutExercisesAtom] = useAtom(workoutExercisesAtom);
-  const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
+  const [, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
 
   const [chosenVariation, setChosenVariation] = useState<ExerciseListItem>(exercise);
-
   const displayOptions: DisplayOptionObject[] = [
     { label: 'heatmap', value: 'heatmap' },
     { label: 'frequency calendar', value: 'frequency' },
@@ -53,6 +52,7 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
   const [variationValue, setVariationValue] = useState<string>(baseVariationValue);
 
   const handleChooseExercise = () => {
+    console.log(chosenVariation)
     const newExercise = JSON.parse(JSON.stringify(chosenVariation));
     delete newExercise.frequency;
     newExercise.set_data = [{ ...emptySetData }];

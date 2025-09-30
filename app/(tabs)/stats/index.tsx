@@ -38,10 +38,10 @@ export default function Stats() {
           </>
         :
           <>
-            <Text style={commonStyles.text}>Volume: {workoutTotalStats?.volume}</Text>
+            <Text style={commonStyles.text}>Volume: {parseFloat(workoutTotalStats?.volume.toFixed(2))}</Text>
             <Text style={commonStyles.text}>Sets: {workoutTotalStats?.num_sets}</Text>
             <Text style={commonStyles.text}>Reps: {workoutTotalStats?.reps}</Text>
-            <Text style={commonStyles.text}>Duration: {workoutTotalStats?.duration}</Text>
+            <Text style={commonStyles.text}>Duration: {Math.round(workoutTotalStats?.duration)}</Text>
             <Text style={commonStyles.text}># workouts: {workoutTotalStats?.num_workouts}</Text>
             <Text style={commonStyles.text}># exercises : {workoutTotalStats?.num_exercises}</Text>
           </>
