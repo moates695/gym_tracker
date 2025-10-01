@@ -204,7 +204,6 @@ export interface WorkoutHistoryStats {
 
 export const workoutHistoryStatsAtom = atom<WorkoutHistoryStats[] | null>(null)
 
-
 export interface UserData {
   email: string
   username: string
@@ -219,3 +218,15 @@ export interface UserData {
 
 export const userDataAtom = atomWithStorage<UserData | null>('userData', null, storage, { getOnInit: true })
 export const loadableUserDataAtom = loadable(userDataAtom);
+
+export type DistributionStatsMetric = 'volume' | 'num_sets' | 'reps' | 'num_exercises';
+
+export type DistributionStatsBase = Record<DistributionStatsMetric, number>
+
+export interface DistributionGroupStats extends DistributionStatsBase {
+  targets: Record<string, DistributionStatsBase>
+}
+
+export type DistributionStats = Record<string, DistributionGroupStats>
+
+export const distributionStatsAtom = atom<DistributionStats | null>(null);

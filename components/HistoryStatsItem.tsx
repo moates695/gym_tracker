@@ -84,7 +84,7 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
     }
   };
 
-  const getGroupRadarData = () => {
+  const getGroupRadarData = (): any[] => {
     const data: any[] = [];
     for (const [group, groupStats] of Object.entries(stats.workout_muscle_stats)) {
       data.push({
