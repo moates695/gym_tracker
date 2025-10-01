@@ -8,15 +8,10 @@ import { commonStyles } from "@/styles/commonStyles";
 import { RadarChart } from "@salmonco/react-native-radar-chart";
 import { useRouter } from "expo-router";
 import { useAtom, useAtomValue } from "jotai";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 
-// distribution metrics: volume, num_sets, num_reps, exercise_counter
-// distribution per group && target
-// show radar chart of group volume as initial
-//    allow to choose muscle group and see muscle target radar charts
-// heatmap per metric
-// show table underneath for each graphic view?
+// change to: for radar select muscle group, for heatmap select group or target for display
 
 interface MetricOption {
   label: string
@@ -38,14 +33,14 @@ export default function StatsDistribution() {
 
   const [loadingDistributions, setLoadingDistributions] = useState<boolean>(false);
 
-  const muscleGroupOptions: OptionsObject[] = ((): OptionsObject[] => {
+  const muscleGroupOptions: OptionsObject[] = useMemo((): OptionsObject[] => {
     const options = [{ label: 'all groups', value: 'all' }];
     options.push(...Object.keys(groupToTargets).map(group => ({
       label: group,
       value: group
     })))
     return options;
-  })();
+  }, [groupToTargets]);
   const [muscleGroupValue, setMuscleGroupValue] = useState<string>('all');
 
   const metricOptions: MetricOption[] = [
@@ -107,31 +102,70 @@ export default function StatsDistribution() {
   const getRadarData = (): any[] => {
     const data: any[] = [];
     if (distributions === null) return data;
-
-    if (muscleGroupValue === 'all') {
-      for (const [groupName, groupStats] of Object.entries(distributions)) {
-        data.push(
-          {
-            label: groupName,
-            value: groupStats[metricOptionValue]
-          }
-        )
+    try {
+      if (muscleGroupValue === 'all') {
+        for (const [groupName, groupStats] of Object.entries(distributions)) {
+          data.push(
+            {
+              label: groupName,
+              value: groupStats[metricOptionValue]
+            }
+          )
+        }
+      } else {
+        for (const [targetName, targetStats] of Object.entries(distributions[muscleGroupValue]["targets"])) {
+          data.push(
+            {
+              label: targetName,
+              value: targetStats[metricOptionValue] ?? 0
+            }
+          )
+        }
       }
+    } catch (error) {
+      console.log(error)
     }
+
     return data;
   };
 
   const getValueMap = (): Record<string, number> => {
     const map: Record<string, number> = {};
+    if (distributions === null) return map;
 
+    try {
+      for (const [groupName, groupStats] of Object.entries(distributions)) {
+        if (muscleGroupValue === 'all') {
+          if (groupStats[metricOptionValue] === 0) continue;
+          map[groupName] = groupStats[metricOptionValue];
+          continue;
+        } 
+        for (const [targetName, targetStats] of Object.entries(distributions[muscleGroupValue]["targets"])) {
+          if (targetStats[metricOptionValue] === 0) continue;
+          map[`${groupName}/${targetName}`] = targetStats[metricOptionValue];
+        }
+      }
+
+      // for (const [groupName, groupStats] of Object.entries(stats.workout_muscle_stats)) {
+      //   if (muscleOptionValue === 'group') {
+      //     if (groupStats[statOptionValue] === 0) continue;
+      //     map[groupName] = groupStats[statOptionValue];
+      //   } else {
+      //     for (const [targetName, targetStats] of Object.entries(groupStats.targets)) {
+      //       if (targetStats[statOptionValue] === 0) continue;
+      //       map[`${groupName}/${targetName}`] = targetStats[statOptionValue]
+      //     }
+      //   }
+      // }
+    } catch (error) {
+      console.log(error);
+    }
     return map;
   }
 
   const getTableData = (): TableData<string[], string | number> => {
     const headers: string[] = ['volume', 'sets', 'reps', 'exercises'];
     const rows: Record<string, string | number>[] = [];
-
-
 
     return {
       headers,
@@ -153,28 +187,49 @@ export default function StatsDistribution() {
       >
         <Text style={commonStyles.text}>refresh</Text>
       </TouchableOpacity>
+      <Text style={commonStyles.text}>Choose a metric:</Text>
       {useDropdown(metricOptions, metricOptionValue, setMetricOptionValue)}
-      {useDropdown(muscleGroupOptions, muscleGroupValue, setMuscleGroupValue)}
+      <Text style={commonStyles.text}>Choose a display:</Text>
       {useDropdown(displayOptions, displayOptionValue, setDisplayOptionValue)}
+      <Text style={commonStyles.text}>Choose a muscle group:</Text>
+      {useDropdown(muscleGroupOptions, muscleGroupValue, setMuscleGroupValue)}
       {displayOptionValue === 'radar' &&
-        <RadarChart 
-          data={getRadarData()}
-          gradientColor={{
-            startColor: '#00000000',
-            endColor: '#00000000',
-            count: 4,
-          }}
-          strokeWidth={[0.5, 0.5, 0.5, 0.5, 1]}
-          strokeOpacity={[1, 1, 1, 1, 0.13]}
-          labelColor="#f6f6f6ff"
-          dataFillColor="#ff9430ff"
-          dataFillOpacity={0.8}
-          dataStroke="#ff7f08ff"
-          labelSize={12}
-        />
+        <>
+          {muscleGroupValue !== 'chest' ? 
+            <View 
+              style={{
+                width: '100%',
+                alignItems: 'center'
+              }}
+            >
+              <RadarChart 
+                data={getRadarData()}
+                gradientColor={{
+                  startColor: '#00000000',
+                  endColor: '#00000000',
+                  count: 4,
+                }}
+                strokeWidth={[0.5, 0.5, 0.5, 0.5, 1]}
+                strokeOpacity={[1, 1, 1, 1, 0.13]}
+                labelColor="#f6f6f6ff"
+                dataFillColor="#ff9430ff"
+                dataFillOpacity={0.8}
+                dataStroke="#ff7f08ff"
+                labelSize={12}
+              />
+            </View>
+          :
+            <Text style={commonStyles.text}>chest does not have enough targets to show a radar :(</Text>
+          }
+        </>
       }
       {displayOptionValue === 'heatmap' &&
-        <MuscleGroupSvg valueMap={getValueMap()} showGroups={muscleGroupValue === 'all'}/>
+        <View style={{marginBottom: 20, marginTop: 20}}>
+          <MuscleGroupSvg 
+            valueMap={getValueMap()} 
+            showGroups={muscleGroupValue === 'all'}
+          />
+        </View>
       }
       <DataTable tableData={getTableData()}/>
     </View>
