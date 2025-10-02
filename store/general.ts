@@ -231,14 +231,15 @@ export type DistributionStats = Record<string, DistributionGroupStats>
 
 export const distributionStatsAtom = atom<DistributionStats | null>(null);
 
-export interface FavouriteExercisesStats {
+export type FavouriteStatsMetric = 'volume' | 'num_sets' | 'reps' | 'counter';
+export interface FavouriteExercisesFields {
   exercise_id: string
   exercise_name: string
   variation_name?: string
-  volume: number
-  num_sets: number
-  reps: number
-  counter: number
+}
+
+export type FavouriteExercisesStats = FavouriteExercisesFields & {
+  [K in FavouriteStatsMetric]: number
 }
 
 export const favouriteExerciseStatsAtom = atom<FavouriteExercisesStats[] | null>(null);

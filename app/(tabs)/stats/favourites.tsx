@@ -1,16 +1,32 @@
+import LoadingScreen from "@/app/loading";
+import { useDropdown } from "@/components/ExerciseData";
 import { fetchWrapper } from "@/middleware/helpers";
-import { favouriteExerciseStatsAtom } from "@/store/general";
+import { favouriteExerciseStatsAtom, FavouriteStatsMetric } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useRouter } from "expo-router";
 import { useAtom } from "jotai";
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+
+interface MetricOption {
+  label: string
+  value: FavouriteStatsMetric
+}
 
 export default function StatsDistribution() {
   const router = useRouter();
   
   const [favouriteStats, setFavouriteStats] = useAtom(favouriteExerciseStatsAtom);
+  
   const [loadingStats, setLoadingStats] = useState<boolean>(false);
+
+  const metricOptions: MetricOption[] = [
+    { label: 'volume', value: 'volume' },
+    { label: 'sets', value: 'num_sets' },
+    { label: 'reps', value: 'reps' },
+    { label: 'frequency', value: 'counter' },
+  ]
+  const [metricOptionValue, setMetricOptionValue] = useState<FavouriteStatsMetric>('volume');
 
   const fetchFavouriteStats = async () => {
     setLoadingStats(true);
@@ -46,6 +62,42 @@ export default function StatsDistribution() {
       >
         <Text style={commonStyles.text}>refresh</Text>
       </TouchableOpacity>
+      {loadingStats ?
+        <LoadingScreen />
+      :
+        <>
+          {favouriteStats === null ?
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
+            >
+              <Text style={commonStyles.text}>you haven't done any exercises yet!</Text>
+            </View>
+          :
+            <ScrollView
+              style={{
+                marginTop: 10,
+                marginBottom: 10
+              }}
+            >
+              {useDropdown(metricOptions, metricOptionValue, setMetricOptionValue)}
+              {favouriteStats
+                .sort((a, b) => a[metricOptionValue] - b[metricOptionValue])
+                .map((stats) => {
+                  return (
+                    <View key={stats.exercise_id}>
+                      
+                    </View>
+                  )
+                })
+              } 
+            </ScrollView>
+          }
+        </>
+      }
     </View>
   )
 }

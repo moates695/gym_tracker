@@ -61,10 +61,10 @@ export default function StatsDistribution() {
               <Text style={commonStyles.text}>no previous workouts!</Text>
             </View>
           :
-            <View>
               <ScrollView
                 style={{
-                  marginBottom: 30
+                  marginTop: 10,
+                  marginBottom: 10
                 }}
               >
                 {workoutHistoryStats.map((historyStats, i) => {
@@ -76,7 +76,6 @@ export default function StatsDistribution() {
                   )
                 })}
               </ScrollView>
-            </View>
           }      
         </>
       }

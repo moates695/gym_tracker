@@ -10,7 +10,7 @@ import { useColorScheme, View } from 'react-native';
 import * as SystemUI from "expo-system-ui"
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAtom } from "jotai";
-import { distributionStatsAtom, exerciseListAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, userDataAtom, workoutExercisesAtom, workoutHistoryStatsAtom, workoutTotalStatsAtom } from "@/store/general";
+import { distributionStatsAtom, exerciseListAtom, favouriteExerciseStatsAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, userDataAtom, workoutExercisesAtom, workoutHistoryStatsAtom, workoutTotalStatsAtom } from "@/store/general";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface DecodedJWT {
@@ -36,6 +36,7 @@ export default function RootLayout() {
   const [, setWorkoutHistoryStats] = useAtom(workoutHistoryStatsAtom);
   const [, setWorkoutTotalStats] = useAtom(workoutTotalStatsAtom);
   const [, setDistributions] = useAtom(distributionStatsAtom);
+  const [, setFavouriteStats] = useAtom(favouriteExerciseStatsAtom);
   
   SystemUI.setBackgroundColorAsync("black");
 
@@ -201,6 +202,19 @@ export default function RootLayout() {
       });
       if (!data || !data.distributions) throw new Error('distribution stats result is empty');
       setDistributions(data.distributions);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchFavouriteStats = async () => {
+    try {
+      const data = await fetchWrapper({
+        route: 'stats/favourites',
+        method: 'GET'
+      });
+      if (data === null || data.favourites == null) throw new Error('result is empty');
+      setFavouriteStats(data.favourites);
     } catch (error) {
       console.log(error);
     }
