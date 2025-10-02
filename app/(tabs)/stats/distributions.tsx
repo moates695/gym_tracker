@@ -84,11 +84,6 @@ export default function StatsDistribution() {
     }
     setLoadingDistributions(false);
   };
-  
-  useEffect(() => {
-    if (distributions !== null) return;
-    fetchDistributionStats();
-  }, []);
 
   const getMuscleMaps = async () => {
     try {
@@ -104,17 +99,16 @@ export default function StatsDistribution() {
     }
   };
 
-  useEffect(() => {
-    if (Object.keys(groupToTargets).length > 0) return;
-    getMuscleMaps();
-  }, []);
-
   const refreshData = async () => {
     await Promise.all([
       fetchDistributionStats(),
       getMuscleMaps()
     ])
   };
+
+  useEffect(() => {
+    refreshData();
+  }, []);
 
   const getRadarData = (): any[] => {
     const data: any[] = [];

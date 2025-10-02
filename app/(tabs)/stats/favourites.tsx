@@ -1,11 +1,12 @@
 import LoadingScreen from "@/app/loading";
+import { OptionsObject } from "@/components/ChooseExerciseModal";
 import { useDropdown } from "@/components/ExerciseData";
 import { fetchWrapper } from "@/middleware/helpers";
-import { favouriteExerciseStatsAtom, FavouriteStatsMetric } from "@/store/general";
+import { favouriteExerciseStatsAtom, FavouriteStatsMetric, muscleGroupToTargetsAtom, muscleTargetoGroupAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useRouter } from "expo-router";
 import { useAtom } from "jotai";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 
 interface MetricOption {
@@ -17,6 +18,8 @@ export default function StatsDistribution() {
   const router = useRouter();
   
   const [favouriteStats, setFavouriteStats] = useAtom(favouriteExerciseStatsAtom);
+  const [groupToTargets, setGroupToTargets] = useAtom(muscleGroupToTargetsAtom);
+  const [, setTargetoGroup] = useAtom(muscleTargetoGroupAtom);
   
   const [loadingStats, setLoadingStats] = useState<boolean>(false);
 
@@ -27,6 +30,16 @@ export default function StatsDistribution() {
     { label: 'frequency', value: 'counter' },
   ]
   const [metricOptionValue, setMetricOptionValue] = useState<FavouriteStatsMetric>('volume');
+
+  const muscleGroupOptions: OptionsObject[] = useMemo((): OptionsObject[] => {
+      const options = [{ label: 'all groups', value: 'all' }];
+      options.push(...Object.keys(groupToTargets).map(group => ({
+        label: group,
+        value: group
+      })))
+      return options;
+    }, [groupToTargets]);
+    const [muscleGroupValue, setMuscleGroupValue] = useState<string>('all');
 
   const fetchFavouriteStats = async () => {
     setLoadingStats(true);
@@ -43,9 +56,29 @@ export default function StatsDistribution() {
     setLoadingStats(false);
   };
 
+  const getMuscleMaps = async () => {
+    try {
+      const data = await fetchWrapper({
+        route: 'muscles/get_maps',
+        method: 'GET'
+      });
+      if (!data || !data.group_to_targets || !data.target_to_group) throw new Error('muscle maps bad response');
+      setGroupToTargets(data.group_to_targets);
+      setTargetoGroup(data.target_to_group);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const refreshData = async () => {
+    await Promise.all([
+      fetchFavouriteStats(),
+      getMuscleMaps()
+    ])
+  };
+
   useEffect(() => {
-    if (favouriteStats !== null) return;
-    fetchFavouriteStats();
+    refreshData();
   }, []);
 
   return (
@@ -57,7 +90,7 @@ export default function StatsDistribution() {
     >
       <TouchableOpacity
         style={[commonStyles.button, {width: 50}]}
-        onPress={() => fetchFavouriteStats()}
+        onPress={refreshData}
         disabled={loadingStats}
       >
         <Text style={commonStyles.text}>refresh</Text>
@@ -77,9 +110,16 @@ export default function StatsDistribution() {
               <Text style={commonStyles.text}>you haven't done any exercises yet!</Text>
             </View>
           :
-            <View style={{marginTop: 10}}>
+            <View 
+              style={{
+                marginTop: 10,
+                flex: 1,
+              }}
+            >
+              <Text style={commonStyles.text}>Choose a metric:</Text>
               {useDropdown(metricOptions, metricOptionValue, setMetricOptionValue)}
-
+              <Text style={commonStyles.text}>Choose a muscle group:</Text>
+              {useDropdown(muscleGroupOptions, muscleGroupValue, setMuscleGroupValue)}
               <ScrollView
                 style={{
                   marginTop: 10,
@@ -93,6 +133,10 @@ export default function StatsDistribution() {
                   }}
                 >
                   {favouriteStats
+                    .filter((stats) => { 
+                      if (muscleGroupValue === 'all') return true;
+                      return stats.groups.includes(muscleGroupValue); 
+                    })
                     .sort((a, b) => b[metricOptionValue] - a[metricOptionValue])
                     .map((stats, i) => {
                       return (

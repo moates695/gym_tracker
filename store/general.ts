@@ -236,6 +236,7 @@ export interface FavouriteExercisesFields {
   exercise_id: string
   exercise_name: string
   variation_name?: string
+  groups: string[]
 }
 
 export type FavouriteExercisesStats = FavouriteExercisesFields & {
