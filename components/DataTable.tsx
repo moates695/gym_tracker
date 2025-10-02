@@ -55,33 +55,85 @@ export default function DataTable(props: DataTableProps<string[], string | numbe
   };
 
   return (
-    <View style={{marginBottom: 10}}>
-      <Grid style={{marginBottom: 5}}>
-        <Row style={styles.gridRow}>
-          {tableData.headers.map((header, index) => {
+    <View 
+      style={{
+        marginBottom: 10,
+      }}
+    >
+      {/* <View>
+        <Grid 
+          style={{
+            marginBottom: 5, 
+            flexDirection: 'column',
+            flex: 0,
+          }}
+        >
+          <Row style={styles.gridRow}>
+            {tableData.headers.map((header, index) => {
+              return (
+                <Col key={index}>
+                  <Text style={styles.text}>{!capitalise || header === '' ? header : header.charAt(0).toUpperCase() + header.slice(1)}</Text>
+                </Col>
+              )
+            })}
+          </Row>
+          {rows.map((row, rowIndex) => {
             return (
-              <Col key={index}>
-                <Text style={styles.text}>{!capitalise || header === '' ? header : header.charAt(0).toUpperCase() + header.slice(1)}</Text>
-              </Col>
+              <Row key={rowIndex} style={[styles.gridRow, {flexWrap: 'nowrap', minHeight: 'auto', overflow: 'visible'}]}>
+                {tableData.headers.map((header, colIndex) => {
+                  return (
+                    <Col key={colIndex} style={{flex: 1}}>
+                      <Text style={[styles.text]}>{row[header]}</Text>
+                    </Col>
+                  )
+                })}
+              </Row>
             )
           })}
-        </Row>
-        {rows.map((row, rowIndex) => {
-          return (
-            <Row key={rowIndex} style={styles.gridRow}>
-              {tableData.headers.map((header, colIndex) => {
-                return (
-                  <Col key={colIndex}>
-                    <Text style={styles.text}>{row[header]}</Text>
-                  </Col>
-                )
-              })}
-            </Row>
-          )
-        })}
-      </Grid>
+        </Grid>
+      </View> */}
+      <View>
+        <Grid 
+          style={{
+            marginBottom: 5, 
+            flexDirection: 'column',
+            flex: 0,
+          }}
+        >
+          <Row style={{}}>
+            {tableData.headers.map((header, index) => {
+              return (
+                <Col key={index}>
+                  <Text style={styles.text}>{!capitalise || header === '' ? header : header.charAt(0).toUpperCase() + header.slice(1)}</Text>
+                </Col>
+              )
+            })}
+          </Row>
+          {rows.map((row, rowIndex) => {
+            return (
+              <Row key={rowIndex} style={{flex: 0}}>
+                {tableData.headers.map((header, colIndex) => {
+                  return (
+                    <Col key={colIndex} style={{flex: 1}}>
+                      <Text style={[styles.text]}>{row[header]}</Text>
+                    </Col>
+                  )
+                })}
+              </Row>
+            )
+          })}
+        </Grid>
+      </View>
       {numPages > 1 &&
-        <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around'}}>
+        <View 
+          style={{
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            justifyContent: 'space-around',
+            // zIndex: 1,  // Add this
+            // elevation: 1,  // Add this for Android
+          }}
+        >
           <TouchableOpacity
             onPress={() => shiftPageIndex('decrease')}
             style={[commonStyles.thinTextButton, {width: 30}]}
@@ -108,7 +160,4 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
   },
-  gridRow: {
-    height: 20
-  }
 })

@@ -10,7 +10,7 @@ import { useColorScheme, View } from 'react-native';
 import * as SystemUI from "expo-system-ui"
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAtom } from "jotai";
-import { userDataAtom, workoutExercisesAtom } from "@/store/general";
+import { distributionStatsAtom, exerciseListAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, userDataAtom, workoutExercisesAtom, workoutHistoryStatsAtom, workoutTotalStatsAtom } from "@/store/general";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface DecodedJWT {
@@ -20,13 +20,23 @@ export interface DecodedJWT {
   iat: number
 }
 
+// todo: load in all required atoms before allowing to go to main screen
+// todo: load in secondary data async after transiting to home screen
+
 export default function RootLayout() {
   const router = useRouter();
   const colorScheme = useColorScheme();
 
   const [,] = useAtom(workoutExercisesAtom); // to prevent screen flashbang  
-  const [userData, setUserData] = useAtom(userDataAtom);
-
+  const [, setUserData] = useAtom(userDataAtom);
+  const [, setGroupToTargets] = useAtom(muscleGroupToTargetsAtom);
+  const [, setTargetoGroup] = useAtom(muscleTargetoGroupAtom);
+  const [, setExerciseList] = useAtom(exerciseListAtom);
+  const [, setOverviewHistoricalStats] = useAtom(previousWorkoutStatsAtom);
+  const [, setWorkoutHistoryStats] = useAtom(workoutHistoryStatsAtom);
+  const [, setWorkoutTotalStats] = useAtom(workoutTotalStatsAtom);
+  const [, setDistributions] = useAtom(distributionStatsAtom);
+  
   SystemUI.setBackgroundColorAsync("black");
 
   const checkUserState = async () => {
@@ -54,9 +64,10 @@ export default function RootLayout() {
         route: 'login',
         method: 'GET',
       });
-      if (data === null) throw new Error("response not ok");
+      if (!data || !data.account_state) throw new Error("response not ok");
 
       if (data.account_state !== "good") {
+        setUserData(null);
         await SecureStore.deleteItemAsync("auth_token");
       }
       if (data.account_state !== "unverified") {
@@ -72,27 +83,35 @@ export default function RootLayout() {
           router.replace("/sign-in");
           return;
         }
-        const data = await fetchWrapper({
+        const data2 = await fetchWrapper({
           route: 'register/validate/resend',
           method: 'POST',
           token_str: 'temp_token'
         })
-        if (data === null) {
+        if (!data2) {
           await SecureStore.deleteItemAsync("temp_token");
           router.replace("/sign-in");
         } else {
           router.replace("/validate");
         }
       } else if (data.account_state == "good") {
-        if (userData === null) {
-          const data = await fetchWrapper({
-            route: 'users/data/get',
-            method: 'GET'
-          })
-          if (data === null) throw new Error('error fetching user data');
-          setUserData(data.user_data);
-        }
+        await Promise.all([
+          loadFonts(),
+          fetchUserData(),
+          fetchMappings(),
+        ])
         router.replace("/(tabs)");
+        try {
+          await Promise.all([
+            fetchExerciseList(),
+            fetchOverviewStats(),
+            fetchHistoryStats(),
+            fetchWorkoutTotalStats(),
+            fetchDistributionStats(),
+          ])
+        } catch (error) {
+          console.log(error);
+        }
       } else {
         throw new Error("response not recognised");
       }
@@ -100,6 +119,90 @@ export default function RootLayout() {
     } catch (error) {
       console.log(error);
       router.replace("/sign-up");
+    }
+  };
+
+  const fetchUserData = async () => {
+    const data = await fetchWrapper({
+      route: 'users/data/get',
+      method: 'GET'
+    })
+    if (!data || !data.user_data) throw new Error('error fetching user data');
+    setUserData(data.user_data);
+  };
+
+  const fetchMappings = async () => {
+    const data = await fetchWrapper({
+      route: 'muscles/get_maps',
+      method: 'GET'
+    })
+    if (!data || !data.group_to_targets || !data.target_to_group) throw new Error('muscle maps bad response');
+    setGroupToTargets(data.group_to_targets);
+    setTargetoGroup(data.target_to_group);
+  };
+
+  const fetchExerciseList = async () => {
+    try {
+      const data = await fetchWrapper({
+        route: 'exercises/list/all',
+        method: 'GET'
+      });
+      if (!data || !data.exercises) throw new Error('bad exercise list response');
+      setExerciseList(data.exercises)
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  const fetchOverviewStats = async () => {
+    try {
+      const data = await fetchWrapper({
+        route: 'workout/overview/stats',
+        method: 'GET'
+      });
+      if (!data || !data.workouts) throw new Error('bad overview stats response');
+      setOverviewHistoricalStats(data.workouts);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchHistoryStats = async () => {
+    try {
+      const data = await fetchWrapper({
+        route: 'stats/history',
+        method: 'GET'
+      });
+      if (!data || !data.stats) throw new Error('stats history result is empty');
+      setWorkoutHistoryStats(data.stats);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+    
+  const fetchWorkoutTotalStats = async () => {
+    try {
+      const data = await fetchWrapper({
+        route: 'stats/workout_totals',
+        method: 'GET'
+      });
+      if (!data || !data.totals == null) throw new Error('result is empty');
+      setWorkoutTotalStats(data.totals);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchDistributionStats = async () => {
+    try {
+      const data = await fetchWrapper({
+        route: 'stats/distributions',
+        method: 'GET'
+      });
+      if (!data || !data.distributions) throw new Error('distribution stats result is empty');
+      setDistributions(data.distributions);
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -114,7 +217,6 @@ export default function RootLayout() {
   const initialSetup = async () => {
     await Promise.all([
       checkUserState(),
-      loadFonts()
     ]);
   };
 

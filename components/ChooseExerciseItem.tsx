@@ -52,7 +52,6 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
   const [variationValue, setVariationValue] = useState<string>(baseVariationValue);
 
   const handleChooseExercise = () => {
-    console.log(chosenVariation)
     const newExercise = JSON.parse(JSON.stringify(chosenVariation));
     delete newExercise.frequency;
     newExercise.set_data = [{ ...emptySetData }];

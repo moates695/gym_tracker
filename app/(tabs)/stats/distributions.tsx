@@ -11,7 +11,7 @@ import { useAtom, useAtomValue } from "jotai";
 import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 
-// change to: for radar select muscle group, for heatmap select group or target for display
+// todo change to: for radar select muscle group, for heatmap select group or target for display
 
 interface MetricOption {
   label: string
@@ -22,6 +22,12 @@ type DisplayOptionValue = 'radar' | 'heatmap'
 interface DisplayOption {
   label: string
   value: DisplayOptionValue
+}
+
+type HeatmapDisplayValue = 'group' | 'target'
+interface HeatmapDisplayOption {
+  label: string
+  value: HeatmapDisplayValue
 }
 
 export default function StatsDistribution() {
@@ -57,6 +63,12 @@ export default function StatsDistribution() {
   ]
   const [displayOptionValue, setDisplayOptionValue] = useState<DisplayOptionValue>('radar');
 
+  const heatmapDisplayOptions: HeatmapDisplayOption[] = [
+    { label: 'muscle targets', value: 'target' },
+    { label: 'muscle groups', value: 'group' },
+  ]
+  const [heatmapDisplayValue, setHeatmapDisplayValue] = useState<HeatmapDisplayValue>('target');
+
   const fetchDistributionStats = async () => {
     setLoadingDistributions(true);
     try {
@@ -78,13 +90,17 @@ export default function StatsDistribution() {
   }, []);
 
   const getMuscleMaps = async () => {
-    const data = await fetchWrapper({
-      route: 'muscles/get_maps',
-      method: 'GET'
-    });
-    if (data === null) return;
-    setGroupToTargets(data.group_to_targets);
-    setTargetoGroup(data.target_to_group);
+    try {
+      const data = await fetchWrapper({
+        route: 'muscles/get_maps',
+        method: 'GET'
+      });
+      if (!data || !data.group_to_targets || !data.target_to_group) throw new Error('muscle maps bad response');
+      setGroupToTargets(data.group_to_targets);
+      setTargetoGroup(data.target_to_group);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   useEffect(() => {
@@ -135,28 +151,16 @@ export default function StatsDistribution() {
 
     try {
       for (const [groupName, groupStats] of Object.entries(distributions)) {
-        if (muscleGroupValue === 'all') {
+        if (heatmapDisplayValue === 'group') {
           if (groupStats[metricOptionValue] === 0) continue;
           map[groupName] = groupStats[metricOptionValue];
           continue;
         } 
-        for (const [targetName, targetStats] of Object.entries(distributions[muscleGroupValue]["targets"])) {
+        for (const [targetName, targetStats] of Object.entries(groupStats["targets"])) {
           if (targetStats[metricOptionValue] === 0) continue;
           map[`${groupName}/${targetName}`] = targetStats[metricOptionValue];
         }
       }
-
-      // for (const [groupName, groupStats] of Object.entries(stats.workout_muscle_stats)) {
-      //   if (muscleOptionValue === 'group') {
-      //     if (groupStats[statOptionValue] === 0) continue;
-      //     map[groupName] = groupStats[statOptionValue];
-      //   } else {
-      //     for (const [targetName, targetStats] of Object.entries(groupStats.targets)) {
-      //       if (targetStats[statOptionValue] === 0) continue;
-      //       map[`${groupName}/${targetName}`] = targetStats[statOptionValue]
-      //     }
-      //   }
-      // }
     } catch (error) {
       console.log(error);
     }
@@ -166,6 +170,66 @@ export default function StatsDistribution() {
   const getTableData = (): TableData<string[], string | number> => {
     const headers: string[] = ['volume', 'sets', 'reps', 'exercises'];
     const rows: Record<string, string | number>[] = [];
+    if (distributions === null) {
+      return {
+        headers,
+        rows
+      }
+    }
+
+    if (displayOptionValue === 'radar') {
+      if (muscleGroupValue === 'all') {
+        headers.unshift('group');
+        for (const [groupName, groupStats] of Object.entries(distributions)) {
+          rows.push({
+            group: groupName,
+            volume: groupStats.volume,
+            sets: groupStats.num_sets,
+            reps: groupStats.reps,
+            exercises: groupStats.num_exercises,
+          })
+        }
+      } else {
+        headers.unshift('target');
+        for (const [targetName, targetStats] of Object.entries(distributions[muscleGroupValue].targets)) {
+          rows.push({
+            target: targetName,
+            volume: targetStats.volume,
+            sets: targetStats.num_sets,
+            reps: targetStats.reps,
+            exercises: targetStats.num_exercises,
+          })
+        }
+      }
+    } else {
+      if (heatmapDisplayValue === 'group') {
+        headers.unshift('group');
+        for (const [groupName, groupStats] of Object.entries(distributions)) {
+          rows.push({
+            group: groupName,
+            volume: groupStats.volume,
+            sets: groupStats.num_sets,
+            reps: groupStats.reps,
+            exercises: groupStats.num_exercises,
+          })
+        }
+      } else {
+        headers.unshift('target');
+        headers.unshift('group');
+        for (const [groupName, groupStats] of Object.entries(distributions)) {
+          for (const [targetName, targetStats] of Object.entries(groupStats["targets"])) {
+            rows.push({
+              group: groupName,
+              target: targetName,
+              volume: targetStats.volume,
+              sets: targetStats.num_sets,
+              reps: targetStats.reps,
+              exercises: targetStats.num_exercises,
+            })
+          }
+        }
+      }
+    }
 
     return {
       headers,
@@ -191,15 +255,15 @@ export default function StatsDistribution() {
       {useDropdown(metricOptions, metricOptionValue, setMetricOptionValue)}
       <Text style={commonStyles.text}>Choose a display:</Text>
       {useDropdown(displayOptions, displayOptionValue, setDisplayOptionValue)}
-      <Text style={commonStyles.text}>Choose a muscle group:</Text>
-      {useDropdown(muscleGroupOptions, muscleGroupValue, setMuscleGroupValue)}
       {displayOptionValue === 'radar' &&
         <>
+          <Text style={commonStyles.text}>Choose a muscle group:</Text>
+          {useDropdown(muscleGroupOptions, muscleGroupValue, setMuscleGroupValue)}
           {muscleGroupValue !== 'chest' ? 
             <View 
               style={{
                 width: '100%',
-                alignItems: 'center'
+                alignItems: 'center',
               }}
             >
               <RadarChart 
@@ -224,14 +288,18 @@ export default function StatsDistribution() {
         </>
       }
       {displayOptionValue === 'heatmap' &&
-        <View style={{marginBottom: 20, marginTop: 20}}>
-          <MuscleGroupSvg 
-            valueMap={getValueMap()} 
-            showGroups={muscleGroupValue === 'all'}
-          />
-        </View>
+        <>
+          <Text style={commonStyles.text}>Choose a muscle display:</Text>
+          {useDropdown(heatmapDisplayOptions, heatmapDisplayValue, setHeatmapDisplayValue)}
+          <View style={{marginBottom: 20, marginTop: 20}}>
+            <MuscleGroupSvg 
+              valueMap={getValueMap()} 
+              showGroups={heatmapDisplayValue === 'group'}
+            />
+          </View>
+        </>
       }
-      <DataTable tableData={getTableData()}/>
+      <DataTable tableData={getTableData()} numRows={(displayOptionValue === 'heatmap' && heatmapDisplayValue === 'target') ? 5 : 10}/>
     </View>
   )
 }

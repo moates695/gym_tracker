@@ -314,7 +314,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
         <Text 
           style={[styles.text, {alignSelf: 'center', margin: 5}]}
         >
-          Workout on {exerciseHistory["history"][historyListIndex]?.started_at}
+          Workout on {timestampToDateStr(exerciseHistory["history"][historyListIndex]?.started_at)}
         </Text>
       }
     </>
@@ -421,7 +421,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
         for (let j = 0; j < set_data.reps!; j++) {
           points.push({
             x: repNum,
-            y: set_data.weight,
+            y: set_data.weight ?? 0,
           });
           repNum++;
         }
