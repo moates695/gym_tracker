@@ -121,7 +121,7 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
           {dataOption === 'data' &&
             <>
               <View style={styles.divider}/>
-              <ExerciseData exercise={exercise} exerciseIndex={exerciseIndex}/>
+              <ExerciseData exercise={exercise} />
             </>
           }
           {dataOption === 'heatmap' &&

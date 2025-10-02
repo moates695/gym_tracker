@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { View, StyleSheet, Text, Platform, TouchableOpacity, ScrollView, FlatList, StyleProp, ViewStyle } from "react-native"
-import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoryData, loadableExercisesHistoricalDataAtom, emptyExerciseHistoricalData, HistoryData } from "@/store/general"
+import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoryData, loadableExercisesHistoricalDataAtom, emptyExerciseHistoricalData, HistoryData, ExerciseListItem } from "@/store/general"
 import ThreeAxisGraph, { Point3D } from './ThreeAxisGraph'
 import { useEffect, useRef, useState } from "react";
 import { useAtom, useAtomValue } from "jotai";
@@ -35,10 +35,7 @@ import Feather from '@expo/vector-icons/Feather';
 //    overall by sets, volume, reps
 //    per muscle group or target by sets, volume, reps
 
-interface ExerciseDataProps {
-  exercise: WorkoutExercise
-  exerciseIndex: number
-}
+
 
 type DataVisual = 'graph' | 'table';
 
@@ -122,8 +119,13 @@ export const filterTimeSeries = (points: LineGraphPoint[], timeSpanOptionValue: 
   });
 }
 
+interface ExerciseDataProps {
+  exercise: WorkoutExercise
+}
+
+// todo include bar graph and current points for exercise data to compare to previous
 export default function ExerciseData(props: ExerciseDataProps) {
-  const {exercise, exerciseIndex} = props;
+  const {exercise} = props;
 
   const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
   const loadableExercisesHistoricalData = useAtomValue(loadableExercisesHistoricalDataAtom);

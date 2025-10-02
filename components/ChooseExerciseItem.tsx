@@ -33,6 +33,7 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
   const [, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
 
   const [chosenVariation, setChosenVariation] = useState<ExerciseListItem>(exercise);
+  
   const displayOptions: DisplayOptionObject[] = [
     { label: 'heatmap', value: 'heatmap' },
     { label: 'frequency calendar', value: 'frequency' },
@@ -72,16 +73,20 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
     onChoose();
   };
 
-  const fetchExerciseHistoricalData = async (id: string) => {
-    const data = await fetchWrapper({
-      route: 'exercise/history',
-      method: 'GET',
-      params: {exercise_id: id}
-    })
-    setExercisesHistoricalData(prev => ({
-      ...prev,
-      [id]: data
-    }))
+  const fetchExerciseHistoricalData = async (exercise_id: string) => {
+    try {
+      const data = await fetchWrapper({
+        route: 'exercise/history',
+        method: 'GET',
+        params: {exercise_id}
+      })
+      setExercisesHistoricalData(prev => ({
+        ...prev,
+        [exercise_id]: data
+      }))
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const displayMap: Record<DisplayOption, JSX.Element> = {
@@ -107,29 +112,29 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
   return (
     <View style={styles.box}>
       <View style={styles.row}>
-          <TouchableOpacity
-            onPress={() => setIsExpanded(!isExpanded)}
+        <TouchableOpacity
+          onPress={() => setIsExpanded(!isExpanded)}
+        >
+          <View 
+            style={{
+              flexDirection: 'row', 
+              alignItems: 'center', 
+            }}
           >
-            <View 
-              style={{
-                flexDirection: 'row', 
-                alignItems: 'center', 
-              }}
-            >
-              <Text style={[styles.text]}>{exercise.name}</Text>
-              <MaterialIcons 
-                name={isExpanded ? "expand-less" : "expand-more"} 
-                size={16} 
-                color="gray" 
-                style={{paddingLeft: 4, paddingBottom: 4}}
-              />
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            onPress={handleChooseExercise}
-          >
-            <Text style={[styles.text, commonStyles.textButton]}>add</Text> 
-          </TouchableOpacity>
+            <Text style={[styles.text]}>{exercise.name}</Text>
+            <MaterialIcons 
+              name={isExpanded ? "expand-less" : "expand-more"} 
+              size={16} 
+              color="gray" 
+              style={{paddingLeft: 4, paddingBottom: 4}}
+            />
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          onPress={handleChooseExercise}
+        >
+          <Text style={[styles.text, commonStyles.textButton]}>add</Text> 
+        </TouchableOpacity>
       </View>
       {isExpanded &&
         <>

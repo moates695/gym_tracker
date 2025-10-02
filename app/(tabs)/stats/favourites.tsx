@@ -42,7 +42,6 @@ export default function StatsDistribution() {
     const [muscleGroupValue, setMuscleGroupValue] = useState<string>('all');
 
   const fetchFavouriteStats = async () => {
-    setLoadingStats(true);
     try {
       const data = await fetchWrapper({
         route: 'stats/favourites',
@@ -53,7 +52,6 @@ export default function StatsDistribution() {
     } catch (error) {
       console.log(error);
     }
-    setLoadingStats(false);
   };
 
   const getMuscleMaps = async () => {
@@ -71,10 +69,12 @@ export default function StatsDistribution() {
   };
 
   const refreshData = async () => {
+    setLoadingStats(true);
     await Promise.all([
       fetchFavouriteStats(),
       getMuscleMaps()
-    ])
+    ]);
+    setLoadingStats(false);
   };
 
   useEffect(() => {
