@@ -77,24 +77,48 @@ export default function StatsDistribution() {
               <Text style={commonStyles.text}>you haven't done any exercises yet!</Text>
             </View>
           :
-            <ScrollView
-              style={{
-                marginTop: 10,
-                marginBottom: 10
-              }}
-            >
+            <View style={{marginTop: 10}}>
               {useDropdown(metricOptions, metricOptionValue, setMetricOptionValue)}
-              {favouriteStats
-                .sort((a, b) => a[metricOptionValue] - b[metricOptionValue])
-                .map((stats) => {
-                  return (
-                    <View key={stats.exercise_id}>
-                      
-                    </View>
-                  )
-                })
-              } 
-            </ScrollView>
+
+              <ScrollView
+                style={{
+                  marginTop: 10,
+                  marginBottom: 10
+                }}
+              >
+                <View
+                  style={{
+                    flex: 1,
+                    alignItems: 'center'
+                  }}
+                >
+                  {favouriteStats
+                    .sort((a, b) => b[metricOptionValue] - a[metricOptionValue])
+                    .map((stats, i) => {
+                      return (
+                        <View 
+                          key={stats.exercise_id}
+                          style={{
+                            flexDirection: 'row',
+                            width: '95%',
+                            justifyContent: 'space-between',
+                            padding: 5,
+                            backgroundColor: i % 2 ? '#000000': '#222328ff',
+                            borderRadius: 5,
+                          }}
+                        >
+                          <View>
+                            <Text style={commonStyles.text}>{stats.exercise_name}</Text>
+                            {stats.variation_name && <Text style={commonStyles.text}>({stats.variation_name})</Text>}
+                          </View>
+                          <Text style={commonStyles.text}>{stats[metricOptionValue]}</Text>
+                        </View>
+                      )
+                    })
+                  } 
+                </View>
+              </ScrollView>
+            </View>
           }
         </>
       }
