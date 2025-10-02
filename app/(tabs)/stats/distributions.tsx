@@ -1,3 +1,4 @@
+import LoadingScreen from "@/app/loading";
 import { OptionsObject } from "@/components/ChooseExerciseModal";
 import DataTable, { TableData } from "@/components/DataTable";
 import { useDropdown } from "@/components/ExerciseData";
@@ -251,55 +252,61 @@ export default function StatsDistribution() {
       >
         <Text style={commonStyles.text}>refresh</Text>
       </TouchableOpacity>
-      <Text style={commonStyles.text}>Choose a metric:</Text>
-      {useDropdown(metricOptions, metricOptionValue, setMetricOptionValue)}
-      <Text style={commonStyles.text}>Choose a display:</Text>
-      {useDropdown(displayOptions, displayOptionValue, setDisplayOptionValue)}
-      {displayOptionValue === 'radar' &&
+      {loadingDistributions ?
+        <LoadingScreen />
+      :
         <>
-          <Text style={commonStyles.text}>Choose a muscle group:</Text>
-          {useDropdown(muscleGroupOptions, muscleGroupValue, setMuscleGroupValue)}
-          {muscleGroupValue !== 'chest' ? 
-            <View 
-              style={{
-                width: '100%',
-                alignItems: 'center',
-              }}
-            >
-              <RadarChart 
-                data={getRadarData()}
-                gradientColor={{
-                  startColor: '#00000000',
-                  endColor: '#00000000',
-                  count: 4,
-                }}
-                strokeWidth={[0.5, 0.5, 0.5, 0.5, 1]}
-                strokeOpacity={[1, 1, 1, 1, 0.13]}
-                labelColor="#f6f6f6ff"
-                dataFillColor="#ff9430ff"
-                dataFillOpacity={0.8}
-                dataStroke="#ff7f08ff"
-                labelSize={12}
-              />
-            </View>
-          :
-            <Text style={commonStyles.text}>chest does not have enough targets to show a radar :(</Text>
+          <Text style={commonStyles.text}>Choose a metric:</Text>
+          {useDropdown(metricOptions, metricOptionValue, setMetricOptionValue)}
+          <Text style={commonStyles.text}>Choose a display:</Text>
+          {useDropdown(displayOptions, displayOptionValue, setDisplayOptionValue)}
+          {displayOptionValue === 'radar' &&
+            <>
+              <Text style={commonStyles.text}>Choose a muscle group:</Text>
+              {useDropdown(muscleGroupOptions, muscleGroupValue, setMuscleGroupValue)}
+              {muscleGroupValue !== 'chest' ? 
+                <View 
+                  style={{
+                    width: '100%',
+                    alignItems: 'center',
+                  }}
+                >
+                  <RadarChart 
+                    data={getRadarData()}
+                    gradientColor={{
+                      startColor: '#00000000',
+                      endColor: '#00000000',
+                      count: 4,
+                    }}
+                    strokeWidth={[0.5, 0.5, 0.5, 0.5, 1]}
+                    strokeOpacity={[1, 1, 1, 1, 0.13]}
+                    labelColor="#f6f6f6ff"
+                    dataFillColor="#ff9430ff"
+                    dataFillOpacity={0.8}
+                    dataStroke="#ff7f08ff"
+                    labelSize={12}
+                  />
+                </View>
+              :
+                <Text style={commonStyles.text}>chest does not have enough targets to show a radar :(</Text>
+              }
+            </>
           }
+          {displayOptionValue === 'heatmap' &&
+            <>
+              <Text style={commonStyles.text}>Choose a muscle display:</Text>
+              {useDropdown(heatmapDisplayOptions, heatmapDisplayValue, setHeatmapDisplayValue)}
+              <View style={{marginBottom: 20, marginTop: 20}}>
+                <MuscleGroupSvg 
+                  valueMap={getValueMap()} 
+                  showGroups={heatmapDisplayValue === 'group'}
+                />
+              </View>
+            </>
+          }
+          <DataTable tableData={getTableData()} numRows={(displayOptionValue === 'heatmap' && heatmapDisplayValue === 'target') ? 5 : 10}/>
         </>
       }
-      {displayOptionValue === 'heatmap' &&
-        <>
-          <Text style={commonStyles.text}>Choose a muscle display:</Text>
-          {useDropdown(heatmapDisplayOptions, heatmapDisplayValue, setHeatmapDisplayValue)}
-          <View style={{marginBottom: 20, marginTop: 20}}>
-            <MuscleGroupSvg 
-              valueMap={getValueMap()} 
-              showGroups={heatmapDisplayValue === 'group'}
-            />
-          </View>
-        </>
-      }
-      <DataTable tableData={getTableData()} numRows={(displayOptionValue === 'heatmap' && heatmapDisplayValue === 'target') ? 5 : 10}/>
     </View>
   )
 }

@@ -230,3 +230,15 @@ export interface DistributionGroupStats extends DistributionStatsBase {
 export type DistributionStats = Record<string, DistributionGroupStats>
 
 export const distributionStatsAtom = atom<DistributionStats | null>(null);
+
+export interface FavouriteExercisesStats {
+  exercise_id: string
+  exercise_name: string
+  variation_name?: string
+  volume: number
+  num_sets: number
+  reps: number
+  counter: number
+}
+
+export const favouriteExerciseStatsAtom = atom<FavouriteExercisesStats[] | null>(null);
