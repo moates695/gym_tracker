@@ -109,6 +109,7 @@ export default function RootLayout() {
             fetchHistoryStats(),
             fetchWorkoutTotalStats(),
             fetchDistributionStats(),
+            fetchFavouriteStats(),
           ])
         } catch (error) {
           console.log(error);
