@@ -12,7 +12,7 @@ export default function StatsHeader() {
     for (const i in pathParts) {
       pathParts[i] = pathParts[i].charAt(0).toUpperCase() + pathParts[i].slice(1);
     }
-    return pathParts.join('/');
+    return pathParts.join(' / ');
   };
 
   return (

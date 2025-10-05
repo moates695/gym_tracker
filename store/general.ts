@@ -244,3 +244,18 @@ export type FavouriteExercisesStats = FavouriteExercisesFields & {
 }
 
 export const favouriteExerciseStatsAtom = atom<FavouriteExercisesStats[] | null>(null);
+
+export interface LeaderboardListItem {
+  username: string
+  rank: string
+  value: number
+}
+
+export interface LeaderboardData {
+  fracture: number | null
+  leaderboard: LeaderboardListItem[]
+}
+
+export const volumeLeaderboardAtom = atom<LeaderboardData | null>(null);
+export const setLeaderboardAtom = atom<LeaderboardData | null>(null);
+export const repsLeaderboardAtom = atom<LeaderboardData | null>(null);
