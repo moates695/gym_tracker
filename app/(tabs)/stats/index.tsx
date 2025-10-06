@@ -1,3 +1,4 @@
+import DataTable, { TableData } from "@/components/DataTable";
 import { fetchWrapper } from "@/middleware/helpers";
 import { workoutTotalStatsAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
@@ -29,6 +30,29 @@ export default function Stats() {
     fetchWorkoutTotalStats();
   }, []);
 
+  const tableData1: TableData<string[], string | number> = {
+    headers: ['volume','sets','reps'],
+    rows: [
+      {
+        'volume': parseFloat((workoutTotalStats?.volume ?? 0).toFixed(2)),
+        'sets': workoutTotalStats?.num_sets ?? 0,
+        'reps': workoutTotalStats?.reps ?? 0,
+      }
+    ]
+  }
+
+  // todo: convert duration into string of mins, hours, days etc
+  const tableData2: TableData<string[], string | number> = {
+    headers: ['duration','workouts','exercises'],
+    rows: [
+      {
+        'duration': Math.round(workoutTotalStats?.duration ?? 0),
+        'workouts': workoutTotalStats?.num_workouts ?? 0,
+        'exercises': workoutTotalStats?.num_exercises ?? 0,
+      }
+    ]
+  }
+
   return (
     <Suspense fallback={<View style={{ flex: 1, backgroundColor: 'black' }} />}>
       <SafeAreaView style={styles.container}>
@@ -37,14 +61,22 @@ export default function Stats() {
             <Text style={commonStyles.text}>stats haven't loaded</Text> 
           </>
         :
-          <>
-            <Text style={commonStyles.text}>Volume: {parseFloat(workoutTotalStats?.volume.toFixed(2))}</Text>
+          <View
+            style={{
+              width: '100%',
+              height: 'auto',
+              justifyContent: 'center',
+            }}
+          >
+            <DataTable tableData={tableData1} />
+            <DataTable tableData={tableData2} />
+            {/* <Text style={commonStyles.text}>Volume: {parseFloat(workoutTotalStats?.volume.toFixed(2))}</Text>
             <Text style={commonStyles.text}>Sets: {workoutTotalStats?.num_sets}</Text>
             <Text style={commonStyles.text}>Reps: {workoutTotalStats?.reps}</Text>
             <Text style={commonStyles.text}>Duration: {Math.round(workoutTotalStats?.duration)}</Text>
             <Text style={commonStyles.text}># workouts: {workoutTotalStats?.num_workouts}</Text>
-            <Text style={commonStyles.text}># exercises : {workoutTotalStats?.num_exercises}</Text>
-          </>
+            <Text style={commonStyles.text}># exercises : {workoutTotalStats?.num_exercises}</Text> */}
+          </View>
         }
         
         <TouchableOpacity

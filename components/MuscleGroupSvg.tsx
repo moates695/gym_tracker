@@ -16,6 +16,10 @@ export default function MuscleGroupSvg(props: MuscleGroupSvgProps) {
     const values = Object.values(valueMap);
     const min = Math.min(...values);
     const max = Math.max(...values);
+    if (min === max) {
+      return Object.fromEntries(Object.keys(valueMap).map(k => [k, 1]));
+    }
+
     for (const [key, value] of Object.entries(valueMap)) {
       normalizedMap[key] = (value - min) / (max - min || 1)
     }

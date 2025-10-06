@@ -3,7 +3,6 @@ import { Feather } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import { Grid, Row, Col } from "react-native-easy-grid";
-import { Header } from "react-native/Libraries/NewAppScreen";
 
 export interface TableData<H extends readonly string[], V> {
   headers: H;
@@ -100,11 +99,13 @@ export default function DataTable(props: DataTableProps<string[], string | numbe
             flex: 0,
           }}
         >
-          <Row style={{}}>
+          <Row style={{flex: 0}}>
             {tableData.headers.map((header, index) => {
               return (
                 <Col key={index}>
-                  <Text style={styles.text}>{!capitalise || header === '' ? header : header.charAt(0).toUpperCase() + header.slice(1)}</Text>
+                  <Text style={styles.text}>
+                    {!capitalise || header === '' ? header : header.charAt(0).toUpperCase() + header.slice(1)}
+                  </Text>
                 </Col>
               )
             })}
@@ -130,13 +131,11 @@ export default function DataTable(props: DataTableProps<string[], string | numbe
             flexDirection: 'row', 
             alignItems: 'center', 
             justifyContent: 'space-around',
-            // zIndex: 1,  // Add this
-            // elevation: 1,  // Add this for Android
           }}
         >
           <TouchableOpacity
             onPress={() => shiftPageIndex('decrease')}
-            style={[commonStyles.thinTextButton, {width: 30}]}
+            style={[commonStyles.thinTextButton, {width: 30, opacity: pageIndex === 0 ? 0 : 1}]}
           >
             <Feather name="chevron-left" size={14} color="white" />
           </TouchableOpacity>
@@ -145,7 +144,7 @@ export default function DataTable(props: DataTableProps<string[], string | numbe
           </Text>
           <TouchableOpacity
             onPress={() => shiftPageIndex('increase')}
-            style={[commonStyles.thinTextButton, {width: 30}]}
+            style={[commonStyles.thinTextButton, {width: 30, opacity: pageIndex + 1 === numPages ? 0 : 1}]}
           >
             <Feather name="chevron-right" size={14} color="white" />
           </TouchableOpacity>

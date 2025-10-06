@@ -44,15 +44,15 @@ export default function StatsDistribution() {
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
-      setLoadingStats(true);
-      try {
-        const map: Record<OverallLeaderboardType, LeaderboardData | null> = {
+      const map: Record<OverallLeaderboardType, LeaderboardData | null> = {
           volume: volumeLeaderboard,
           sets: setLeaderboard,
           reps: repsLeaderboard,
         };
-        if (map[overallOptionValue] != null) return;
-        console.log(overallOptionValue)
+      if (map[overallOptionValue] != null) return;
+      
+      setLoadingStats(true);
+      try {
         const data = await fetchWrapper({
           route: 'stats/leaderboards/overall',
           method: 'GET',
@@ -62,7 +62,7 @@ export default function StatsDistribution() {
             side_num: '20'
           }
         });
-        if (!data || !data.fracture || !data.leaderboard) throw new Error('bad response');
+        if (!data || !data.leaderboard) throw new Error('bad response');
         if (overallOptionValue === 'volume') {
           setVolumeLeaderboard(data);
         } else if (overallOptionValue === 'sets') {
@@ -85,18 +85,19 @@ export default function StatsDistribution() {
         backgroundColor: 'black',
       }}
     >
+      <Text style={commonStyles.text}>Choose leaderboard:</Text>
+      {useDropdown(leaderboardOptions, leaderboardOptionValue, setLeaderboardOptionValue)}
+      {leaderboardOptionValue === 'overall' &&
+        <>
+          <Text style={commonStyles.text}>Choose a metric:</Text>
+          {useDropdown(overallOptions, overallOptionValue, setOverallOptionValue)}
+        </>
+      }
       {loadingStats ?
         <LoadingScreen />
       :
         <>
-          <Text style={commonStyles.text}>Choose leaderboard:</Text>
-          {useDropdown(leaderboardOptions, leaderboardOptionValue, setLeaderboardOptionValue)}
-          {leaderboardOptionValue === 'overall' &&
-            <>
-              <Text style={commonStyles.text}>Choose a metric:</Text>
-              {useDropdown(overallOptions, overallOptionValue, setOverallOptionValue)}
-            </>
-          }
+
         </>
       }
     </View>
