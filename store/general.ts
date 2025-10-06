@@ -247,7 +247,7 @@ export const favouriteExerciseStatsAtom = atom<FavouriteExercisesStats[] | null>
 
 export interface LeaderboardListItem {
   username: string
-  rank: string
+  rank: number
   value: number
 }
 

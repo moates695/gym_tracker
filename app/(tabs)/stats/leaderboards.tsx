@@ -1,5 +1,6 @@
 import LoadingScreen from "@/app/loading";
 import { useDropdown } from "@/components/ExerciseData";
+import { Leaderboard } from "@/components/Leaderboard";
 import { fetchWrapper } from "@/middleware/helpers";
 import { LeaderboardData, repsLeaderboardAtom, setLeaderboardAtom, volumeLeaderboardAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
@@ -29,6 +30,25 @@ export default function StatsDistribution() {
   const [setLeaderboard, setSetLeaderboard] = useAtom(setLeaderboardAtom);
   const [repsLeaderboard, setRepsLeaderboard] = useAtom(repsLeaderboardAtom);
 
+  interface MapObject {
+    value: LeaderboardData | null
+    setter: any
+  }
+  const overallMap: Record<OverallLeaderboardType, MapObject> = {
+    volume: {
+      value: volumeLeaderboard,
+      setter: setVolumeLeaderboard
+    },
+    sets: {
+      value: setLeaderboard,
+      setter: setSetLeaderboard
+    },
+    reps: {
+      value: repsLeaderboard,
+      setter: setRepsLeaderboard
+    },
+  };
+
   const leaderboardOptions: LeaderboardOption[] = [
     { label: 'volume', value: 'overall' },
     { label: 'sets', value: 'exercise' },
@@ -44,12 +64,7 @@ export default function StatsDistribution() {
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
-      const map: Record<OverallLeaderboardType, LeaderboardData | null> = {
-          volume: volumeLeaderboard,
-          sets: setLeaderboard,
-          reps: repsLeaderboard,
-        };
-      if (map[overallOptionValue] != null) return;
+      if (overallMap[overallOptionValue]['value'] !== null) return;
       
       setLoadingStats(true);
       try {
@@ -75,6 +90,7 @@ export default function StatsDistribution() {
       }
       setLoadingStats(false);
     };
+
     fetchLeaderboard();
   }, [overallOptionValue]);
 
@@ -91,13 +107,11 @@ export default function StatsDistribution() {
         <>
           <Text style={commonStyles.text}>Choose a metric:</Text>
           {useDropdown(overallOptions, overallOptionValue, setOverallOptionValue)}
-        </>
-      }
-      {loadingStats ?
-        <LoadingScreen />
-      :
-        <>
-
+          {loadingStats ?
+            <LoadingScreen />
+          :
+            <Leaderboard data={overallMap[overallOptionValue].value} />
+          }
         </>
       }
     </View>
