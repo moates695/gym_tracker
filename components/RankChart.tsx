@@ -6,11 +6,14 @@ export interface RankChartProps {
   data: any[]
 }
 
+//! CHECK that full graph is shown based on spacing
 export default function RankChart(props: RankChartProps) {
   const { data } = props;
 
-  const chart_width = 350;
-  const calculatedSpacing = chart_width / (data.length - 1);
+  const chart_width = 300;
+  const calculatedSpacing = (chart_width * 0.8) / (data.length - 1);
+  // data[0]["showVerticalLine"] = true
+  // data[data.length - 1]["showVerticalLine"] = true
 
   return (
     <View 
@@ -18,9 +21,9 @@ export default function RankChart(props: RankChartProps) {
         flex: 1, 
         justifyContent: 'center', 
         alignItems: 'center', 
-        height: 150,
+        // height: 150,
         alignSelf: 'center',
-        paddingRight: 80,
+        paddingRight: 35,
         marginBottom: -30,
       }}
     >
