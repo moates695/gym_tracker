@@ -205,6 +205,7 @@ export interface WorkoutHistoryStats {
 export const workoutHistoryStatsAtom = atom<WorkoutHistoryStats[] | null>(null)
 
 export interface UserData {
+  user_id: string
   email: string
   username: string
   first_name: string
@@ -247,6 +248,7 @@ export const favouriteExerciseStatsAtom = atom<FavouriteExercisesStats[] | null>
 
 export interface LeaderboardListItem {
   username: string
+  user_id: string
   rank: number
   value: number
 }

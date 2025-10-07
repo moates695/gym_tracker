@@ -1,6 +1,7 @@
 import LoadingScreen from "@/app/loading";
 import { useDropdown } from "@/components/ExerciseData";
 import { Leaderboard } from "@/components/Leaderboard";
+import RankChart from "@/components/RankChart";
 import { fetchWrapper } from "@/middleware/helpers";
 import { LeaderboardData, repsLeaderboardAtom, setLeaderboardAtom, volumeLeaderboardAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
@@ -20,6 +21,8 @@ interface OverallLeaderboardOption {
   label: string
   value: OverallLeaderboardType
 }
+
+// todo add in per exercise, and per muscle group/target stats?
 
 export default function StatsDistribution() {
   const router = useRouter();
@@ -50,8 +53,8 @@ export default function StatsDistribution() {
   };
 
   const leaderboardOptions: LeaderboardOption[] = [
-    { label: 'volume', value: 'overall' },
-    { label: 'sets', value: 'exercise' },
+    { label: 'overall stats', value: 'overall' },
+    { label: 'per exercise', value: 'exercise' },
   ]
   const [leaderboardOptionValue, setLeaderboardOptionValue] = useState<LeaderboardType>('overall');
 
@@ -110,7 +113,20 @@ export default function StatsDistribution() {
           {loadingStats ?
             <LoadingScreen />
           :
-            <Leaderboard data={overallMap[overallOptionValue].value} />
+            // <View
+            //   style={{
+            //     // height: '80%',
+            //     // flex: 1
+            //   }}
+            // >
+            <>
+              <Leaderboard data={overallMap[overallOptionValue].value} />
+              <View style={{height: 180}}>
+                <RankChart />
+              </View>
+              <Text style={commonStyles.text}>You're ranked x/total, that's the yth percentile.</Text>
+            </>
+            // </View>
           }
         </>
       }
