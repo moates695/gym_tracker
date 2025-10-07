@@ -38,9 +38,9 @@ export default function ExerciseSet(props: ExerciseSetProps) {
   const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
   
   const classOptions: SetClassOption[] = [
+    { label: 'warmup', value: 'warmup' },
     { label: 'working', value: 'working' },
     { label: 'dropset', value: 'dropset' },
-    { label: 'warmup', value: 'warmup' },
     { label: 'cooldown', value: 'cooldown' },
   ]
   const [classOptionValue, setClassOptionValue] = useState<SetClass>(set_data.class);
