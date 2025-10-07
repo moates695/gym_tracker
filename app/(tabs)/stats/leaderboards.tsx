@@ -76,7 +76,7 @@ export default function StatsDistribution() {
           method: 'GET',
           params: {
             table: overallOptionValue,
-            top_num: '10',
+            top_num: '20',
             side_num: '20'
           }
         });
@@ -97,6 +97,16 @@ export default function StatsDistribution() {
     fetchLeaderboard();
   }, [overallOptionValue]);
 
+  const getPercentile = (rank: number | undefined, maxRank: number | undefined): number | null => {
+    if (!rank || ! maxRank) return null;
+    return parseFloat((((maxRank - rank) / maxRank) * 100).toFixed(3));
+  };
+
+  const userRank = overallMap[overallOptionValue].value?.user_rank;
+  const maxRank = overallMap[overallOptionValue].value?.max_rank;
+
+  const rankChart = overallMap[overallOptionValue].value?.rank_data ?? [];
+
   return (
     <View 
       style={{
@@ -113,20 +123,23 @@ export default function StatsDistribution() {
           {loadingStats ?
             <LoadingScreen />
           :
-            // <View
-            //   style={{
-            //     // height: '80%',
-            //     // flex: 1
-            //   }}
-            // >
             <>
-              <Leaderboard data={overallMap[overallOptionValue].value} />
-              <View style={{height: 180}}>
-                <RankChart />
-              </View>
-              <Text style={commonStyles.text}>You're ranked x/total, that's the yth percentile.</Text>
+              {overallMap[overallOptionValue].value === null ?
+                <Text>leaderboard data is empty</Text>
+              :
+                <>
+                  <Leaderboard data={overallMap[overallOptionValue].value} />
+                  <View style={{height: 180}}>
+                    <RankChart data={rankChart}/>
+                  </View>
+                  <Text 
+                    style={[commonStyles.text, {alignSelf: 'center', paddingBottom: 5}]}
+                  >
+                    Rank {userRank}/{maxRank}, that's the {getPercentile(userRank, maxRank)} percentile
+                  </Text>
+                </>
+              }
             </>
-            // </View>
           }
         </>
       }

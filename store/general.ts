@@ -256,6 +256,10 @@ export interface LeaderboardListItem {
 export interface LeaderboardData {
   fracture: number | null
   leaderboard: LeaderboardListItem[]
+  user_rank: number
+  max_rank: number
+  friend_ids: string[]
+  rank_data: any[]
 }
 
 export const volumeLeaderboardAtom = atom<LeaderboardData | null>(null);
