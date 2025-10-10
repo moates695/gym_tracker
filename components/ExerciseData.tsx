@@ -99,6 +99,7 @@ export const useDropdown = (options: any, value: any, setter: any, disabled: boo
         </View>
       )}
       disable={disabled}
+      autoScroll={false}
     />
   )
 };

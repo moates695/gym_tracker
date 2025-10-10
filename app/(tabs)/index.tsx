@@ -1,3 +1,4 @@
+import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { Text, View, StyleSheet, SafeAreaView, TouchableOpacity } from "react-native";
 
@@ -12,6 +13,7 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.container}>
       <Text style={{color: "white"}}>Home</Text>
+      <StatusBar style='dark' />
     </SafeAreaView >
   );
 }

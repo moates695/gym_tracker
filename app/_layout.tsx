@@ -6,7 +6,7 @@ import React from "react";
 import * as Font from 'expo-font';
 import { MaterialIcons, AntDesign, Ionicons } from '@expo/vector-icons';
 import { fetchWrapper } from "@/middleware/helpers";
-import { useColorScheme, View } from 'react-native';
+import { StatusBar, useColorScheme, View } from 'react-native';
 import * as SystemUI from "expo-system-ui"
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAtom } from "jotai";
@@ -221,6 +221,7 @@ export default function RootLayout() {
     }
   };
 
+  //! todo update this with new Font sources
   const loadFonts = async () => {
     await Font.loadAsync({
       ...MaterialIcons.font,

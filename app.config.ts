@@ -2,7 +2,6 @@ import 'dotenv/config';
 import { config as loadEnv } from "dotenv";
 import path from "path";
 
-
 const envFile = process.env.ENVFILE || './envs/.env.dev'; 
 loadEnv({ path: path.resolve(process.cwd(), envFile) });
 

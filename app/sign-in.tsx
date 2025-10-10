@@ -158,6 +158,7 @@ export default function SignInScreen() {
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>
+      <StatusBar style='dark' />
     </KeyboardAvoidingView>
   );
 }
