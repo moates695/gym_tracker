@@ -124,7 +124,7 @@ export default function Workout() {
   if (loadableWorkoutExercises.state === 'hasError') {
     Alert.alert('error loading current workout data');
     setWorkoutExercises([]);
-  }
+  } 
   if (loadableUserData.state === 'hasError') {
     Alert.alert('error loading user data');
     fetchUserData();
@@ -140,7 +140,7 @@ export default function Workout() {
             <Text style={{ color: "white"}}>refresh</Text>
           </TouchableOpacity>
         </SafeAreaView>
-    </Suspense>
+      </Suspense>
     )
   }
 

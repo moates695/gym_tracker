@@ -24,7 +24,7 @@ export default ({ config }: any) => {
         "eas": {
           "projectId": "1a09967a-b075-4243-9269-a14a1d0e4d8c"
         }
-      },
+      }
     },
   }
 };
