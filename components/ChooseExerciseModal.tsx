@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { TouchableOpacity, View, Text, StyleSheet, ScrollView, TextInput, Switch } from "react-native";
+import { TouchableOpacity, View, Text, StyleSheet, ScrollView, TextInput, Switch, FlatList } from "react-native";
 
 import { fetchWrapper } from "@/middleware/helpers";
 import { useAtom, useAtomValue } from "jotai";
@@ -70,7 +70,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
         {displayedExercises.length === 0 &&
           <Text style={styles.text}>no exercises</Text>
         }
-        <ScrollView style={styles.scrollView}>
+        {/* <ScrollView style={styles.scrollView}>
           {displayedExercises.map((displayedExercise, i) => {
             return (
               <ChooseExerciseItem 
@@ -80,7 +80,26 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
               />
             )
           })}
-        </ScrollView>
+        </ScrollView> */}
+        <FlatList 
+          style={styles.scrollView}
+          data={displayedExercises}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <ChooseExerciseItem exercise={item} onChoose={onChoose} />
+          )}
+          showsVerticalScrollIndicator={false}
+        >
+          {displayedExercises.map((displayedExercise, i) => {
+            return (
+              <ChooseExerciseItem 
+                key={displayedExercise.id} 
+                exercise={displayedExercise} 
+                onChoose={onChoose}
+              />
+            )
+          })}
+        </FlatList>
         <TouchableOpacity 
           onPress={onChoose}
           style={commonStyles.thinTextButton}

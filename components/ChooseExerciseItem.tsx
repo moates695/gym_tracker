@@ -97,6 +97,11 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
     />
   }
 
+  // if (exercise.id === 'ceaf5334-aff7-475e-b7d3-d52d74b0d091') {
+  //   console.log(exercise.frequency)
+  //   console.log(chosenVariation.frequency)
+  // }
+
   useEffect(() => {
     if (variationValue === baseVariationValue) {
       setChosenVariation(exercise);

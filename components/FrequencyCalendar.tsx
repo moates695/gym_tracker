@@ -8,18 +8,9 @@ export interface FrequencyCalendarProps {
 
 export default function FrequencyCalendar(props: FrequencyCalendarProps) {
   const { frequencyData } = props;
-  
-  return <Text style={styles.text}>not enough data</Text>
-
-  // todo: handle less than 2 frequency data
-  // if (Object.keys(frequencyData).length <= 2) {
-  //   return (
-  //     <Text style={styles.text}>not enough data</Text>
-  //   )
-  // }
 
   const offset = 7 - ((new Date().getDay() + 6) % 7);
-  const minRadius = 8;
+  const minRadius = 10;
   const maxRadius = 20;
 
   const getRadius = (volume: number) => {
@@ -28,6 +19,9 @@ export default function FrequencyCalendar(props: FrequencyCalendarProps) {
     }
     const minVolume = Math.min(...Object.values(frequencyData));
     const maxVolume = Math.max(...Object.values(frequencyData));
+    if (minVolume === maxVolume) {
+      return (maxRadius - minRadius) / 2;
+    }
     
     return minRadius + (volume - minVolume) * (maxRadius - minRadius) / (maxVolume - minVolume);
   };
@@ -72,10 +66,16 @@ export default function FrequencyCalendar(props: FrequencyCalendarProps) {
                   { translateX: -radius },
                   { translateY: -radius },
                 ],
-                zIndex: -1,
               }}
             />
-            <Text style={styles.text}>{dayDate}</Text>
+            <Text 
+              style={[
+                styles.text,
+                {zIndex: 5}
+              ]}
+            >
+              {dayDate}
+            </Text>
           </View>
         </Col>
       )
