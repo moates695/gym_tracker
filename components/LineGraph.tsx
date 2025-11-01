@@ -102,6 +102,18 @@ export default function LineGraph(props: LineGraphProps) {
     return `M ${x1} ${y} L ${x2} ${y}`;
   };
 
+  const circleRadius = 3;
+
+  const getBackgroundCircleRadius = (point: LineGraphPoint, points: LineGraphPoint[]): number => {
+    try {
+      for (const pt of points) {
+        const dist = Math.sqrt(Math.pow((point.x - pt.x), 2) + Math.pow((point.y - pt.y), 2));
+        if (dist >= circleRadius) continue;
+        return circleRadius + 2;
+      }
+    } catch (error) {}
+    return circleRadius;
+  };
 
   // todo if current point exists in points => make it bigger to surround it
   // todo if line between 2 points is the same, make current line bigger on background?
@@ -193,7 +205,7 @@ export default function LineGraph(props: LineGraphProps) {
               key={`point-${index}`}
               cx={getXPosition(point.x)}
               cy={getYPosition(point.y)}
-              r="5"
+              r={getBackgroundCircleRadius(point, points)}
               fill="black"
               stroke="orange"
               strokeWidth="2"
@@ -213,7 +225,7 @@ export default function LineGraph(props: LineGraphProps) {
               key={`point-${index}`}
               cx={getXPosition(point.x)}
               cy={getYPosition(point.y)}
-              r="3"
+              r={circleRadius}
               fill="black"
               stroke="cyan"
               strokeWidth="2"
@@ -243,6 +255,7 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: 100,
   },
   title: {
     fontSize: 20,

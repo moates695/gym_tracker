@@ -4,7 +4,7 @@ import * as SecureStore from "expo-secure-store";
 import { jwtDecode } from "jwt-decode";
 import React from "react";
 import * as Font from 'expo-font';
-import { MaterialIcons, AntDesign, Ionicons } from '@expo/vector-icons';
+import { MaterialIcons, AntDesign, Ionicons, Feather } from '@expo/vector-icons';
 import { fetchWrapper } from "@/middleware/helpers";
 import { StatusBar, useColorScheme, View } from 'react-native';
 import * as SystemUI from "expo-system-ui"
@@ -227,6 +227,7 @@ export default function RootLayout() {
       ...MaterialIcons.font,
       ...AntDesign.font,
       ...Ionicons.font,
+      ...Feather.font,
     });
   };
 

@@ -512,9 +512,15 @@ export default function ExerciseData(props: ExerciseDataProps) {
 
   if (exerciseHistory.history.length === 0) {
     return (
-      <View>
+      <View
+        style={{
+          height: 50,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
         <Text style={styles.text}>
-          this exercise has no historical data.
+          this exercise has no historical data
         </Text>
       </View>
     )

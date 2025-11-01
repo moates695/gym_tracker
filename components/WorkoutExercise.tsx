@@ -97,16 +97,43 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
           <View style={styles.rowThin}>
             <View style={{flexDirection: 'row'}}>
               <TouchableOpacity
-                style={styles.thinTextButton}
+                style={[
+                  styles.thinTextButton,
+                  dataOption === 'heatmap' && styles.thinTextButtonHighlighted
+                ]}
                 onPress={() => handleDataExpanded('heatmap')}
               >
-                <Text style={styles.text}>heatmap</Text>
+                <Text 
+                  style={[
+                    styles.text,
+                    dataOption === 'heatmap' && {
+                      color: 'black'
+                    }
+                  ]}
+                >
+                  heatmap
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.thinTextButton, {marginLeft: 5}]}
+                style={[
+                  styles.thinTextButton,
+                  dataOption === 'data' && styles.thinTextButtonHighlighted,
+                  {
+                    marginLeft: 4
+                  }
+                ]}
                 onPress={() => handleDataExpanded('data')}
               >
-                <Text style={styles.text}>data</Text>
+                <Text 
+                  style={[
+                    styles.text,
+                    dataOption === 'data' && {
+                      color: 'black'
+                    }
+                  ]}
+                >
+                  data
+                </Text>
               </TouchableOpacity>
             </View>
             {dataOption === 'data' && 
@@ -183,4 +210,8 @@ const styles = StyleSheet.create({
     minWidth: 80,
     alignItems: 'center'
   },
+  thinTextButtonHighlighted: {
+    backgroundColor: '#e0e0e0ff',
+    borderColor: '#e0e0e0ff',
+  }
 })

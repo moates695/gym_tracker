@@ -225,7 +225,7 @@ export default function ExerciseSet(props: ExerciseSetProps) {
               activeOpacity={1}
               disabled={setIndex === 0}
             >
-              <AntDesign name='arrowup' size={20} color={moveUpPressOn ? "cyan" : "#ccc"} />
+              <AntDesign name='arrow-up' size={20} color={moveUpPressOn ? "cyan" : "#ccc"} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleMoveDown}
@@ -235,7 +235,7 @@ export default function ExerciseSet(props: ExerciseSetProps) {
               activeOpacity={1}
               disabled={setIndex === exercise.set_data.length - 1}
             >
-              <AntDesign name='arrowdown' size={20} color={moveDownPressOn ? "cyan" : "#ccc"} />
+              <AntDesign name='arrow-down' size={20} color={moveDownPressOn ? "cyan" : "#ccc"} />
             </TouchableOpacity>
           </>
         :

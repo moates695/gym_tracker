@@ -82,28 +82,35 @@ export default function FrequencyCalendar(props: FrequencyCalendarProps) {
     }
     
     rows.push(
-      <Row key={i}>
+      <Row key={i} style={{alignItems: 'center'}}>
         {cols}
       </Row>
     )
   }
 
   return (
-    <View style={styles.container}>
-      <Grid>
-        <Row>
-          {['M','T','W','T','F','S','S'].map((day_letter, i) => {
-            return (
-              <Col key={i}>
-                <View style={styles.cellContainer}>
-                  <Text style={styles.text}>{day_letter}</Text>
-                </View>
-              </Col>
-            )
-          })}
-        </Row>
-        {rows}
-      </Grid>
+    <View 
+      style={{
+        width: '100%',
+        alignItems: 'center',
+      }}
+    >
+      <View style={styles.container}>
+        <Grid>
+          <Row style={{alignItems: 'center'}}>
+            {['M','T','W','T','F','S','S'].map((day_letter, i) => {
+              return (
+                <Col key={i}>
+                  <View style={styles.cellContainer}>
+                    <Text style={styles.text}>{day_letter}</Text>
+                  </View>
+                </Col>
+              )
+            })}
+          </Row>
+          {rows}
+        </Grid>
+      </View>
     </View>
   )
 }
@@ -113,7 +120,6 @@ const styles = StyleSheet.create({
     color: 'white'
   },
   container: {
-    // backgroundColor: 'purple',
     width: '70%',
     height: 250,
   },
