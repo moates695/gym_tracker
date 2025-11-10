@@ -14,7 +14,7 @@ interface MetricOption {
   value: FavouriteStatsMetric
 }
 
-export default function StatsDistribution() {
+export default function StatsFavourites() {
   const router = useRouter();
   
   const [favouriteStats, setFavouriteStats] = useAtom(favouriteExerciseStatsAtom);

@@ -16,10 +16,6 @@ interface FetchWrapperArgs {
 export const fetchWrapper = async ({route, method, params = {}, body, token_str = 'auth_token'}: FetchWrapperArgs) => {
   try {
     let url = `${Constants.expoConfig?.extra?.apiUrl}/${route}`;
-    
-    if (method === 'GET') {
-      params.use_real = Constants.expoConfig?.extra?.useReal;
-    }
     url = `${url}?${new URLSearchParams(params).toString()}`;
     
     const token = await SecureStore.getItemAsync(token_str);

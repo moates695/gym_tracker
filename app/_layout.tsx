@@ -96,6 +96,7 @@ export default function RootLayout() {
           router.replace("/validate");
         }
       } else if (data.account_state == "good") {
+        // todo: group these into a single request (get all startup data at once)
         await Promise.all([
           loadFonts(),
           fetchUserData(),
