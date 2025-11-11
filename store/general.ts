@@ -247,8 +247,8 @@ export type FavouriteExercisesStats = FavouriteExercisesFields & {
 export const favouriteExerciseStatsAtom = atom<FavouriteExercisesStats[] | null>(null);
 
 export interface LeaderboardListItem {
-  username: string
   user_id: string
+  username: string
   rank: number
   value: number
 }

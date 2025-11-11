@@ -12,6 +12,8 @@ import { fetchWrapper } from "@/middleware/helpers";
 import Constants from 'expo-constants';
 import { useAtom } from "jotai";
 import { userDataAtom } from "@/store/general";
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface FormData {
   email: string,
@@ -116,84 +118,115 @@ export default function SignInScreen() {
     return formData.email === '' || formData.password === '' || submitting;
   };
 
-  return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1, backgroundColor: "black"}}
+  return ( 
+    <KeyboardAwareScrollView
+      style={{flex: 1, backgroundColor: 'black'}}
+      contentContainerStyle={{flexGrow: 1}}
+      keyboardShouldPersistTaps="handled"
+      enableOnAndroid={true}
+      extraHeight={50}
+      enableResetScrollToCoords={false}
+      extraScrollHeight={50}
     >
-      {Platform.OS == 'android' &&
+      {Platform.OS === 'android' &&
         <StatusBar style="light" backgroundColor="black" translucent={false} />
       }
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView 
+          contentContainerStyle={{flexGrow: 1, padding: 30, paddingTop: 50}}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           <Text style={commonStyles.boldText}>Sign In</Text>
-          <View style={styles.container}>
-            {(['email','password'] as (keyof FormData)[]).map((key, index) => (
-              <View key={index} style={styles.singleItemRow}>
-                <TextInputFeild field={key} label={formDataLabels[key]} value={formData[key]} is_number={false} is_secure={key === 'password'} onChangeText={handleTextChange} error_message={inError[key]}/>
-              </View>
-            ))}
-          </View>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity 
-              onPress={handleSubmit}
-              style={{
-                backgroundColor: isButtonDisabled() ? "#ccc" : "#0db80d",
-                padding: 12,
-                borderRadius: 5,
-                width: "30%",
-                alignItems: "center"
-              }}
-              disabled={isButtonDisabled()}
-            >
-              <Text style={{ color: "white"}}>{submitting ? 'submitting' : 'sign in'}</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity 
-              onPress={() => router.replace("/sign-up")}
-            >
-              <Text style={{ color: "white"}}>don't have an account?</Text>
-            </TouchableOpacity>
+          <View
+            style={{
+              flex: 1,
+              flexDirection: 'column',
+              justifyContent: 'center',
+            }}
+          >
+            <>
+              {(['email','password'] as (keyof FormData)[]).map((key, index) => (
+                <View key={index} style={styles.singleItemRow}>
+                  <TextInputFeild 
+                    field={key} 
+                    label={formDataLabels[key]} 
+                    value={formData[key]} 
+                    is_number={false} 
+                    is_secure={key === 'password'} 
+                    onChangeText={handleTextChange} 
+                    error_message={inError[key]}
+                  />
+                </View>
+              ))}
+            </>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity 
+                onPress={handleSubmit}
+                style={{
+                  backgroundColor: isButtonDisabled() ? "#ccc" : "#0db80d",
+                  padding: 12,
+                  borderRadius: 5,
+                  width: "30%",
+                  alignItems: "center"
+                }}
+                disabled={isButtonDisabled()}
+              >
+                <Text style={{ color: "white"}}>{submitting ? 'submitting' : 'sign in'}</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity 
+                onPress={() => router.replace("/sign-up")}
+              >
+                <Text style={{ color: "white"}}>don't have an account?</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>
-      <StatusBar style='dark' />
-    </KeyboardAvoidingView>
+    {/* </KeyboardAvoidingView> */}
+    </KeyboardAwareScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   text: { color: "white" },
-  content: { padding: 30 },
+  content: { 
+    flexGrow: 1,
+    padding: 30, 
+    paddingTop: 50,
+    // backgroundColor: 'blue'
+  },
   container: {
-    flex: 1,
+    // flex: 1,
     padding: 10,
     color: "white",
+    justifyContent: 'center',
   },
   singleItemRow: {
-    flex: 1,
+    // flex: 1,
     marginBottom: 10,
   },
   singleItem: {
-    flex: 1,
+    // flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 5,
     padding: 15,
   },
   doubleItemRow: {
-    flex: 1,
+    // flex: 1,
     flexDirection: 'row',
     marginBottom: 10,
   },
   doubleItem: {
-    flex: 1,
+    // flex: 1,
     justifyContent: 'center',
     borderRadius: 5,
   },
   buttonContainer: {
-    flex: 1,
+    // flex: 1,
     padding: 10,
     alignItems: "center",
   }

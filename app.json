@@ -22,7 +22,9 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#000000"
       },
-      "backgroundColor": "#000000"
+      "backgroundColor": "#000000",
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
     },
     "splash": {
       "backgroundColor": "#000000"

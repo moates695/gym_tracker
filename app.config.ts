@@ -13,6 +13,7 @@ export default ({ config }: any) => {
       slug: "gym-junkie",
       version: "1.0.0",
       orientation: "portrait",
+      userInterfaceStyle: "automatic",
       android: {
         compileSdkVersion: 34,
         targetSdkVersion: 34,
@@ -24,7 +25,12 @@ export default ({ config }: any) => {
         "eas": {
           "projectId": "1a09967a-b075-4243-9269-a14a1d0e4d8c"
         }
-      }
+      },
+      owner: "moates",
+      plugins: [
+        "expo-asset",
+        "expo-font"
+      ]
     },
   }
 };

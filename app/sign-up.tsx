@@ -11,6 +11,7 @@ import { OptionsObject } from "@/components/ChooseExerciseModal";
 import { useDropdown } from "@/components/ExerciseData";
 import { fetchWrapper } from "@/middleware/helpers";
 import Constants from 'expo-constants';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 export type Gender = "male" | "female" | "other";
 export type GoalStatus = "bulking" | "cutting" | "maintaining";
@@ -309,72 +310,88 @@ export default function SignUpScreen() {
   // }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1, backgroundColor: "black"}}
-    >
+    // <KeyboardAvoidingView
+    //   behavior={Platform.OS === "ios" ? "padding" : "height"}
+    //   style={{ flex: 1, backgroundColor: "black"}}
+    // >
+    <View style={{ flex: 1, backgroundColor: "black" }}>
       {Platform.OS == 'android' &&
         <StatusBar style="light" backgroundColor="black" translucent={false} />
       }
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={commonStyles.boldText}>Sign Up</Text>
-          <View style={styles.container}>
+          <View
+            style={{
+              flex: 1,
+              flexDirection: 'column',
+              justifyContent: 'center',
+              // backgroundColor: 'orange'
+            }}
+          >
+            <>
+              {/* {(['email', 'password', 'username'] as (keyof FormData)[]).map((key, index) => (
+                <View key={index} style={styles.singleItemRow}>
+                  <TextInputFeild field={key} label={formDataLabels[key]} value={formData[key as keyof FormData]} is_number={false} is_secure={key==='password'} error_message={inError[key]} onChangeText={handleTextChange}/>
+                </View>
+              ))} */}
+              {([['first_name', 'last_name'], ['height', 'weight']] as (keyof FormData)[][]).map((tuple, tupleIdx) => (
+                <View key={tupleIdx} style={styles.doubleItemRow}>
+                  {tuple.map((item, itemIdx) => (
+                    <View key={itemIdx} style={styles.doubleItem}>
+                      <TextInputFeild field={item} label={formDataLabels[item]} value={formData[item]} is_number={tupleIdx === 1} error_message={inError[item]} onChangeText={handleTextChange}/>
+                    </View>
+                  ))}
+                </View>
+              ))}
+              <View style={styles.container}>
+                <Text style={styles.formHeader}>Gender</Text>
+                {useDropdown(genderOptions, genderValue, setGenderValue, undefined, styles.dropDown)}
+              </View>
+              <View style={styles.container}>
+                <Text style={styles.formHeader}>Phase</Text>
+                {useDropdown(phaseOptions, phaseValue, setPhaseValue, undefined, styles.dropDown)}
+              </View>
+              <View style={styles.container}>
+                <Text style={styles.formHeader}>Natty status</Text>
+                {useDropdown(pedOptions, pedValue, setPedValue, undefined, styles.dropDown)}
+              </View>
+            </>
+
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity 
+                onPress={handleSubmit}
+                style={{
+                  backgroundColor: isButtonDisabled() ? "#ccc" : "#0db80d",
+                  padding: 12,
+                  borderRadius: 5,
+                  width: "30%",
+                  alignItems: "center"
+                }}
+                disabled={isButtonDisabled()}
+              >
+                <Text style={{ color: "white"}}>{submitting ? 'submitting' : 'sign up'}</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity 
+                onPress={() => router.replace("/sign-in")}
+                disabled={submitting}
+              >
+                <Text style={{ color: "white"}}>already have an account?</Text>
+              </TouchableOpacity>
+            </View>
             {(['email', 'password', 'username'] as (keyof FormData)[]).map((key, index) => (
-              <View key={index} style={styles.singleItemRow}>
-                <TextInputFeild field={key} label={formDataLabels[key]} value={formData[key as keyof FormData]} is_number={false} is_secure={key==='password'} error_message={inError[key]} onChangeText={handleTextChange}/>
-              </View>
-            ))}
-            {([['first_name', 'last_name'], ['height', 'weight']] as (keyof FormData)[][]).map((tuple, tupleIdx) => (
-              <View key={tupleIdx} style={styles.doubleItemRow}>
-                {tuple.map((item, itemIdx) => (
-                  <View key={itemIdx} style={styles.doubleItem}>
-                    <TextInputFeild field={item} label={formDataLabels[item]} value={formData[item]} is_number={tupleIdx === 1} error_message={inError[item]} onChangeText={handleTextChange}/>
-                  </View>
-                ))}
-              </View>
-            ))}
-            <View style={styles.container}>
-              <Text style={styles.formHeader}>Gender</Text>
-              {useDropdown(genderOptions, genderValue, setGenderValue, undefined, styles.dropDown)}
-            </View>
-            <View style={styles.container}>
-              <Text style={styles.formHeader}>Phase</Text>
-              {useDropdown(phaseOptions, phaseValue, setPhaseValue, undefined, styles.dropDown)}
-            </View>
-            <View style={styles.container}>
-              <Text style={styles.formHeader}>Natty status</Text>
-              {useDropdown(pedOptions, pedValue, setPedValue, undefined, styles.dropDown)}
-            </View>
-          </View>
-
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity 
-              onPress={handleSubmit}
-              style={{
-                backgroundColor: isButtonDisabled() ? "#ccc" : "#0db80d",
-                padding: 12,
-                borderRadius: 5,
-                width: "30%",
-                alignItems: "center"
-              }}
-              disabled={isButtonDisabled()}
-            >
-              <Text style={{ color: "white"}}>{submitting ? 'submitting' : 'sign up'}</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity 
-              onPress={() => router.replace("/sign-in")}
-              disabled={submitting}
-            >
-              <Text style={{ color: "white"}}>already have an account?</Text>
-            </TouchableOpacity>
+                <View key={index} style={styles.singleItemRow}>
+                  <TextInputFeild field={key} label={formDataLabels[key]} value={formData[key as keyof FormData]} is_number={false} is_secure={key==='password'} error_message={inError[key]} onChangeText={handleTextChange}/>
+                </View>
+              ))}
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+    </View>
+    // </KeyboardAvoidingView>
   );
 }
 
@@ -383,25 +400,28 @@ const styles = StyleSheet.create({
     color: "white" 
   },
   content: { 
-    padding: 30 
+    flex: 1,
+    padding: 30, 
+    paddingTop: 50,
+    // backgroundColor: 'blue'
   },
   container: {
     padding: 10,
     color: "white",
   },
   singleItemRow: {
-    flex: 1,
+    // flex: 1,
     marginBottom: 10,
   },
   singleItem: {
-    flex: 1,
+    // flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 5,
     padding: 15,
   },
   doubleItemRow: {
-    flex: 1,
+    // flex: 1,
     flexDirection: 'row',
     marginBottom: 10,
   },
@@ -411,7 +431,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   buttonContainer: {
-    flex: 1,
+    // flex: 1,
     padding: 10,
     alignItems: "center",
   },

@@ -6,12 +6,13 @@ import React from "react";
 import * as Font from 'expo-font';
 import { MaterialIcons, AntDesign, Ionicons, Feather } from '@expo/vector-icons';
 import { fetchWrapper } from "@/middleware/helpers";
-import { StatusBar, useColorScheme, View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 import * as SystemUI from "expo-system-ui"
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { useAtom } from "jotai";
 import { distributionStatsAtom, exerciseListAtom, favouriteExerciseStatsAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, userDataAtom, workoutExercisesAtom, workoutHistoryStatsAtom, workoutTotalStatsAtom } from "@/store/general";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StatusBar } from 'expo-status-bar';
 
 export interface DecodedJWT {
   email: string
@@ -243,30 +244,37 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <SafeAreaProvider style={{ backgroundColor: 'black' }}>
-      <View style={{ flex: 1, backgroundColor: 'black' }}>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            headerStyle: {
-              backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
-            },
-            headerTintColor: colorScheme === 'dark' ? '#fff' : '#000',
-            contentStyle: {
-              backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
-            },
-            animation: "none"
-          }}
-        >
-          <Stack.Screen name="loading"/>
-          <Stack.Screen name="(tabs)"/>
-          <Stack.Screen name="+not-found" />
-          <Stack.Screen name="sign-up"/>
-          <Stack.Screen name="sign-in"/>
-          <Stack.Screen name="validate"/>
-          <Stack.Screen name="error"/>
-        </Stack>
-      </View>
+    // <SafeAreaProvider style={{ backgroundColor: 'black' }}>
+    <SafeAreaProvider>
+      <SafeAreaView style={{ flex: 1, backgroundColor: 'black' }} edges={[]}>
+        {/* <View style={{ flex: 1, backgroundColor: 'black' }}> */}
+          <StatusBar 
+            style='dark'
+            backgroundColor='red' 
+          /> 
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              headerStyle: {
+                backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
+              },
+              headerTintColor: colorScheme === 'dark' ? '#fff' : '#000',
+              contentStyle: {
+                backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
+              },
+              animation: "none"
+            }}
+          >
+            <Stack.Screen name="loading"/>
+            <Stack.Screen name="(tabs)"/>
+            <Stack.Screen name="+not-found" />
+            <Stack.Screen name="sign-up"/>
+            <Stack.Screen name="sign-in"/>
+            <Stack.Screen name="validate"/>
+            <Stack.Screen name="error"/>
+          </Stack>
+        {/* </View> */}
+      </SafeAreaView>
     </SafeAreaProvider>
   );
 }
