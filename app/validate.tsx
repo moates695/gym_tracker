@@ -97,8 +97,15 @@ export default function Validate() {
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={commonStyles.boldText}>Validate</Text>
           <View style={{height: '100%', justifyContent: 'center', alignItems: 'center'}}>
-            <Text style={[styles.text, {marginBottom: 20}]}>
-              Check your emails for a validation link.
+            <Text 
+              style={[styles.text, {marginBottom: 5, fontSize: 16}]}
+            >
+              Check your emails for a validation link
+            </Text>
+            <Text 
+              style={[styles.text, {marginBottom: 30}]}
+            >
+              this page will refresh automatically
             </Text>
             <TouchableOpacity 
               onPress={async () => {
@@ -122,6 +129,7 @@ const styles = StyleSheet.create({
   },
   content: { 
     flex: 1,
-    padding: 30
+    padding: 30,
+    paddingTop: 50,
   },
 })

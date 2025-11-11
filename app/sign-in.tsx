@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, KeyboardAvoidingView, TouchableWithoutFeedback, ScrollView, Platform, Keyboard, StyleSheet, Alert } from "react-native";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import TextInputFeild from "../components/InputField";
 import * as SecureStore from "expo-secure-store";
 import React from "react";
@@ -124,9 +124,9 @@ export default function SignInScreen() {
       contentContainerStyle={{flexGrow: 1}}
       keyboardShouldPersistTaps="handled"
       enableOnAndroid={true}
-      extraHeight={50}
+      // extraHeight={50}
       enableResetScrollToCoords={false}
-      extraScrollHeight={50}
+      // extraScrollHeight={50}
     >
       {Platform.OS === 'android' &&
         <StatusBar style="light" backgroundColor="black" translucent={false} />

@@ -12,6 +12,8 @@ import { useDropdown } from "@/components/ExerciseData";
 import { fetchWrapper } from "@/middleware/helpers";
 import Constants from 'expo-constants';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+// import DatePicker from 'react-native-date-picker'
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 export type Gender = "male" | "female" | "other";
 export type GoalStatus = "bulking" | "cutting" | "maintaining";
@@ -28,6 +30,7 @@ interface FormData {
   weight: string,
   goal_status: GoalStatus
   ped_status: PedStatus
+  date_of_birth: string
 }
 
 interface GenderOption {
@@ -45,6 +48,7 @@ interface PedOption {
   value: PedStatus
 }
 
+// todo: select date of birth
 export default function SignUpScreen() {
   const router = useRouter();
 
@@ -58,7 +62,8 @@ export default function SignUpScreen() {
     weight: "60",
     gender: "female",
     goal_status: "bulking",
-    ped_status: "natural"
+    ped_status: "natural",
+    date_of_birth: ""
   })
 
   const [inError, setInError] = useState<Record<string, string>>({
@@ -73,7 +78,7 @@ export default function SignUpScreen() {
     goal_status: ""
   });
 
-  const usernameTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const usernameTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isTimeoutActive, setIsTimeoutActive] = useState<boolean>(false);
   const [submitting, SetSubmitting] = useState<boolean>(false);
 
@@ -97,6 +102,33 @@ export default function SignUpScreen() {
     { label: 'silent', value: 'silent' },
   ]
   const [pedValue, setPedValue] = useState<PedStatus>('natural');
+
+  const [dateOpen, setDateOpen] = useState<boolean>(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+  const showDatePicker = () => {
+    setDateOpen(true);
+  };
+
+  const hideDatePicker = () => {
+    setDateOpen(false);
+  };
+
+  const handleConfirmDate = (date: Date) => {
+    setSelectedDate(date);
+    setFormData({
+      ...formData,
+      date_of_birth: formatSelectedDate(date).split('').reverse().join('')
+    })
+    hideDatePicker();
+  };
+
+  const formatSelectedDate = (date: Date): string => {
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yyyy = date.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
+  };
 
   const handleTextChange = (field: string, value: string): void => {
     setInError({
@@ -233,6 +265,7 @@ export default function SignUpScreen() {
 
   const areFormDataFieldsEmpty = (): boolean => {
     for (const key in formData) {
+      if (key === 'date_of_birth') continue;
       if (formData[key as keyof FormData].trim().length !== 0) continue;
       return true;
     }
@@ -300,7 +333,8 @@ export default function SignUpScreen() {
     height: "Height (cm)",
     weight: "Weight (kg)",
     goal_status: "Current phase",
-    ped_status: "PED use"
+    ped_status: "PED use",
+    date_of_birth: "Date of birth"
   }
 
   // const formDataOptions: Record<string, string[]> = {
@@ -310,11 +344,15 @@ export default function SignUpScreen() {
   // }
 
   return (
-    // <KeyboardAvoidingView
-    //   behavior={Platform.OS === "ios" ? "padding" : "height"}
-    //   style={{ flex: 1, backgroundColor: "black"}}
-    // >
-    <View style={{ flex: 1, backgroundColor: "black" }}>
+    <KeyboardAwareScrollView
+      style={{flex: 1, backgroundColor: 'black'}}
+      contentContainerStyle={{flexGrow: 1}}
+      keyboardShouldPersistTaps="handled"
+      enableOnAndroid={true}
+      extraHeight={50}
+      enableResetScrollToCoords={false}
+      extraScrollHeight={50}
+    >
       {Platform.OS == 'android' &&
         <StatusBar style="light" backgroundColor="black" translucent={false} />
       }
@@ -326,39 +364,75 @@ export default function SignUpScreen() {
               flex: 1,
               flexDirection: 'column',
               justifyContent: 'center',
-              // backgroundColor: 'orange'
             }}
           >
-            <>
-              {/* {(['email', 'password', 'username'] as (keyof FormData)[]).map((key, index) => (
-                <View key={index} style={styles.singleItemRow}>
-                  <TextInputFeild field={key} label={formDataLabels[key]} value={formData[key as keyof FormData]} is_number={false} is_secure={key==='password'} error_message={inError[key]} onChangeText={handleTextChange}/>
-                </View>
-              ))} */}
-              {([['first_name', 'last_name'], ['height', 'weight']] as (keyof FormData)[][]).map((tuple, tupleIdx) => (
-                <View key={tupleIdx} style={styles.doubleItemRow}>
-                  {tuple.map((item, itemIdx) => (
-                    <View key={itemIdx} style={styles.doubleItem}>
-                      <TextInputFeild field={item} label={formDataLabels[item]} value={formData[item]} is_number={tupleIdx === 1} error_message={inError[item]} onChangeText={handleTextChange}/>
-                    </View>
-                  ))}
-                </View>
-              ))}
-              <View style={styles.container}>
+            {(['email', 'password', 'username'] as (keyof FormData)[]).map((key, index) => (
+              <View key={index} style={styles.singleItemRow}>
+                <TextInputFeild field={key} label={formDataLabels[key]} value={formData[key as keyof FormData]} is_number={false} is_secure={key==='password'} error_message={inError[key]} onChangeText={handleTextChange}/>
+              </View>
+            ))}
+            {([['first_name', 'last_name'], ['height', 'weight']] as (keyof FormData)[][]).map((tuple, tupleIdx) => (
+              <View key={tupleIdx} style={styles.doubleItemRow}>
+                {tuple.map((item, itemIdx) => (
+                  <View key={itemIdx} style={styles.doubleItem}>
+                    <TextInputFeild field={item} label={formDataLabels[item]} value={formData[item]} is_number={tupleIdx === 1} error_message={inError[item]} onChangeText={handleTextChange}/>
+                  </View>
+                ))}
+              </View>
+            ))}
+            <View
+              style={styles.doubleItemRow}
+            >
+              <View style={styles.doubleItem}>
                 <Text style={styles.formHeader}>Gender</Text>
-                {useDropdown(genderOptions, genderValue, setGenderValue, undefined, styles.dropDown)}
+                <View style={{marginLeft: 10}}>
+                  {useDropdown(genderOptions, genderValue, setGenderValue, undefined, styles.dropDown)}
+                </View>
               </View>
-              <View style={styles.container}>
+              <View style={styles.doubleItem}>
                 <Text style={styles.formHeader}>Phase</Text>
-                {useDropdown(phaseOptions, phaseValue, setPhaseValue, undefined, styles.dropDown)}
+                <View style={{marginLeft: 10}}>
+                  {useDropdown(phaseOptions, phaseValue, setPhaseValue, undefined, styles.dropDown)}
+                </View>
               </View>
-              <View style={styles.container}>
+            </View>
+            <View
+              style={styles.doubleItemRow}
+            >
+              <View style={styles.doubleItem}>
                 <Text style={styles.formHeader}>Natty status</Text>
-                {useDropdown(pedOptions, pedValue, setPedValue, undefined, styles.dropDown)}
+                <View style={{marginLeft: 10}}>
+                  {useDropdown(pedOptions, pedValue, setPedValue, undefined, styles.dropDown)}
+                </View>
               </View>
-            </>
-
-            <View style={styles.buttonContainer}>
+              <View style={styles.doubleItem}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <Text style={styles.formHeader}>Date of birth:</Text>
+                    <Text style={styles.formHeader}>{formatSelectedDate(selectedDate)}</Text>
+                  </View>
+                  <TouchableOpacity 
+                    onPress={showDatePicker}
+                    disabled={submitting}
+                    style={[commonStyles.textButton, 
+                      {
+                        width: 100, 
+                        alignItems: 'center', 
+                        alignSelf: 'center',
+                        marginTop: 4
+                      }
+                    ]}
+                  >
+                    <Text style={{ color: "white"}}>choose date</Text>
+                  </TouchableOpacity>
+                </View>
+            </View>
+            
+            <View style={[styles.buttonContainer, {paddingTop: 20}]}>
               <TouchableOpacity 
                 onPress={handleSubmit}
                 style={{
@@ -373,7 +447,6 @@ export default function SignUpScreen() {
                 <Text style={{ color: "white"}}>{submitting ? 'submitting' : 'sign up'}</Text>
               </TouchableOpacity>
             </View>
-
             <View style={styles.buttonContainer}>
               <TouchableOpacity 
                 onPress={() => router.replace("/sign-in")}
@@ -382,16 +455,18 @@ export default function SignUpScreen() {
                 <Text style={{ color: "white"}}>already have an account?</Text>
               </TouchableOpacity>
             </View>
-            {(['email', 'password', 'username'] as (keyof FormData)[]).map((key, index) => (
-                <View key={index} style={styles.singleItemRow}>
-                  <TextInputFeild field={key} label={formDataLabels[key]} value={formData[key as keyof FormData]} is_number={false} is_secure={key==='password'} error_message={inError[key]} onChangeText={handleTextChange}/>
-                </View>
-              ))}
+            <DateTimePickerModal
+              date={selectedDate}
+              isVisible={dateOpen}
+              mode="date"
+              onConfirm={handleConfirmDate}
+              onCancel={hideDatePicker}
+              isDarkModeEnabled={true}
+            />
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>
-    </View>
-    // </KeyboardAvoidingView>
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -441,6 +516,6 @@ const styles = StyleSheet.create({
     color: "white"
   },
   dropDown: {
-    width: '40%'
+    width: '80%'
   }
 });
