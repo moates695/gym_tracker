@@ -9,14 +9,35 @@ interface InputFieldProps {
   is_secure?: boolean,
   error_message?: string,
   onChangeText: (field: string, value: string) => void
+  required?: boolean
 }
 
 export default function InputField(props: InputFieldProps) {
-  const { field, label, value, is_number=false, is_secure=false, error_message='', onChangeText } = props;
+  const { 
+    field, 
+    label, 
+    value, 
+    is_number=false, 
+    is_secure=false, 
+    error_message='', 
+    onChangeText,
+    required=false,
+  } = props;
+
+  const requiredMark = (
+    <Text style={{color: 'red', marginLeft: 2}}>*</Text>
+  )
 
   return (
     <View>
-      <Text style={styles.formHeader}>{label}</Text>
+      <View
+        style={{
+          flexDirection: 'row'
+        }}
+      >
+        <Text style={styles.formHeader}>{label}</Text>
+        {required && requiredMark}
+      </View>
       <View style={styles.container}>
         <TextInput
           value={value}

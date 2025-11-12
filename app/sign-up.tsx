@@ -48,9 +48,15 @@ interface PedOption {
   value: PedStatus
 }
 
-// todo: select date of birth
+type SignUpScreen = 'details' | 'stats';
+type UsernameState = null | 'checking' | 'good' | 'error';
+// todo: add body fat percentage
+// todo: show mandatory fields with red asterix
+
 export default function SignUpScreen() {
   const router = useRouter();
+
+  const [signUpScreen, setSignUpScreen] = useState<SignUpScreen>('details');
 
   const [formData, setFormData] = useState<FormData>({
     email: "moates695@gmail.com",
@@ -79,6 +85,7 @@ export default function SignUpScreen() {
   });
 
   const usernameTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [usernameState, setUsernameState] = useState<UsernameState>(null);
   const [isTimeoutActive, setIsTimeoutActive] = useState<boolean>(false);
   const [submitting, SetSubmitting] = useState<boolean>(false);
 
@@ -131,10 +138,18 @@ export default function SignUpScreen() {
   };
 
   const handleTextChange = (field: string, value: string): void => {
-    setInError({
-      ...inError,
-      [field]: value !== '' ? '' : 'cannot be empty'
-    });
+    if (isRequiredMap[field as keyof FormData]) {
+      setInError({
+        ...inError,
+        [field]: value !== '' ? '' : 'cannot be empty'
+      }); 
+    } else {
+      setInError({
+        ...inError,
+        [field]: value !== '' ? '' : ''
+      });
+    }
+    
 
     setFormData({
       ...formData,
@@ -207,7 +222,11 @@ export default function SignUpScreen() {
     if (usernameTimeoutRef.current) {
       clearTimeout(usernameTimeoutRef.current);
     }
-
+    if (username.trim() === '') {
+      setUsernameState(null);
+      return
+    }
+    setUsernameState('checking');
     setIsTimeoutActive(true);
     usernameTimeoutRef.current = setTimeout(async () => {
       try {
@@ -219,18 +238,23 @@ export default function SignUpScreen() {
 
         const data = await response.json();
   
-        if (data.taken === false) return;
-  
+        if (data.taken === false) {
+          setUsernameState('good');
+          return;
+        }
+
         setInError({
           ...inError,
           'username': "username is taken"
         })
+        setUsernameState('error');
       
       } catch (error) {
         setInError({
           ...inError,
           'username': "error checking username"
         })
+        setUsernameState('error');
       } finally {
         setIsTimeoutActive(false);
       }
@@ -238,11 +262,11 @@ export default function SignUpScreen() {
   };
 
   const validateName = (name: string, field: string) => {
-    if (name.length > 0 && name.trim().length > 0) return;
-    setInError({
-      ...inError,
-      [field]: "name is empty"
-    })
+    // if (name.length > 0 && name.trim().length > 0) return;
+    // setInError({
+    //   ...inError,
+    //   [field]: "name is empty"
+    // })
   };
 
   const validateHeight = (height_str: string) => {
@@ -266,6 +290,7 @@ export default function SignUpScreen() {
   const areFormDataFieldsEmpty = (): boolean => {
     for (const key in formData) {
       if (key === 'date_of_birth') continue;
+      if (!isRequiredMap[key as keyof FormData]) continue;
       if (formData[key as keyof FormData].trim().length !== 0) continue;
       return true;
     }
@@ -343,6 +368,20 @@ export default function SignUpScreen() {
   //   ped_status: ["natural", "juicing", "silent"] as PedStatus[]
   // }
 
+  const isRequiredMap: Record<keyof FormData, boolean> = {
+    email: true,
+    password: true,
+    username: true,
+    first_name: false,
+    last_name: false,
+    gender: true,
+    height: true,
+    weight: true,
+    goal_status: true,
+    ped_status: true,
+    date_of_birth: true
+  }
+
   return (
     <KeyboardAwareScrollView
       style={{flex: 1, backgroundColor: 'black'}}
@@ -358,7 +397,9 @@ export default function SignUpScreen() {
       }
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView contentContainerStyle={styles.content}>
-          <Text style={commonStyles.boldText}>Sign Up</Text>
+          <Text style={[commonStyles.boldText, {marginRight: 10}]}>
+            Sign Up
+          </Text>
           <View
             style={{
               flex: 1,
@@ -366,103 +407,203 @@ export default function SignUpScreen() {
               justifyContent: 'center',
             }}
           >
-            {(['email', 'password', 'username'] as (keyof FormData)[]).map((key, index) => (
-              <View key={index} style={styles.singleItemRow}>
-                <TextInputFeild field={key} label={formDataLabels[key]} value={formData[key as keyof FormData]} is_number={false} is_secure={key==='password'} error_message={inError[key]} onChangeText={handleTextChange}/>
-              </View>
-            ))}
-            {([['first_name', 'last_name'], ['height', 'weight']] as (keyof FormData)[][]).map((tuple, tupleIdx) => (
-              <View key={tupleIdx} style={styles.doubleItemRow}>
-                {tuple.map((item, itemIdx) => (
-                  <View key={itemIdx} style={styles.doubleItem}>
-                    <TextInputFeild field={item} label={formDataLabels[item]} value={formData[item]} is_number={tupleIdx === 1} error_message={inError[item]} onChangeText={handleTextChange}/>
+            {signUpScreen === 'details' &&
+              <>
+                {(['email', 'password', 'username'] as (keyof FormData)[]).map((key, index) => (
+                  <View key={index} style={styles.singleItemRow}>
+                    <TextInputFeild 
+                      field={key} 
+                      label={formDataLabels[key]} 
+                      value={formData[key as keyof FormData]} 
+                      is_number={false} 
+                      is_secure={key==='password'} 
+                      error_message={inError[key]} 
+                      onChangeText={handleTextChange} 
+                      required={isRequiredMap[key]}
+                    />
                   </View>
                 ))}
-              </View>
-            ))}
-            <View
-              style={styles.doubleItemRow}
-            >
-              <View style={styles.doubleItem}>
-                <Text style={styles.formHeader}>Gender</Text>
-                <View style={{marginLeft: 10}}>
-                  {useDropdown(genderOptions, genderValue, setGenderValue, undefined, styles.dropDown)}
-                </View>
-              </View>
-              <View style={styles.doubleItem}>
-                <Text style={styles.formHeader}>Phase</Text>
-                <View style={{marginLeft: 10}}>
-                  {useDropdown(phaseOptions, phaseValue, setPhaseValue, undefined, styles.dropDown)}
-                </View>
-              </View>
-            </View>
-            <View
-              style={styles.doubleItemRow}
-            >
-              <View style={styles.doubleItem}>
-                <Text style={styles.formHeader}>Natty status</Text>
-                <View style={{marginLeft: 10}}>
-                  {useDropdown(pedOptions, pedValue, setPedValue, undefined, styles.dropDown)}
-                </View>
-              </View>
-              <View style={styles.doubleItem}>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                    }}
-                  >
-                    <Text style={styles.formHeader}>Date of birth:</Text>
-                    <Text style={styles.formHeader}>{formatSelectedDate(selectedDate)}</Text>
+                <Text 
+                  style={[commonStyles.text, {
+                    marginTop: -28,
+                    marginLeft: 10,
+                    marginBottom: 10,
+                  }]}
+                >
+                  {usernameState === 'checking' && <Text>checking username...</Text>}
+                  {usernameState === 'good' && <Text style={{color: '#48ff00ff'}}>valid</Text>}
+                </Text>
+                {([['first_name', 'last_name']] as (keyof FormData)[][]).map((tuple, tupleIdx) => (
+                  <View key={tupleIdx} style={styles.doubleItemRow}>
+                    {tuple.map((item, itemIdx) => (
+                      <View key={itemIdx} style={styles.doubleItem}>
+                        <TextInputFeild 
+                          field={item} 
+                          label={formDataLabels[item]} 
+                          value={formData[item]} 
+                          is_number={false} 
+                          error_message={inError[item]} 
+                          onChangeText={handleTextChange}
+                        />
+                      </View>
+                    ))}
                   </View>
+                ))}
+                <View style={[styles.buttonContainer, {paddingTop: 20}]}>
                   <TouchableOpacity 
-                    onPress={showDatePicker}
-                    disabled={submitting}
-                    style={[commonStyles.textButton, 
-                      {
-                        width: 100, 
-                        alignItems: 'center', 
-                        alignSelf: 'center',
-                        marginTop: 4
-                      }
-                    ]}
+                    onPress={() => setSignUpScreen('stats')}
+                    style={{
+                      // backgroundColor: isButtonDisabled() ? "#ccc" : "#0db80d",
+                      backgroundColor: "#0db80d",
+                      padding: 12,
+                      borderRadius: 5,
+                      width: "30%",
+                      alignItems: "center"
+                    }}
+                    // disabled={isButtonDisabled()}
                   >
-                    <Text style={{ color: "white"}}>choose date</Text>
+                    <Text style={{ color: "white"}}>next</Text>
                   </TouchableOpacity>
                 </View>
-            </View>
-            
-            <View style={[styles.buttonContainer, {paddingTop: 20}]}>
-              <TouchableOpacity 
-                onPress={handleSubmit}
-                style={{
-                  backgroundColor: isButtonDisabled() ? "#ccc" : "#0db80d",
-                  padding: 12,
-                  borderRadius: 5,
-                  width: "30%",
-                  alignItems: "center"
-                }}
-                disabled={isButtonDisabled()}
-              >
-                <Text style={{ color: "white"}}>{submitting ? 'submitting' : 'sign up'}</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity 
-                onPress={() => router.replace("/sign-in")}
-                disabled={submitting}
-              >
-                <Text style={{ color: "white"}}>already have an account?</Text>
-              </TouchableOpacity>
-            </View>
-            <DateTimePickerModal
-              date={selectedDate}
-              isVisible={dateOpen}
-              mode="date"
-              onConfirm={handleConfirmDate}
-              onCancel={hideDatePicker}
-              isDarkModeEnabled={true}
-            />
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity 
+                    onPress={() => router.replace("/sign-in")}
+                    disabled={submitting}
+                  >
+                    <Text style={{ color: "white"}}>already have an account?</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            }
+            {signUpScreen === 'stats' &&
+              <>
+                {([['height', 'weight']] as (keyof FormData)[][]).map((tuple, tupleIdx) => (
+                  <View key={tupleIdx} style={styles.doubleItemRow}>
+                    {tuple.map((item, itemIdx) => (
+                      <View key={itemIdx} style={styles.doubleItem}>
+                        <TextInputFeild 
+                          field={item} 
+                          label={formDataLabels[item]} 
+                          value={formData[item]} 
+                          is_number={true} 
+                          error_message={inError[item]} 
+                          onChangeText={handleTextChange}
+                          required={isRequiredMap[item as keyof FormData]}
+                        />
+                      </View>
+                    ))}
+                  </View>
+                ))}
+                <View
+                  style={styles.doubleItemRow}
+                >
+                  <View style={styles.doubleItem}>
+                    <Text style={styles.formHeader}>Gender</Text>
+                    <View style={{marginLeft: 10}}>
+                      {useDropdown(genderOptions, genderValue, setGenderValue, undefined, styles.dropDown)}
+                    </View>
+                  </View>
+                  <View style={styles.doubleItem}>
+                    <Text style={styles.formHeader}>Phase</Text>
+                    <View style={{marginLeft: 10}}>
+                      {useDropdown(phaseOptions, phaseValue, setPhaseValue, undefined, styles.dropDown)}
+                    </View>
+                  </View>
+                </View>
+                <View
+                  style={[styles.doubleItemRow, {
+                    marginTop: 16,
+                  }]}
+                >
+                  <View style={styles.doubleItem}>
+                    <Text style={styles.formHeader}>Natty status</Text>
+                    <View style={{marginLeft: 10}}>
+                      {useDropdown(pedOptions, pedValue, setPedValue, undefined, styles.dropDown)}
+                    </View>
+                  </View>
+                  <View style={styles.doubleItem}>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                        }}
+                      >
+                        <Text style={styles.formHeader}>Date of birth:</Text>
+                        <Text style={styles.formHeader}>{formatSelectedDate(selectedDate)}</Text>
+                      </View>
+                      <TouchableOpacity 
+                        onPress={showDatePicker}
+                        disabled={submitting}
+                        style={[commonStyles.textButton, 
+                          {
+                            width: 100, 
+                            alignItems: 'center', 
+                            alignSelf: 'center',
+                            marginTop: 4
+                          }
+                        ]}
+                      >
+                        <Text style={{ color: "white"}}>choose date</Text>
+                      </TouchableOpacity>
+                    </View>
+                </View>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: 10,
+                    paddingTop: 20,
+                  }}
+                >
+                  <TouchableOpacity
+                    onPress={() => setSignUpScreen('details')}
+                    style={[commonStyles.thinTextButton, {
+                      width: 80,
+                      position: 'absolute',
+                      left: 0,
+                      top: 30,
+                    }]}
+                  >
+                    <Text style={{color: 'white'}}>back</Text>
+                  </TouchableOpacity>
+                  {/* <View style={[styles.buttonContainer, {paddingTop: 20}]}> */}
+                    <TouchableOpacity 
+                      onPress={handleSubmit}
+                      style={{
+                        backgroundColor: isButtonDisabled() ? "#ccc" : "#0db80d",
+                        padding: 12,
+                        borderRadius: 5,
+                        width: "30%",
+                        alignItems: "center"
+                      }}
+                      disabled={isButtonDisabled()}
+                    >
+                      <Text style={{ color: "white"}}>{submitting ? 'submitting' : 'sign up'}</Text>
+                    </TouchableOpacity>
+                  {/* </View> */}
+                </View>
+                {/* <View style={styles.buttonContainer}> */}
+                  
+                {/* </View> */}
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity 
+                    onPress={() => router.replace("/sign-in")}
+                    disabled={submitting}
+                  >
+                    <Text style={{ color: "white"}}>already have an account?</Text>
+                  </TouchableOpacity>
+                </View>
+                <DateTimePickerModal
+                  date={selectedDate}
+                  isVisible={dateOpen}
+                  mode="date"
+                  onConfirm={handleConfirmDate}
+                  onCancel={hideDatePicker}
+                  isDarkModeEnabled={true}
+                />
+              </>
+            } 
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>

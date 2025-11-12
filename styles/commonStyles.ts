@@ -41,5 +41,10 @@ export const commonStyles = StyleSheet.create({
   },
   text: {
     color: 'white'
-  }
+  },
+  formHeader: {
+    fontSize: 16,
+    marginBottom: 5,
+    color: "white"
+  },
 })
