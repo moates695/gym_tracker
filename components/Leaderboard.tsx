@@ -15,11 +15,10 @@ export function Leaderboard(props: LeaderboardProps) {
 
   const userData = useAtomValue(userDataAtom);
 
-  if (data === null) {
-    console.log('here113');
+  if (data === null || data.leaderboard.length === 0) {
     return (
       <Text style={commonStyles.text}>
-        no leaderboard data
+        leaderboard is empty
       </Text>
     )
   }

@@ -6,6 +6,8 @@ import { HistoryGraphOption, VolumeTimespan } from '@/components/ExerciseData';
 import { Point3D } from '@/components/ThreeAxisGraph';
 import { TableData } from '@/components/DataTable';
 import { Gender, GoalStatus, PedStatus } from '@/app/sign-up';
+import { get } from 'lodash';
+import { fetchWrapper } from '@/middleware/helpers';
 
 const storage = createJSONStorage(() => AsyncStorage) as any;
 
@@ -73,6 +75,21 @@ export const workoutStartTimeAtom = atomWithStorage<number | null>('workoutStart
 
 export const muscleGroupToTargetsAtom = atomWithStorage<Record<string, string[]>>('muscleGroupToTargetsAtom', {});
 export const muscleTargetoGroupAtom = atomWithStorage<Record<string, string>>('muscleTargetoGroupAtom', {});
+
+export const fetchMappingsAtom = atom(
+  null,
+  async (get, set) => {
+    const data = await fetchWrapper({
+      route: 'muscles/get_maps',
+      method: 'GET'
+    })
+    if (!data || !data.group_to_targets || !data.target_to_group) {
+      throw new Error('muscle maps bad response');
+    }
+    set(muscleGroupToTargetsAtom, data.group_to_targets);
+    set(muscleGroupToTargetsAtom, data.target_to_group);
+  }
+)
 
 export const showWorkoutStartOptionsAtom = atom<boolean>(true);
 

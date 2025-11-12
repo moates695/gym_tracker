@@ -5,7 +5,7 @@ import { jwtDecode } from "jwt-decode";
 import React from "react";
 import * as Font from 'expo-font';
 import { MaterialIcons, AntDesign, Ionicons, Feather } from '@expo/vector-icons';
-import { fetchWrapper } from "@/middleware/helpers";
+import { fetchWrapper, loadFonts } from "@/middleware/helpers";
 import { useColorScheme, View } from 'react-native';
 import * as SystemUI from "expo-system-ui"
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
@@ -221,16 +221,6 @@ export default function RootLayout() {
     } catch (error) {
       console.log(error);
     }
-  };
-
-  //! todo update this with new Font sources
-  const loadFonts = async () => {
-    await Font.loadAsync({
-      ...MaterialIcons.font,
-      ...AntDesign.font,
-      ...Ionicons.font,
-      ...Feather.font,
-    });
   };
 
   const initialSetup = async () => {

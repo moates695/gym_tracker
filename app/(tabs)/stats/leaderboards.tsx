@@ -125,7 +125,7 @@ export default function StatsDistribution() {
           :
             <>
               {overallMap[overallOptionValue].value === null ?
-                <Text>leaderboard data is empty</Text>
+                <Text>leaderboard data is hasn't loaded</Text>
               :
                 <>
                   <Leaderboard data={overallMap[overallOptionValue].value} />

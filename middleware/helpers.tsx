@@ -1,6 +1,8 @@
 import { BodyWeightRatios, ExerciseListItem, SetData, UserData, ValidSetData, WorkoutExercise } from "@/store/general";
 import * as SecureStore from "expo-secure-store";
 import Constants from 'expo-constants';
+import * as Font from 'expo-font';
+import { MaterialIcons, AntDesign, Ionicons, Feather } from '@expo/vector-icons';
 
 type FetchWrapperMethods = 'POST' | 'GET';
 type TokenString = 'auth_token' | 'temp_token';
@@ -101,4 +103,20 @@ export const timestampToDateStr = (timestamp: number): string => {
     console.log(error);
     return `date error`
   }
-  };
+};
+
+export const loadFonts = async () => {
+  await Font.loadAsync({
+    ...MaterialIcons.font,
+    ...AntDesign.font,
+    ...Ionicons.font,
+    ...Feather.font,
+  });
+};
+
+export const loadInitialNecessary = async (runFetchMappings: () => Promise<void>) => {
+  await Promise.all([
+    loadFonts(),
+    runFetchMappings(),
+  ])
+};

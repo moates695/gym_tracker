@@ -8,12 +8,15 @@ import { DecodedJWT } from "./_layout";
 import { jwtDecode } from "jwt-decode";
 import { StatusBar } from "expo-status-bar";
 import { commonStyles } from "@/styles/commonStyles";
-import { fetchWrapper } from "@/middleware/helpers";
+import { fetchWrapper, loadFonts, loadInitialNecessary } from "@/middleware/helpers";
 import Constants from 'expo-constants';
-import { useAtom } from "jotai";
-import { userDataAtom } from "@/store/general";
+import { useAtom, useSetAtom } from "jotai";
+import { fetchMappingsAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, userDataAtom } from "@/store/general";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Font from 'expo-font';
+import { MaterialIcons, AntDesign, Ionicons, Feather } from '@expo/vector-icons';
+
 
 interface FormData {
   email: string,
@@ -26,6 +29,7 @@ export default function SignInScreen() {
   const router = useRouter();
 
   const [, setUserData] = useAtom(userDataAtom);
+  const fetchMappings = useSetAtom(fetchMappingsAtom);
 
   const [formData, setFormData] = useState<FormData>({
     email: "moates695@gmail.com",
@@ -102,6 +106,11 @@ export default function SignInScreen() {
         await SecureStore.deleteItemAsync("temp_token");
         await SecureStore.setItemAsync("auth_token", data.token);
         setUserData(data.user_data);
+        // await Promise.all([
+        //   loadFonts(),
+        //   fetchMappings(),
+        // ])
+        await loadInitialNecessary(fetchMappings);
         router.replace('/(tabs)');
       } else {
         throw new Error("Return status not recognised")
@@ -117,6 +126,16 @@ export default function SignInScreen() {
   const isButtonDisabled = () => {
     return formData.email === '' || formData.password === '' || submitting;
   };
+
+  // const fetchMappings = async () => {
+  //   const data = await fetchWrapper({
+  //     route: 'muscles/get_maps',
+  //     method: 'GET'
+  //   })
+  //   if (!data || !data.group_to_targets || !data.target_to_group) throw new Error('muscle maps bad response');
+  //   setGroupToTargets(data.group_to_targets);
+  //   setTargetoGroup(data.target_to_group);
+  // };
 
   return ( 
     <KeyboardAwareScrollView

@@ -125,7 +125,7 @@ export default function SignUpScreen() {
     setSelectedDate(date);
     setFormData({
       ...formData,
-      date_of_birth: formatSelectedDate(date).split('').reverse().join('')
+      date_of_birth: date.toISOString().split("T")[0]
     })
     hideDatePicker();
   };
@@ -150,7 +150,6 @@ export default function SignUpScreen() {
       });
     }
     
-
     setFormData({
       ...formData,
       [field]: value,
