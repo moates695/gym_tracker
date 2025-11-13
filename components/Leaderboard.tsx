@@ -3,17 +3,38 @@ import { commonStyles } from "@/styles/commonStyles";
 import { useAtom, useAtomValue } from "jotai";
 import React from "react";
 import { Text, View, StyleSheet, ScrollView } from 'react-native';
+import { Col, Grid, Row } from "react-native-easy-grid";
 
 export interface LeaderboardProps {
   data: LeaderboardData | null
 }
 
 // todo fix leaderboard row spacing with different string lengths
+// todo show large numbers as condensed
 
 export function Leaderboard(props: LeaderboardProps) {
-  const {data} = props;
+  let {data} = props;
 
   const userData = useAtomValue(userDataAtom);
+
+  // const leaderboard = [];
+  // for (let i = 0; i < 100; i++) {
+  //   leaderboard.push({
+  //     user_id: "",
+  //     username: "username",
+  //     rank: i,
+  //     value: 0
+  //   })
+  // }
+
+  // data = {
+  //   fracture: 5,
+  //   leaderboard: leaderboard,
+  //   user_rank: 0,
+  //   max_rank: 0,
+  //   friend_ids: [],
+  //   rank_data: [],
+  // };
 
   if (data === null || data.leaderboard.length === 0) {
     return (
@@ -22,25 +43,6 @@ export function Leaderboard(props: LeaderboardProps) {
       </Text>
     )
   }
-
-  const showTopNum = 20;
-  // const testLength = 50;
-  // const data: LeaderboardData = {
-  //   fracture: 20,
-  //   leaderboard: [],
-  //   num_rows: testLength,
-  //   user_rank: 28,
-  //   friend_ids: [],
-  //   rank_data: []
-  // };
-  // for (let i = 0; i < testLength; i++) {
-  //   data.leaderboard.push({
-  //     user_id: i === 28 ? userData!.user_id : '',
-  //     username: 'testtesttest',
-  //     rank: i + 1,
-  //     value: testLength - i
-  //   })
-  // }
 
   // todo extract row building to a function
   // todo highlight user and friends in list?
@@ -91,7 +93,6 @@ export function Leaderboard(props: LeaderboardProps) {
       <ScrollView
           style={{
             flex: 1,
-            // marginBottom: 10,
           }}
         >
           {leaderboard.map((item, i) => {
@@ -111,18 +112,14 @@ export function Leaderboard(props: LeaderboardProps) {
                 <Text style={commonStyles.text}>{item.rank}</Text>
                 <View 
                   style={{
-                    // width: '40%',
                     alignItems: 'center',
-                    // backgroundColor: 'red',
                   }}
                 >
                   <Text style={commonStyles.text}>{item.username}</Text>
                 </View>
                 <View 
                   style={{
-                    // width: '35%',
                     alignItems: 'flex-end',
-                    // backgroundColor: 'purple'
                   }}
                 >
                   <Text style={commonStyles.text}>{item.value}</Text>
@@ -134,51 +131,107 @@ export function Leaderboard(props: LeaderboardProps) {
     )
   };
 
-  if (!data.fracture) {
-    return (
-     <View 
-        style={{
-          flex: 1,
-          backgroundColor: 'black',
-        }}
-      >
-        {leaderboardHeaders}
-        {createScrollView(data.leaderboard)}
-    </View>
-    )
-  }
-
   return (
     <View 
       style={{
         flex: 1,
-        backgroundColor: 'black',
+        // backgroundColor: 'red',
       }}
     >
-      <View
-        style={{
-          flex: 1,
-        }}
-      >
-        {leaderboardHeaders}
-        {createScrollView(data.leaderboard.slice(0, showTopNum))}
-      </View>
       <View 
         style={{
-          height: 1,
-          backgroundColor: 'white',
+          flexDirection: 'row',
           width: '95%',
+          justifyContent: 'space-between',
+          padding: 5,
+          borderRadius: 5,
           alignSelf: 'center',
-        }}
-      />
-      <View
-        style={{
-          flex: 1,
-          marginBottom: 10,
+          marginTop: 5
         }}
       >
-        {createScrollView(data.leaderboard.slice(showTopNum))}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            gap: 10,
+          }}
+        >
+          <View 
+            style={{
+              width: 40,
+            }}
+          >
+            <Text style={[commonStyles.text]}>Rank</Text>
+          </View>
+          <View >
+            <Text style={commonStyles.text}>Username</Text>
+          </View>
+        </View>
+        <View 
+          style={{
+            alignItems: 'flex-end',
+          }}
+        >
+          <Text style={commonStyles.text}>Value</Text>
+        </View>
       </View>
+      <ScrollView
+        style={{
+          flex: 1,
+        }}
+      >
+        {data.leaderboard.map((item, i) => {
+          return (
+            <React.Fragment key={i}>
+              {i === data.fracture &&
+                <View 
+                  style={{
+                    height: 1,
+                    backgroundColor: 'white',
+                    width: '95%',
+                    alignSelf: 'center',
+                  }}
+                />
+              }
+              <View 
+                style={{
+                  flexDirection: 'row',
+                  width: '95%',
+                  justifyContent: 'space-between',
+                  padding: 5,
+                  backgroundColor: getBackgroundColor(item.user_id, i),
+                  borderRadius: 5,
+                  alignSelf: 'center'
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'flex-start',
+                    gap: 10,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 40,
+                    }}
+                  >
+                    <Text style={commonStyles.text}>{item.rank}</Text>
+                  </View>
+                  <Text style={commonStyles.text}>{item.username}</Text>
+                </View>
+                <View 
+                  style={{
+                    alignItems: 'flex-end',
+                  }}
+                >
+                  <Text style={commonStyles.text}>{item.value}</Text>
+                </View>
+              </View>
+            </React.Fragment>
+          )
+        })}
+      </ScrollView>
     </View>
   )
 }

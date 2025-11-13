@@ -16,7 +16,7 @@ interface LeaderboardOption {
   value: LeaderboardType
 }
 
-type OverallLeaderboardType = 'volume' | 'sets' | 'reps'
+type OverallLeaderboardType = 'volume' | 'sets' | 'reps' | 'exercises' | 'workouts' | 'duration'
 interface OverallLeaderboardOption {
   label: string
   value: OverallLeaderboardType
@@ -26,31 +26,9 @@ interface OverallLeaderboardOption {
 
 export default function StatsDistribution() {
   const router = useRouter();
-  
+
   const [loadingStats, setLoadingStats] = useState<boolean>(false);
-
-  const [volumeLeaderboard, setVolumeLeaderboard] = useAtom(volumeLeaderboardAtom);
-  const [setLeaderboard, setSetLeaderboard] = useAtom(setLeaderboardAtom);
-  const [repsLeaderboard, setRepsLeaderboard] = useAtom(repsLeaderboardAtom);
-
-  interface MapObject {
-    value: LeaderboardData | null
-    setter: any
-  }
-  const overallMap: Record<OverallLeaderboardType, MapObject> = {
-    volume: {
-      value: volumeLeaderboard,
-      setter: setVolumeLeaderboard
-    },
-    sets: {
-      value: setLeaderboard,
-      setter: setSetLeaderboard
-    },
-    reps: {
-      value: repsLeaderboard,
-      setter: setRepsLeaderboard
-    },
-  };
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardData | null>(null);
 
   const leaderboardOptions: LeaderboardOption[] = [
     { label: 'overall stats', value: 'overall' },
@@ -62,50 +40,76 @@ export default function StatsDistribution() {
     { label: 'volume', value: 'volume' },
     { label: 'sets', value: 'sets' },
     { label: 'reps', value: 'reps' },
+    { label: '# exercises', value: 'exercises' },
+    { label: '# workouts', value: 'workouts' },
+    { label: 'duration', value: 'duration' },
   ]
   const [overallOptionValue, setOverallOptionValue] = useState<OverallLeaderboardType>('volume');
 
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      if (overallMap[overallOptionValue]['value'] !== null) return;
-      
+  const fetchLeaderboard = async () => {
+    try {
       setLoadingStats(true);
-      try {
+      if (leaderboardOptionValue === 'overall') {
         const data = await fetchWrapper({
           route: 'stats/leaderboards/overall',
           method: 'GET',
           params: {
-            table: overallOptionValue,
-            top_num: '20',
-            side_num: '20'
+            top_num: '2',
+            side_num: '3'
           }
         });
-        if (!data || !data.leaderboard) throw new Error('bad response');
-        if (overallOptionValue === 'volume') {
-          setVolumeLeaderboard(data);
-        } else if (overallOptionValue === 'sets') {
-          setSetLeaderboard(data);
-        } else if (overallOptionValue === 'reps') {
-          setRepsLeaderboard(data);
+        if (!data || !data.leaderboards) throw new Error('bad response');
+        const overallMap: Record<OverallLeaderboardType, string> = {
+          volume: "overall_volume",
+          sets: "overall_sets",
+          reps: "overall_reps",
+          exercises: "overall_exercises",
+          workouts: "overall_workouts",
+          duration: "overall_duration",
         }
-      } catch (error) {
-        console.log(error);
+        const overallData = data.leaderboards[overallMap[overallOptionValue]];
+        setLeaderboardData(overallData);
       }
+    } catch (error) {
+      setLeaderboardData(null);
+    } finally {
       setLoadingStats(false);
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchLeaderboard();
-  }, [overallOptionValue]);
+  }, [leaderboardOptionValue, overallOptionValue])
 
-  const getPercentile = (rank: number | undefined, maxRank: number | undefined): number | null => {
-    if (!rank || ! maxRank) return null;
+  const getPercentile = (rank: number | null, maxRank: number | null): number | null => {
+    if (rank === null || !maxRank) return null;
     return parseFloat((((maxRank - rank) / maxRank) * 100).toFixed(3));
   };
 
-  const userRank = overallMap[overallOptionValue].value?.user_rank;
-  const maxRank = overallMap[overallOptionValue].value?.max_rank;
-
-  const rankChart = overallMap[overallOptionValue].value?.rank_data ?? [];
+  const renderLeaderboard = (): JSX.Element => {
+    if (loadingStats) {
+      return <LoadingScreen />;
+    } else if (leaderboardData === null) {
+      return (
+        <Text style={commonStyles.text}>
+          leaderboard data did not load
+        </Text>
+      )
+    }
+    return (
+      <>
+        <Leaderboard data={leaderboardData} />
+        <View style={{height: 180}}>
+          <RankChart data={leaderboardData.rank_data}/>
+        </View>
+        <Text 
+          style={[commonStyles.text, {alignSelf: 'center', paddingBottom: 5}]}
+        >
+          Rank {leaderboardData.user_rank}/{leaderboardData.max_rank}, that's the {getPercentile(leaderboardData.user_rank, leaderboardData.max_rank)} percentile
+        </Text>
+      </>
+    )
+  };
 
   return (
     <View 
@@ -120,29 +124,9 @@ export default function StatsDistribution() {
         <>
           <Text style={commonStyles.text}>Choose a metric:</Text>
           {useDropdown(overallOptions, overallOptionValue, setOverallOptionValue)}
-          {loadingStats ?
-            <LoadingScreen />
-          :
-            <>
-              {overallMap[overallOptionValue].value === null ?
-                <Text>leaderboard data is hasn't loaded</Text>
-              :
-                <>
-                  <Leaderboard data={overallMap[overallOptionValue].value} />
-                  <View style={{height: 180}}>
-                    <RankChart data={rankChart}/>
-                  </View>
-                  <Text 
-                    style={[commonStyles.text, {alignSelf: 'center', paddingBottom: 5}]}
-                  >
-                    Rank {userRank}/{maxRank}, that's the {getPercentile(userRank, maxRank)} percentile
-                  </Text>
-                </>
-              }
-            </>
-          }
         </>
       }
+      {renderLeaderboard()}
     </View>
   )
 }

@@ -11,7 +11,7 @@ import { StatusBar } from "expo-status-bar";
 import { useAtom } from "jotai";
 import { userDataAtom } from "@/store/general";
 
-// todo resend validate email button if temp token valid
+// todo resend validate email button on timeout
 // TODO: fix rest of this file and refactor others
 
 export default function Validate() {

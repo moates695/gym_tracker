@@ -327,7 +327,7 @@ export default function SignUpScreen() {
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
       const data = await response.json();
 
-      if (data.status === "success") {
+      if (data.status === "success") { 
         await SecureStore.setItemAsync("temp_token", data.temp_token);
         router.replace("/validate");
         return;
@@ -394,8 +394,11 @@ export default function SignUpScreen() {
       {Platform.OS == 'android' &&
         <StatusBar style="light" backgroundColor="black" translucent={false} />
       }
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <ScrollView contentContainerStyle={styles.content}>
+      <TouchableWithoutFeedback 
+        onPress={Keyboard.dismiss}
+        accessible={false}
+      >
+        <View style={styles.content}>
           <Text style={[commonStyles.boldText, {marginRight: 10}]}>
             Sign Up
           </Text>
@@ -566,7 +569,6 @@ export default function SignUpScreen() {
                   >
                     <Text style={{color: 'white'}}>back</Text>
                   </TouchableOpacity>
-                  {/* <View style={[styles.buttonContainer, {paddingTop: 20}]}> */}
                     <TouchableOpacity 
                       onPress={handleSubmit}
                       style={{
@@ -580,11 +582,7 @@ export default function SignUpScreen() {
                     >
                       <Text style={{ color: "white"}}>{submitting ? 'submitting' : 'sign up'}</Text>
                     </TouchableOpacity>
-                  {/* </View> */}
                 </View>
-                {/* <View style={styles.buttonContainer}> */}
-                  
-                {/* </View> */}
                 <View style={styles.buttonContainer}>
                   <TouchableOpacity 
                     onPress={() => router.replace("/sign-in")}
@@ -604,7 +602,7 @@ export default function SignUpScreen() {
               </>
             } 
           </View>
-        </ScrollView>
+        </View>
       </TouchableWithoutFeedback>
     </KeyboardAwareScrollView>
   );
