@@ -11,10 +11,10 @@ export interface RankChartProps {
 export default function RankChart(props: RankChartProps) {
   const { data } = props;
 
-  const chart_width = 300;
+  const chart_width = Dimensions.get('window').width;
   const calculatedSpacing = (chart_width * 0.8) / (data.length - 1);
-  // data[0]["showVerticalLine"] = true
-  // data[data.length - 1]["showVerticalLine"] = true
+  data[0]["showVerticalLine"] = true
+  data[data.length - 1]["showVerticalLine"] = true
 
   if (data === null) {
     return (
@@ -32,8 +32,11 @@ export default function RankChart(props: RankChartProps) {
         alignItems: 'center', 
         // height: 150,
         alignSelf: 'center',
-        paddingRight: 35,
+        // paddingRight: 35,
+        paddingRight: 0,
         marginBottom: -30,
+        // backgroundColor: 'orange',
+        // width: '100%',
       }}
     >
       <LineChart

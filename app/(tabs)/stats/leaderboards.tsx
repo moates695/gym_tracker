@@ -23,6 +23,8 @@ interface OverallLeaderboardOption {
 }
 
 // todo add in per exercise, and per muscle group/target stats?
+// todo once fetched for leaderboard type, save in this component
+// todo provide reload button
 
 export default function StatsDistribution() {
   const router = useRouter();
