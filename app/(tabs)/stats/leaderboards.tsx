@@ -128,6 +128,12 @@ export default function StatsDistribution() {
           {useDropdown(overallOptions, overallOptionValue, setOverallOptionValue)}
         </>
       }
+      <TouchableOpacity
+        onPress={() => fetchLeaderboard()}
+        style={[commonStyles.thinTextButton, {marginTop: 8}]}
+      >
+        <Text style={commonStyles.text}>reload</Text>
+      </TouchableOpacity>
       {renderLeaderboard()}
     </View>
   )

@@ -37,7 +37,8 @@ export const commonStyles = StyleSheet.create({
     paddingLeft: 8,
     paddingRight: 8,
     minWidth: 80,
-    alignItems: 'center'
+    alignItems: 'center',
+    alignSelf: 'flex-start',
   },
   text: {
     color: 'white'

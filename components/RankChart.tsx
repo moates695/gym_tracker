@@ -13,8 +13,8 @@ export default function RankChart(props: RankChartProps) {
 
   const chart_width = Dimensions.get('window').width;
   const calculatedSpacing = (chart_width * 0.8) / (data.length - 1);
-  data[0]["showVerticalLine"] = true
-  data[data.length - 1]["showVerticalLine"] = true
+  // data[0]["showVerticalLine"] = true
+  // data[data.length - 1]["showVerticalLine"] = true
 
   if (data === null) {
     return (

@@ -109,12 +109,14 @@ export default function Stats() {
         >
           <Text style={styles.text}>Exercise History</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[commonStyles.thinTextButton, {width: 50}]}
-          onPress={() => fetchWorkoutTotalStats()}
-        >
-          <Text style={styles.text}>refresh</Text>
-        </TouchableOpacity>
+        <View style={{alignItems: 'center'}}>
+          <TouchableOpacity
+            style={[commonStyles.thinTextButton, {width: 50}]}
+            onPress={() => fetchWorkoutTotalStats()}
+          >
+            <Text style={styles.text}>refresh</Text>
+          </TouchableOpacity>
+        </View>
         
       </SafeAreaView>
     </Suspense>
