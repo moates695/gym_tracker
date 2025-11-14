@@ -22,6 +22,33 @@ interface OverallLeaderboardOption {
   value: OverallLeaderboardType
 }
 
+type ExerciseLeaderboardType = 'volume' | 'sets' | 'reps'
+interface ExerciseLeaderboardOption {
+  label: string
+  value: ExerciseLeaderboardType
+}
+
+type StoredOverallLeaderboardData = Record<OverallLeaderboardType, LeaderboardData | null>
+type StoredExerciseLeaderboardData = Record<ExerciseLeaderboardType, LeaderboardData | null>
+
+type StoredLeaderboardDataValues = {
+  overall: StoredOverallLeaderboardData
+  exercise: StoredExerciseLeaderboardData
+}
+
+type StoredLeaderboardData = {
+  [K in LeaderboardType]: StoredLeaderboardDataValues[K]
+}
+
+type OptionValueMapValues = {
+  overall: OverallLeaderboardType
+  exercise: ExerciseLeaderboardType
+}
+
+type OptionValueMap = {
+  [K in LeaderboardType]: OptionValueMapValues[K]
+}
+
 // todo add in per exercise, and per muscle group/target stats?
 // todo once fetched for leaderboard type, save in this component
 // todo provide reload button
@@ -48,7 +75,36 @@ export default function StatsDistribution() {
   ]
   const [overallOptionValue, setOverallOptionValue] = useState<OverallLeaderboardType>('volume');
 
+  const exerciseOptions: ExerciseLeaderboardOption[] = [
+    { label: 'volume', value: 'volume' },
+    { label: 'sets', value: 'sets' },
+    { label: 'reps', value: 'reps' },
+  ]
+  const [exerciseOptionValue, setExerciseOptionValue] = useState<ExerciseLeaderboardType>('volume');
+
+  const optionValueMap: OptionValueMap = {
+    overall: overallOptionValue,
+    exercise: exerciseOptionValue
+  }
+
+  const [storedLeaderboardData, setStoredLeaderboardData] = useState<StoredLeaderboardData>({
+    overall: {
+      volume: null,
+      sets: null,
+      reps: null,
+      exercises: null,
+      workouts: null,
+      duration: null,
+    },
+    exercise: {
+      volume: null,
+      sets: null,
+      reps: null,
+    }
+  });
+
   const fetchLeaderboard = async () => {
+    let leaderboardData: LeaderboardData | null = null;
     try {
       setLoadingStats(true);
       if (leaderboardOptionValue === 'overall') {
@@ -56,8 +112,9 @@ export default function StatsDistribution() {
           route: 'stats/leaderboards/overall',
           method: 'GET',
           params: {
-            top_num: '2',
-            side_num: '3'
+            top_num: '10',
+            side_num: '20',
+            num_rank_points: '50'
           }
         });
         if (!data || !data.leaderboards) throw new Error('bad response');
@@ -69,17 +126,35 @@ export default function StatsDistribution() {
           workouts: "overall_workouts",
           duration: "overall_duration",
         }
-        const overallData = data.leaderboards[overallMap[overallOptionValue]];
-        setLeaderboardData(overallData);
+        leaderboardData = data.leaderboards[overallMap[overallOptionValue]];
       }
+
     } catch (error) {
       setLeaderboardData(null);
     } finally {
       setLoadingStats(false);
+      setLeaderboardData(leaderboardData); 
+      setStoredLeaderboardData(prev => ({
+        ...prev,
+        [leaderboardOptionValue]: {
+          ...prev[leaderboardOptionValue],
+          [optionValueMap[leaderboardOptionValue]]: leaderboardData
+        }
+      }));
     }
   };
 
   useEffect(() => {
+    try {
+      const optionKey = optionValueMap[leaderboardOptionValue] as keyof typeof storedLeaderboardData[typeof leaderboardOptionValue];
+      const stored = storedLeaderboardData[leaderboardOptionValue][optionKey];
+      if (stored !== null) {
+        setLeaderboardData(stored);
+        return;
+      }
+    } catch(error) {
+      console.log(error)
+    }
     fetchLeaderboard();
   }, [leaderboardOptionValue, overallOptionValue])
 
@@ -93,9 +168,17 @@ export default function StatsDistribution() {
       return <LoadingScreen />;
     } else if (leaderboardData === null) {
       return (
-        <Text style={commonStyles.text}>
-          leaderboard data did not load
-        </Text>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
+        >
+          <Text style={commonStyles.text}>
+            leaderboard data did not load {':('}
+          </Text>
+        </View>
       )
     }
     return (
