@@ -9,6 +9,7 @@ import { useRouter } from "expo-router";
 import { useAtom } from "jotai";
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
+import cloneDeep from "lodash/cloneDeep";
 
 type LeaderboardType = 'overall' | 'exercise'
 interface LeaderboardOption {
@@ -103,44 +104,78 @@ export default function StatsDistribution() {
     }
   });
 
+  // const fetchLeaderboards = async () => {
+  //   // let leaderboardData: LeaderboardData | null = null;
+  //   try {
+  //     setLoadingStats(true);
+  //     if (leaderboardOptionValue === 'overall') {
+  //       const data = await fetchWrapper({
+  //         route: 'stats/leaderboards/overall',
+  //         method: 'GET',
+  //         params: {
+  //           top_num: '10',
+  //           side_num: '20',
+  //           num_rank_points: '50'
+  //         }
+  //       });
+  //       if (!data || !data.leaderboards) throw new Error('bad response');
+  //       const overallMap: Record<OverallLeaderboardType, string> = {
+  //         volume: "overall:volume:leaderboard",
+  //         sets: "overall:sets:leaderboard",
+  //         reps: "overall:reps:leaderboard",
+  //         exercises: "overall:exercises:leaderboard",
+  //         workouts: "overall:workouts:leaderboard",
+  //         duration: "overall:duration:leaderboard",
+  //       }
+  //       setLeaderboardData(data.leaderboards[overallMap[overallOptionValue]]);
+  //       const tempStoredOverall = cloneDeep(storedLeaderboardData.overall);
+  //       for () {
+
+  //       }
+  //       setStoredLeaderboardData(prev => ({
+  //         ...prev,
+  //         overall
+  //       }))
+  //     }
+
+  //   } catch (error) {
+  //     setLeaderboardData(null);
+  //   } finally {
+  //     setLoadingStats(false);
+  //     // setLeaderboardData(leaderboardData); 
+  //     // setStoredLeaderboardData(prev => ({
+  //     //   ...prev,
+  //     //   [leaderboardOptionValue]: {
+  //     //     ...prev[leaderboardOptionValue],
+  //     //     [optionValueMap[leaderboardOptionValue]]: leaderboardData
+  //     //   }
+  //     // }));
+  //   }
+  // };
+
+  // todo store the data in state
   const fetchLeaderboard = async () => {
-    let leaderboardData: LeaderboardData | null = null;
     try {
       setLoadingStats(true);
-      if (leaderboardOptionValue === 'overall') {
-        const data = await fetchWrapper({
-          route: 'stats/leaderboards/overall',
-          method: 'GET',
-          params: {
-            top_num: '10',
-            side_num: '20',
-            num_rank_points: '50'
-          }
-        });
-        if (!data || !data.leaderboards) throw new Error('bad response');
-        const overallMap: Record<OverallLeaderboardType, string> = {
-          volume: "overall_volume",
-          sets: "overall_sets",
-          reps: "overall_reps",
-          exercises: "overall_exercises",
-          workouts: "overall_workouts",
-          duration: "overall_duration",
+      const data = await fetchWrapper({
+        route: `stats/leaderboard/${leaderboardOptionValue}/${optionValueMap[leaderboardOptionValue]}`,
+        method: 'GET',
+        params: {
+          top_num: '10',
+          side_num: '20',
+          num_rank_points: '50'
         }
-        leaderboardData = data.leaderboards[overallMap[overallOptionValue]];
-      }
+      });
+      if (!data || !data.leaderboard) throw new Error('bad response');
+      
+      const leaderboard = data.leaderboard;
+      setLeaderboardData(leaderboard);
 
     } catch (error) {
+      console.log(error)
       setLeaderboardData(null);
     } finally {
       setLoadingStats(false);
-      setLeaderboardData(leaderboardData); 
-      setStoredLeaderboardData(prev => ({
-        ...prev,
-        [leaderboardOptionValue]: {
-          ...prev[leaderboardOptionValue],
-          [optionValueMap[leaderboardOptionValue]]: leaderboardData
-        }
-      }));
     }
   };
 
