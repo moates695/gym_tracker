@@ -7,7 +7,7 @@ import { LeaderboardData, repsLeaderboardAtom, setLeaderboardAtom, volumeLeaderb
 import { commonStyles } from "@/styles/commonStyles";
 import { useRouter } from "expo-router";
 import { useAtom } from "jotai";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import cloneDeep from "lodash/cloneDeep";
 import { OptionsObject } from "@/components/ChooseExerciseModal";
@@ -88,17 +88,12 @@ export default function StatsDistribution() {
 
   const [exercisesMeta, setExercisesMeta] = useState<ExercisesMeta>({});
 
-  // todo convert to memo
-  const exerciseOptions = ((): OptionsObject[] => {
-    const options: OptionsObject[] = [];
-    for (const [id, value] of Object.entries(exercisesMeta)) {
-      options.push({
-        label: value.name,
-        value: id
-      })
-    }
-    return options;
-  })();
+  const exerciseOptions = useMemo<OptionsObject[]>(() => {
+    return Object.entries(exercisesMeta).map(([id, value]) => ({
+      label: value.name,
+      value: id,
+    }));
+  }, [exercisesMeta]);
   const [exerciseValue, setExerciseValue] = useState<string | null>(null);
   
   useEffect(() => {
@@ -132,28 +127,24 @@ export default function StatsDistribution() {
   ]
   const [exerciseMetricValue, setExerciseMetricValue] = useState<ExerciseLeaderboardType>('volume');
 
-  const optionValueMap: OptionValueMap = {
-    overall: overallMetricValue,
-    exercise: exerciseMetricValue
-  }
+  const [storedLeaderboards, setStoredLeaderboards] = useState<Record<string, LeaderboardData>>({});
 
-  const [storedLeaderboardData, setStoredLeaderboardData] = useState<StoredLeaderboardData>({
-    overall: {
-      volume: null,
-      sets: null,
-      reps: null,
-      exercises: null,
-      workouts: null,
-      duration: null,
-    },
-    exercise: {}
-  });
+  const getStoredKey = (): string | null => {
+    if (leaderboardValue === 'overall') {
+      return `overall:${overallMetricValue}`;
+    } else if (leaderboardValue === 'exercise') {
+      if (exerciseMetricValue === null) return null;
+      return `exercise:${exerciseValue}:${exerciseMetricValue}`
+    }
+    throw new Error("unknown leaderboard type")
+  }; 
 
   const reload = async () => {
+    const promises = [fetchLeaderboard()];
     if (leaderboardValue === 'exercise') {
-      fetchExercisesMeta();
+      promises.push(fetchExercisesMeta());
     }
-    fetchLeaderboard();
+    await Promise.all(promises);
   };
 
   const fetchExercisesMeta = async () => {
@@ -168,32 +159,16 @@ export default function StatsDistribution() {
       
       const exercisesMeta = data.exercises;
       setExercisesMeta(exercisesMeta);
-      
-      const tempExerciseStored: Record<string, any> = cloneDeep(storedLeaderboardData.exercise);
-      for (const id of Object.keys(exercisesMeta)) {
-        if (id in tempExerciseStored) continue;
-        tempExerciseStored[id] = {
-          volume: null,
-          sets: null,
-          reps: null,
-          workouts: null,
-        }
+      if (exerciseValue === null || !(exerciseValue in exercisesMeta)) {
+        setExerciseValue(Object.keys(exercisesMeta)[0] ?? null);
       }
-      setStoredLeaderboardData(prev => ({
-        ...prev,
-        exercise: tempExerciseStored
-      }));
-    
+
     } catch (error) {
       console.log(error);
     } finally {
       setLoadingExercisesMeta(false);
     }
   };
-
-  useEffect(() => {
-    fetchExercisesMeta();
-  }, []);
 
   const fetchLeaderboard = async () => {
     try {
@@ -211,27 +186,14 @@ export default function StatsDistribution() {
       
       const leaderboard = data.leaderboard;
       setLeaderboardData(leaderboard);
-      // todo differnet for exercises
-      if (leaderboardValue === "overall") {
-        setStoredLeaderboardData(prev => ({
+
+      const storedKey = getStoredKey();
+      if (storedKey !== null) {
+        setStoredLeaderboards(prev => ({
           ...prev,
-          [leaderboardValue]: {
-            ...prev[leaderboardValue], 
-            [optionValueMap[leaderboardValue]]: leaderboard
-          }
-        }));
-      } else if (leaderboardValue === "exercise" && exerciseValue !== null) {
-        setStoredLeaderboardData(prev => ({
-          ...prev,
-          [leaderboardValue]: {
-            ...prev[leaderboardValue], 
-            [exerciseValue]: {
-              ...prev[leaderboardValue][exerciseValue],
-              [exerciseMetricValue]: leaderboard
-            }
-          }
-        }));
-      } 
+          [storedKey]: leaderboard
+        }))
+      }
 
     } catch (error) {
       console.log(error)
@@ -244,37 +206,28 @@ export default function StatsDistribution() {
   const leaderboardRoute = (): string => {
     switch (leaderboardValue) {
       case 'overall':
-        return `stats/leaderboard/${leaderboardValue}/${optionValueMap[leaderboardValue]}`;
+        return `stats/leaderboard/${leaderboardValue}/${overallMetricValue}`;
       case 'exercise':
-        return `stats/leaderboard/${leaderboardValue}/${exerciseValue}/${optionValueMap[leaderboardValue]}`;
+        return `stats/leaderboard/${leaderboardValue}/${exerciseValue}/${exerciseMetricValue}`;
     }
   };
 
   useEffect(() => {
-    try {
-      if (leaderboardValue === 'overall') {
-        // const metric = optionValueMap[leaderboardValue] as keyof typeof storedLeaderboardData[typeof leaderboardValue];
-        const stored = storedLeaderboardData[leaderboardValue][overallMetricValue];
-        if (stored !== null) {
-          setLeaderboardData(stored);
-          return;
-        }
-      } else if (leaderboardValue === 'exercise' && exerciseValue !== null) {
-        const stored = storedLeaderboardData[leaderboardValue][exerciseValue]?.[exerciseMetricValue] ?? null
-        if (stored !== null) {
-          setLeaderboardData(stored);
-          return;
-        }
-      }
-    } catch(error) {
-      console.log(error)
+    fetchExercisesMeta();
+  }, []);
+
+  useEffect(() => {
+    const storedKey = getStoredKey();
+    if (storedKey !== null && storedKey in storedLeaderboards) {
+      setLeaderboardData(storedLeaderboards[storedKey]);
+      return;
     }
     fetchLeaderboard();
-  }, [leaderboardValue, overallMetricValue, exerciseValue])
+  }, [leaderboardValue, overallMetricValue, exerciseValue, exerciseMetricValue])
 
   const getPercentile = (rank: number | null, maxRank: number | null): number | null => {
     if (rank === null || !maxRank) return null;
-    return parseFloat((((maxRank - rank) / maxRank) * 100).toFixed(3));
+    return parseFloat(((1 - (rank - 1) / maxRank) * 100).toFixed(3));
   };
 
   const isLoading = (): boolean => {
@@ -305,11 +258,20 @@ export default function StatsDistribution() {
         <View style={{height: 180}}>
           <RankChart data={leaderboardData.rank_data}/>
         </View>
-        <Text 
-          style={[commonStyles.text, {alignSelf: 'center', paddingBottom: 5}]}
-        >
-          Rank {leaderboardData.user_rank}/{leaderboardData.max_rank}, that's the {getPercentile(leaderboardData.user_rank, leaderboardData.max_rank)} percentile
-        </Text>
+        {leaderboardData.user_rank === null ?
+          <Text 
+            style={[commonStyles.text, {alignSelf: 'center', paddingBottom: 5}]}
+          >
+            you don't have a rank yet
+          </Text>
+        :
+          <Text 
+            style={[commonStyles.text, {alignSelf: 'center', paddingBottom: 5}]}
+          >
+            Rank {leaderboardData.user_rank}/{leaderboardData.max_rank}, that's the {getPercentile(leaderboardData.user_rank, leaderboardData.max_rank)} percentile
+          </Text>
+        }
+        
       </>
     )
   };
