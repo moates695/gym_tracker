@@ -10,6 +10,7 @@ import { useAtom } from "jotai";
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import cloneDeep from "lodash/cloneDeep";
+import { OptionsObject } from "@/components/ChooseExerciseModal";
 
 type LeaderboardType = 'overall' | 'exercise'
 interface LeaderboardOption {
@@ -54,10 +55,18 @@ type OptionValueMap = {
 // todo once fetched for leaderboard type, save in this component
 // todo provide reload button
 
+interface ExerciseMetaValue {
+  name: string
+  variations: Record<string, string> //? id: name
+}
+
+type ExercisesMeta = Record<string, ExerciseMetaValue>;
+
 export default function StatsDistribution() {
   const router = useRouter();
 
   const [loadingStats, setLoadingStats] = useState<boolean>(false);
+  const [loadingExercisesMeta, setLoadingExercisesMeta] = useState<boolean>(false);
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardData | null>(null);
 
   const leaderboardOptions: LeaderboardOption[] = [
@@ -66,7 +75,7 @@ export default function StatsDistribution() {
   ]
   const [leaderboardOptionValue, setLeaderboardOptionValue] = useState<LeaderboardType>('overall');
 
-  const overallOptions: OverallLeaderboardOption[] = [
+  const overallMetricOptions: OverallLeaderboardOption[] = [
     { label: 'volume', value: 'volume' },
     { label: 'sets', value: 'sets' },
     { label: 'reps', value: 'reps' },
@@ -74,18 +83,57 @@ export default function StatsDistribution() {
     { label: '# workouts', value: 'workouts' },
     { label: 'duration', value: 'duration' },
   ]
-  const [overallOptionValue, setOverallOptionValue] = useState<OverallLeaderboardType>('volume');
+  const [overallMetricValue, setOverallMetricValue] = useState<OverallLeaderboardType>('volume');
 
-  const exerciseOptions: ExerciseLeaderboardOption[] = [
+  const [exercisesMeta, setExercisesMeta] = useState<ExercisesMeta>({});
+
+  // todo convert to memo
+  const exerciseOptions = ((): OptionsObject[] => {
+    const options: OptionsObject[] = [];
+    for (const [id, value] of Object.entries(exercisesMeta)) {
+      options.push({
+        label: value.name,
+        value: id
+      })
+    }
+    return options;
+  })();
+  const [exerciseValue, setExerciseValue] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const firstId = Object.keys(exercisesMeta)[0] ?? null;
+    if (exerciseValue === null) {
+      setExerciseValue(firstId);
+    } else if (!(exerciseValue in exercisesMeta)) {
+      setExerciseValue(firstId);
+    }
+  }, [exercisesMeta]);
+
+  const variationOptions = ((): Record<string, OptionsObject[]> => {
+    const optionsMap: Record<string, OptionsObject[]> = {};
+    for (const [exerciseId, exerciseValue] of Object.entries(exercisesMeta)) {
+      optionsMap[exerciseId] = [];
+      for (const [variationId, variationName] of Object.entries(exerciseValue.variations)) {
+        optionsMap[exerciseId].push({
+          label: variationName,
+          value: variationId
+        })
+      }
+    }
+    return optionsMap;
+  })();
+  const [variationValue, setVariationValue] = useState<string | null>(null);
+
+  const exerciseMetricOptions: ExerciseLeaderboardOption[] = [
     { label: 'volume', value: 'volume' },
     { label: 'sets', value: 'sets' },
     { label: 'reps', value: 'reps' },
   ]
-  const [exerciseOptionValue, setExerciseOptionValue] = useState<ExerciseLeaderboardType>('volume');
+  const [exerciseMetricValue, setExerciseMetricValue] = useState<ExerciseLeaderboardType>('volume');
 
   const optionValueMap: OptionValueMap = {
-    overall: overallOptionValue,
-    exercise: exerciseOptionValue
+    overall: overallMetricValue,
+    exercise: exerciseMetricValue
   }
 
   const [storedLeaderboardData, setStoredLeaderboardData] = useState<StoredLeaderboardData>({
@@ -104,61 +152,18 @@ export default function StatsDistribution() {
     }
   });
 
-  // const fetchLeaderboards = async () => {
-  //   // let leaderboardData: LeaderboardData | null = null;
-  //   try {
-  //     setLoadingStats(true);
-  //     if (leaderboardOptionValue === 'overall') {
-  //       const data = await fetchWrapper({
-  //         route: 'stats/leaderboards/overall',
-  //         method: 'GET',
-  //         params: {
-  //           top_num: '10',
-  //           side_num: '20',
-  //           num_rank_points: '50'
-  //         }
-  //       });
-  //       if (!data || !data.leaderboards) throw new Error('bad response');
-  //       const overallMap: Record<OverallLeaderboardType, string> = {
-  //         volume: "overall:volume:leaderboard",
-  //         sets: "overall:sets:leaderboard",
-  //         reps: "overall:reps:leaderboard",
-  //         exercises: "overall:exercises:leaderboard",
-  //         workouts: "overall:workouts:leaderboard",
-  //         duration: "overall:duration:leaderboard",
-  //       }
-  //       setLeaderboardData(data.leaderboards[overallMap[overallOptionValue]]);
-  //       const tempStoredOverall = cloneDeep(storedLeaderboardData.overall);
-  //       for () {
+  const reload = async () => {
+    if (leaderboardOptionValue === 'exercise') {
+      fetchExercisesMeta();
+    }
+    fetchLeaderboard();
+  };
 
-  //       }
-  //       setStoredLeaderboardData(prev => ({
-  //         ...prev,
-  //         overall
-  //       }))
-  //     }
-
-  //   } catch (error) {
-  //     setLeaderboardData(null);
-  //   } finally {
-  //     setLoadingStats(false);
-  //     // setLeaderboardData(leaderboardData); 
-  //     // setStoredLeaderboardData(prev => ({
-  //     //   ...prev,
-  //     //   [leaderboardOptionValue]: {
-  //     //     ...prev[leaderboardOptionValue],
-  //     //     [optionValueMap[leaderboardOptionValue]]: leaderboardData
-  //     //   }
-  //     // }));
-  //   }
-  // };
-
-  // todo store the data in state
   const fetchLeaderboard = async () => {
     try {
       setLoadingStats(true);
       const data = await fetchWrapper({
-        route: `stats/leaderboard/${leaderboardOptionValue}/${optionValueMap[leaderboardOptionValue]}`,
+        route: leaderboardRoute(),
         method: 'GET',
         params: {
           top_num: '10',
@@ -170,12 +175,28 @@ export default function StatsDistribution() {
       
       const leaderboard = data.leaderboard;
       setLeaderboardData(leaderboard);
+      setStoredLeaderboardData(prev => ({
+        ...prev,
+        [leaderboardOptionValue]: {
+          ...prev[leaderboardOptionValue], 
+          [optionValueMap[leaderboardOptionValue]]: leaderboard
+        }
+      }));
 
     } catch (error) {
       console.log(error)
       setLeaderboardData(null);
     } finally {
       setLoadingStats(false);
+    }
+  };
+
+  const leaderboardRoute = (): string => {
+    switch (leaderboardOptionValue) {
+      case 'overall':
+        return `stats/leaderboard/${leaderboardOptionValue}/${optionValueMap[leaderboardOptionValue]}`;
+      case 'exercise':
+        return `stats/leaderboard/${leaderboardOptionValue}/${''}/${optionValueMap[leaderboardOptionValue]}`;
     }
   };
 
@@ -191,15 +212,44 @@ export default function StatsDistribution() {
       console.log(error)
     }
     fetchLeaderboard();
-  }, [leaderboardOptionValue, overallOptionValue])
+  }, [leaderboardOptionValue, overallMetricValue])
+
+  const fetchExercisesMeta = async () => {
+    try {
+      setLoadingExercisesMeta(true);
+      const data = await fetchWrapper({
+        route: 'stats/exercises-meta',
+        method: 'GET',
+        params: {}
+      });
+      if (!data || !data.exercises) throw new Error('bad response');
+      setExercisesMeta(data.exercises);
+      // if ((exerciseValue === null && Object.keys(data.exercises).length > 0) ||
+      //     (exerciseValue !== null && !(exerciseValue in data.exercises))) {
+      //   setExerciseValue(Object.keys(data.exercises)[0]);
+      // }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoadingExercisesMeta(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchExercisesMeta();
+  }, []);
 
   const getPercentile = (rank: number | null, maxRank: number | null): number | null => {
     if (rank === null || !maxRank) return null;
     return parseFloat((((maxRank - rank) / maxRank) * 100).toFixed(3));
   };
 
+  const isLoading = (): boolean => {
+    return loadingStats || loadingExercisesMeta;
+  }
+
   const renderLeaderboard = (): JSX.Element => {
-    if (loadingStats) {
+    if (isLoading()) {
       return <LoadingScreen />;
     } else if (leaderboardData === null) {
       return (
@@ -243,11 +293,27 @@ export default function StatsDistribution() {
       {leaderboardOptionValue === 'overall' &&
         <>
           <Text style={commonStyles.text}>Choose a metric:</Text>
-          {useDropdown(overallOptions, overallOptionValue, setOverallOptionValue)}
+          {useDropdown(overallMetricOptions, overallMetricValue, setOverallMetricValue)}
+        </>
+      }
+      {leaderboardOptionValue === 'exercise' &&
+        <>
+          {exerciseValue === null ?
+            <>
+              <Text>error loading exercise data</Text>
+            </>
+          :
+            <>
+              <Text style={commonStyles.text}>Choose an exercise:</Text>
+              {useDropdown(exerciseOptions, exerciseValue, setExerciseValue)}
+              <Text style={commonStyles.text}>Choose a metric:</Text>
+              {useDropdown(exerciseMetricOptions, exerciseMetricValue, setExerciseMetricValue)}
+            </>
+          }
         </>
       }
       <TouchableOpacity
-        onPress={() => fetchLeaderboard()}
+        onPress={() => reload()}
         style={[commonStyles.thinTextButton, {marginTop: 8}]}
       >
         <Text style={commonStyles.text}>reload</Text>
