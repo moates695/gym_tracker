@@ -11,6 +11,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import cloneDeep from "lodash/cloneDeep";
 import { OptionsObject } from "@/components/ChooseExerciseModal";
+import { identity } from "lodash";
 
 type LeaderboardType = 'overall' | 'exercise'
 interface LeaderboardOption {
@@ -95,30 +96,23 @@ export default function StatsDistribution() {
     }));
   }, [exercisesMeta]);
   const [exerciseValue, setExerciseValue] = useState<string | null>(null);
-  
-  useEffect(() => {
-    const firstId = Object.keys(exercisesMeta)[0] ?? null;
-    if (exerciseValue === null) {
-      setExerciseValue(firstId);
-    } else if (!(exerciseValue in exercisesMeta)) {
-      setExerciseValue(firstId);
-    }
-  }, [exercisesMeta]);
 
-  // const variationOptions = ((): Record<string, OptionsObject[]> => {
-  //   const optionsMap: Record<string, OptionsObject[]> = {};
-  //   for (const [exerciseId, exerciseValue] of Object.entries(exercisesMeta)) {
-  //     optionsMap[exerciseId] = [];
-  //     for (const [variationId, variationName] of Object.entries(exerciseValue.variations)) {
-  //       optionsMap[exerciseId].push({
-  //         label: variationName,
-  //         value: variationId
-  //       })
-  //     }
-  //   }
-  //   return optionsMap;
-  // })();
-  // const [variationValue, setVariationValue] = useState<string | null>(null);
+  const variationOptions = useMemo<Record<string, OptionsObject[]>>(() => {
+    const optionsMap: Record<string, OptionsObject[]> = {};
+    for (const [exerciseId, exerciseMeta] of Object.entries(exercisesMeta)) {
+      if (Object.keys(exerciseMeta.variations).length === 0) continue;
+      optionsMap[exerciseId] = Object.entries(exerciseMeta.variations).map(([id, name]) => ({
+        label: name,
+        value: id
+      }));
+      optionsMap[exerciseId].unshift({
+        label: 'base',
+        value: 'base'
+      })
+    }
+    return optionsMap;
+  }, [exercisesMeta]);
+  const [variationValue, setVariationValue] = useState<string | null>(null);
 
   const exerciseMetricOptions: ExerciseLeaderboardOption[] = [
     { label: 'volume', value: 'volume' },
@@ -134,7 +128,11 @@ export default function StatsDistribution() {
       return `overall:${overallMetricValue}`;
     } else if (leaderboardValue === 'exercise') {
       if (exerciseMetricValue === null) return null;
-      return `exercise:${exerciseValue}:${exerciseMetricValue}`
+      if (variationValue === null || variationValue === 'base') {
+        return `exercise:${exerciseValue}:${exerciseMetricValue}`
+      } else {
+        return `exercise:${exerciseValue}:${variationValue}:${exerciseMetricValue}`
+      }
     }
     throw new Error("unknown leaderboard type")
   }; 
@@ -159,8 +157,24 @@ export default function StatsDistribution() {
       
       const exercisesMeta = data.exercises;
       setExercisesMeta(exercisesMeta);
-      if (exerciseValue === null || !(exerciseValue in exercisesMeta)) {
-        setExerciseValue(Object.keys(exercisesMeta)[0] ?? null);
+
+      if (Object.keys(exercisesMeta).length === 0) {
+        setExerciseValue(null);
+        setVariationValue(null);
+        return
+      }
+      
+      let exerciseId = exerciseValue;
+      if (exerciseId === null || !(exerciseId in exercisesMeta)) {
+        exerciseId = Object.keys(exercisesMeta)[0];
+        setExerciseValue(exerciseId);
+      }
+
+      const variationIds = Object.keys(exercisesMeta[exerciseId].variations); 
+      if (variationIds.length === 0) {
+        setVariationValue(null);
+      } else if (variationValue === null || !(variationValue in exercisesMeta[exerciseId].variations)) {
+        setVariationValue(variationIds[0]);
       }
 
     } catch (error) {
@@ -208,7 +222,11 @@ export default function StatsDistribution() {
       case 'overall':
         return `stats/leaderboard/${leaderboardValue}/${overallMetricValue}`;
       case 'exercise':
-        return `stats/leaderboard/${leaderboardValue}/${exerciseValue}/${exerciseMetricValue}`;
+        if (variationValue === null || variationValue === 'base') {
+          return `stats/leaderboard/${leaderboardValue}/${exerciseValue}/${exerciseMetricValue}`;
+        } else {
+          return `stats/leaderboard/${leaderboardValue}/${variationValue}/${exerciseMetricValue}`;
+        }
     }
   };
 
@@ -223,7 +241,7 @@ export default function StatsDistribution() {
       return;
     }
     fetchLeaderboard();
-  }, [leaderboardValue, overallMetricValue, exerciseValue, exerciseMetricValue])
+  }, [leaderboardValue, overallMetricValue, exerciseValue, variationValue, exerciseMetricValue])
 
   const getPercentile = (rank: number | null, maxRank: number | null): number | null => {
     if (rank === null || !maxRank) return null;
@@ -301,6 +319,18 @@ export default function StatsDistribution() {
             <>
               <Text style={commonStyles.text}>Choose an exercise:</Text>
               {useDropdown(exerciseOptions, exerciseValue, setExerciseValue)}
+              {/* {(variationOptions?.[exerciseValue] ?? []).length > 0 &&
+                <>
+                  <Text style={commonStyles.text}>Choose a variation:</Text>
+                  {useDropdown(variationOptions[exerciseValue], variationValue, setVariationValue)}
+                </>
+              } */}
+              {(variationOptions?.[exerciseValue] ?? []).length > 0 &&
+                <>
+                  <Text style={commonStyles.text}>Choose a variation:</Text>
+                  {useDropdown(variationOptions[exerciseValue], variationValue, setVariationValue)}
+                </>
+              }
               <Text style={commonStyles.text}>Choose a metric:</Text>
               {useDropdown(exerciseMetricOptions, exerciseMetricValue, setExerciseMetricValue)}
             </>
