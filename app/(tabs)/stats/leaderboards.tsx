@@ -35,7 +35,8 @@ type StoredExerciseLeaderboardData = Record<ExerciseLeaderboardType, Leaderboard
 
 type StoredLeaderboardDataValues = {
   overall: StoredOverallLeaderboardData
-  exercise: StoredExerciseLeaderboardData
+  // exercise: StoredExerciseLeaderboardData
+  exercise: any
 }
 
 type StoredLeaderboardData = {
@@ -73,7 +74,7 @@ export default function StatsDistribution() {
     { label: 'overall stats', value: 'overall' },
     { label: 'per exercise', value: 'exercise' },
   ]
-  const [leaderboardOptionValue, setLeaderboardOptionValue] = useState<LeaderboardType>('overall');
+  const [leaderboardValue, setLeaderboardValue] = useState<LeaderboardType>('overall');
 
   const overallMetricOptions: OverallLeaderboardOption[] = [
     { label: 'volume', value: 'volume' },
@@ -109,20 +110,20 @@ export default function StatsDistribution() {
     }
   }, [exercisesMeta]);
 
-  const variationOptions = ((): Record<string, OptionsObject[]> => {
-    const optionsMap: Record<string, OptionsObject[]> = {};
-    for (const [exerciseId, exerciseValue] of Object.entries(exercisesMeta)) {
-      optionsMap[exerciseId] = [];
-      for (const [variationId, variationName] of Object.entries(exerciseValue.variations)) {
-        optionsMap[exerciseId].push({
-          label: variationName,
-          value: variationId
-        })
-      }
-    }
-    return optionsMap;
-  })();
-  const [variationValue, setVariationValue] = useState<string | null>(null);
+  // const variationOptions = ((): Record<string, OptionsObject[]> => {
+  //   const optionsMap: Record<string, OptionsObject[]> = {};
+  //   for (const [exerciseId, exerciseValue] of Object.entries(exercisesMeta)) {
+  //     optionsMap[exerciseId] = [];
+  //     for (const [variationId, variationName] of Object.entries(exerciseValue.variations)) {
+  //       optionsMap[exerciseId].push({
+  //         label: variationName,
+  //         value: variationId
+  //       })
+  //     }
+  //   }
+  //   return optionsMap;
+  // })();
+  // const [variationValue, setVariationValue] = useState<string | null>(null);
 
   const exerciseMetricOptions: ExerciseLeaderboardOption[] = [
     { label: 'volume', value: 'volume' },
@@ -145,19 +146,54 @@ export default function StatsDistribution() {
       workouts: null,
       duration: null,
     },
-    exercise: {
-      volume: null,
-      sets: null,
-      reps: null,
-    }
+    exercise: {}
   });
 
   const reload = async () => {
-    if (leaderboardOptionValue === 'exercise') {
+    if (leaderboardValue === 'exercise') {
       fetchExercisesMeta();
     }
     fetchLeaderboard();
   };
+
+  const fetchExercisesMeta = async () => {
+    try {
+      setLoadingExercisesMeta(true);
+      const data = await fetchWrapper({
+        route: 'stats/exercises-meta',
+        method: 'GET',
+        params: {}
+      });
+      if (!data || !data.exercises) throw new Error('bad response');
+      
+      const exercisesMeta = data.exercises;
+      setExercisesMeta(exercisesMeta);
+      
+      const tempExerciseStored: Record<string, any> = cloneDeep(storedLeaderboardData.exercise);
+      for (const id of Object.keys(exercisesMeta)) {
+        if (id in tempExerciseStored) continue;
+        tempExerciseStored[id] = {
+          volume: null,
+          sets: null,
+          reps: null,
+          workouts: null,
+        }
+      }
+      setStoredLeaderboardData(prev => ({
+        ...prev,
+        exercise: tempExerciseStored
+      }));
+    
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoadingExercisesMeta(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchExercisesMeta();
+  }, []);
 
   const fetchLeaderboard = async () => {
     try {
@@ -175,13 +211,27 @@ export default function StatsDistribution() {
       
       const leaderboard = data.leaderboard;
       setLeaderboardData(leaderboard);
-      setStoredLeaderboardData(prev => ({
-        ...prev,
-        [leaderboardOptionValue]: {
-          ...prev[leaderboardOptionValue], 
-          [optionValueMap[leaderboardOptionValue]]: leaderboard
-        }
-      }));
+      // todo differnet for exercises
+      if (leaderboardValue === "overall") {
+        setStoredLeaderboardData(prev => ({
+          ...prev,
+          [leaderboardValue]: {
+            ...prev[leaderboardValue], 
+            [optionValueMap[leaderboardValue]]: leaderboard
+          }
+        }));
+      } else if (leaderboardValue === "exercise" && exerciseValue !== null) {
+        setStoredLeaderboardData(prev => ({
+          ...prev,
+          [leaderboardValue]: {
+            ...prev[leaderboardValue], 
+            [exerciseValue]: {
+              ...prev[leaderboardValue][exerciseValue],
+              [exerciseMetricValue]: leaderboard
+            }
+          }
+        }));
+      } 
 
     } catch (error) {
       console.log(error)
@@ -192,52 +242,35 @@ export default function StatsDistribution() {
   };
 
   const leaderboardRoute = (): string => {
-    switch (leaderboardOptionValue) {
+    switch (leaderboardValue) {
       case 'overall':
-        return `stats/leaderboard/${leaderboardOptionValue}/${optionValueMap[leaderboardOptionValue]}`;
+        return `stats/leaderboard/${leaderboardValue}/${optionValueMap[leaderboardValue]}`;
       case 'exercise':
-        return `stats/leaderboard/${leaderboardOptionValue}/${''}/${optionValueMap[leaderboardOptionValue]}`;
+        return `stats/leaderboard/${leaderboardValue}/${exerciseValue}/${optionValueMap[leaderboardValue]}`;
     }
   };
 
   useEffect(() => {
     try {
-      const optionKey = optionValueMap[leaderboardOptionValue] as keyof typeof storedLeaderboardData[typeof leaderboardOptionValue];
-      const stored = storedLeaderboardData[leaderboardOptionValue][optionKey];
-      if (stored !== null) {
-        setLeaderboardData(stored);
-        return;
+      if (leaderboardValue === 'overall') {
+        // const metric = optionValueMap[leaderboardValue] as keyof typeof storedLeaderboardData[typeof leaderboardValue];
+        const stored = storedLeaderboardData[leaderboardValue][overallMetricValue];
+        if (stored !== null) {
+          setLeaderboardData(stored);
+          return;
+        }
+      } else if (leaderboardValue === 'exercise' && exerciseValue !== null) {
+        const stored = storedLeaderboardData[leaderboardValue][exerciseValue]?.[exerciseMetricValue] ?? null
+        if (stored !== null) {
+          setLeaderboardData(stored);
+          return;
+        }
       }
     } catch(error) {
       console.log(error)
     }
     fetchLeaderboard();
-  }, [leaderboardOptionValue, overallMetricValue])
-
-  const fetchExercisesMeta = async () => {
-    try {
-      setLoadingExercisesMeta(true);
-      const data = await fetchWrapper({
-        route: 'stats/exercises-meta',
-        method: 'GET',
-        params: {}
-      });
-      if (!data || !data.exercises) throw new Error('bad response');
-      setExercisesMeta(data.exercises);
-      // if ((exerciseValue === null && Object.keys(data.exercises).length > 0) ||
-      //     (exerciseValue !== null && !(exerciseValue in data.exercises))) {
-      //   setExerciseValue(Object.keys(data.exercises)[0]);
-      // }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoadingExercisesMeta(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchExercisesMeta();
-  }, []);
+  }, [leaderboardValue, overallMetricValue, exerciseValue])
 
   const getPercentile = (rank: number | null, maxRank: number | null): number | null => {
     if (rank === null || !maxRank) return null;
@@ -289,14 +322,14 @@ export default function StatsDistribution() {
       }}
     >
       <Text style={commonStyles.text}>Choose leaderboard:</Text>
-      {useDropdown(leaderboardOptions, leaderboardOptionValue, setLeaderboardOptionValue)}
-      {leaderboardOptionValue === 'overall' &&
+      {useDropdown(leaderboardOptions, leaderboardValue, setLeaderboardValue)}
+      {leaderboardValue === 'overall' &&
         <>
           <Text style={commonStyles.text}>Choose a metric:</Text>
           {useDropdown(overallMetricOptions, overallMetricValue, setOverallMetricValue)}
         </>
       }
-      {leaderboardOptionValue === 'exercise' &&
+      {leaderboardValue === 'exercise' &&
         <>
           {exerciseValue === null ?
             <>
