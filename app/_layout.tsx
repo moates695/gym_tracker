@@ -4,15 +4,15 @@ import * as SecureStore from "expo-secure-store";
 import { jwtDecode } from "jwt-decode";
 import React from "react";
 import * as Font from 'expo-font';
-import { MaterialIcons, AntDesign, Ionicons } from '@expo/vector-icons';
-import { fetchWrapper } from "@/middleware/helpers";
-import { Alert, useColorScheme, View } from 'react-native';
+import { MaterialIcons, AntDesign, Ionicons, Feather } from '@expo/vector-icons';
+import { fetchWrapper, loadFonts } from "@/middleware/helpers";
+import { useColorScheme, View } from 'react-native';
 import * as SystemUI from "expo-system-ui"
-import { useAtom, useAtomValue } from "jotai";
-import { loadableWorkoutExercisesAtom, workoutExercisesAtom } from "@/store/general";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { ThemeProvider, DarkTheme } from "@react-navigation/native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { useAtom } from "jotai";
+import { distributionStatsAtom, exerciseListAtom, favouriteExerciseStatsAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, userDataAtom, workoutExercisesAtom, workoutHistoryStatsAtom, workoutTotalStatsAtom } from "@/store/general";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StatusBar } from 'expo-status-bar';
 
 export interface DecodedJWT {
   email: string
@@ -21,17 +21,30 @@ export interface DecodedJWT {
   iat: number
 }
 
+// todo: load in all required atoms before allowing to go to main screen
+// todo: load in secondary data async after transiting to home screen
+
 export default function RootLayout() {
   const router = useRouter();
   const colorScheme = useColorScheme();
 
-  const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom);
-
-  SystemUI.setBackgroundColorAsync("black")
+  const [,] = useAtom(workoutExercisesAtom); // to prevent screen flashbang  
+  const [, setUserData] = useAtom(userDataAtom);
+  const [, setGroupToTargets] = useAtom(muscleGroupToTargetsAtom);
+  const [, setTargetoGroup] = useAtom(muscleTargetoGroupAtom);
+  const [, setExerciseList] = useAtom(exerciseListAtom);
+  const [, setOverviewHistoricalStats] = useAtom(previousWorkoutStatsAtom);
+  const [, setWorkoutHistoryStats] = useAtom(workoutHistoryStatsAtom);
+  const [, setWorkoutTotalStats] = useAtom(workoutTotalStatsAtom);
+  const [, setDistributions] = useAtom(distributionStatsAtom);
+  const [, setFavouriteStats] = useAtom(favouriteExerciseStatsAtom);
+  
+  SystemUI.setBackgroundColorAsync("black");
 
   const checkUserState = async () => {
     // await SecureStore.deleteItemAsync("auth_token"); //!!!! for testing new user
-    
+    // await AsyncStorage.clear(); //!!!!! clear storage
+
     router.replace("/loading");
 
     const auth_token = await SecureStore.getItemAsync("auth_token");
@@ -50,12 +63,13 @@ export default function RootLayout() {
       }
 
       const data = await fetchWrapper({
-        route: 'login',
+        route: 'register/login',
         method: 'GET',
       });
-      if (data === null) throw new Error("response not ok");
+      if (!data || !data.account_state) throw new Error("response not ok");
 
       if (data.account_state !== "good") {
+        setUserData(null);
         await SecureStore.deleteItemAsync("auth_token");
       }
       if (data.account_state !== "unverified") {
@@ -71,21 +85,37 @@ export default function RootLayout() {
           router.replace("/sign-in");
           return;
         }
-        const data = await fetchWrapper({
+        const data2 = await fetchWrapper({
           route: 'register/validate/resend',
           method: 'POST',
           token_str: 'temp_token'
         })
-        if (data === null) {
+        if (!data2) {
           await SecureStore.deleteItemAsync("temp_token");
           router.replace("/sign-in");
         } else {
           router.replace("/validate");
         }
       } else if (data.account_state == "good") {
-        // await loadStoredData();
-        await loadFonts();
+        // todo: group these into a single request (get all startup data at once)
+        await Promise.all([
+          loadFonts(),
+          fetchUserData(),
+          fetchMappings(),
+        ])
         router.replace("/(tabs)");
+        try {
+          await Promise.all([
+            fetchExerciseList(),
+            fetchOverviewStats(),
+            fetchHistoryStats(),
+            fetchWorkoutTotalStats(),
+            fetchDistributionStats(),
+            fetchFavouriteStats(),
+          ])
+        } catch (error) {
+          console.log(error);
+        }
       } else {
         throw new Error("response not recognised");
       }
@@ -96,42 +126,106 @@ export default function RootLayout() {
     }
   };
 
+  const fetchUserData = async () => {
+    const data = await fetchWrapper({
+      route: 'users/data/get',
+      method: 'GET'
+    })
+    if (!data || !data.user_data) throw new Error('error fetching user data');
+    setUserData(data.user_data);
+  };
 
-  // const loadStoredData = async () => {
-  //   const loadItems = [
-  //     [workoutExercises, setWorkoutExercises, 'workoutExercisesAtom'],
-  //   ]
+  const fetchMappings = async () => {
+    const data = await fetchWrapper({
+      route: 'muscles/get_maps',
+      method: 'GET'
+    })
+    if (!data || !data.group_to_targets || !data.target_to_group) throw new Error('muscle maps bad response');
+    setGroupToTargets(data.group_to_targets);
+    setTargetoGroup(data.target_to_group);
+  };
 
-  //   for (const loadItem of loadItems) {
-  //     await loadStoredValue(loadItem[0], loadItem[1], loadItem[2])
-  //   }
-  // };
+  const fetchExerciseList = async () => {
+    try {
+      const data = await fetchWrapper({
+        route: 'exercises/list/all',
+        method: 'GET'
+      });
+      if (!data || !data.exercises) throw new Error('bad exercise list response');
+      setExerciseList(data.exercises)
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
-  // const loadStoredValue = async (atom: any, setAtom: any, key: any) => {
-  //   try {
-  //     const value = await AsyncStorage.getItem(key);
-  //     if (value === null) {
-  //       console.log(`${key} has null value`);
-  //       return;
-  //     }
-  //     setAtom(value);
-  //   } catch (error) {
-  //     console.log(error)
-  //   }
-  // };
+  const fetchOverviewStats = async () => {
+    try {
+      const data = await fetchWrapper({
+        route: 'workout/overview/stats',
+        method: 'GET'
+      });
+      if (!data || !data.workouts) throw new Error('bad overview stats response');
+      setOverviewHistoricalStats(data.workouts);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-  const loadFonts = async () => {
-    await Font.loadAsync({
-      ...MaterialIcons.font,
-      ...AntDesign.font,
-      ...Ionicons.font,
-    });
+  const fetchHistoryStats = async () => {
+    try {
+      const data = await fetchWrapper({
+        route: 'stats/history',
+        method: 'GET'
+      });
+      if (!data || !data.stats) throw new Error('stats history result is empty');
+      setWorkoutHistoryStats(data.stats);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+    
+  const fetchWorkoutTotalStats = async () => {
+    try {
+      const data = await fetchWrapper({
+        route: 'stats/workout_totals',
+        method: 'GET'
+      });
+      if (!data || !data.totals == null) throw new Error('result is empty');
+      setWorkoutTotalStats(data.totals);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchDistributionStats = async () => {
+    try {
+      const data = await fetchWrapper({
+        route: 'stats/distributions',
+        method: 'GET'
+      });
+      if (!data || !data.distributions) throw new Error('distribution stats result is empty');
+      setDistributions(data.distributions);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchFavouriteStats = async () => {
+    try {
+      const data = await fetchWrapper({
+        route: 'stats/favourites',
+        method: 'GET'
+      });
+      if (data === null || data.favourites == null) throw new Error('result is empty');
+      setFavouriteStats(data.favourites);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const initialSetup = async () => {
     await Promise.all([
       checkUserState(),
-      loadFonts()
     ]);
   };
 
@@ -140,29 +234,37 @@ export default function RootLayout() {
   }, []);
 
   return (
+    // <SafeAreaProvider style={{ backgroundColor: 'black' }}>
     <SafeAreaProvider>
-      <View style={{ flex: 1, backgroundColor: 'black' }}>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            headerStyle: {
-              backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
-            },
-            headerTintColor: colorScheme === 'dark' ? '#fff' : '#000',
-            contentStyle: {
-              backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
-            },
-          }}
-        >
-          <Stack.Screen name="loading"/>
-          <Stack.Screen name="(tabs)"/>
-          <Stack.Screen name="+not-found" />
-          <Stack.Screen name="sign-up"/>
-          <Stack.Screen name="sign-in"/>
-          <Stack.Screen name="validate"/>
-          <Stack.Screen name="error"/>
-        </Stack>
-      </View>
+      <SafeAreaView style={{ flex: 1, backgroundColor: 'black' }} edges={[]}>
+        {/* <View style={{ flex: 1, backgroundColor: 'black' }}> */}
+          <StatusBar 
+            style='dark'
+            backgroundColor='red' 
+          /> 
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              headerStyle: {
+                backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
+              },
+              headerTintColor: colorScheme === 'dark' ? '#fff' : '#000',
+              contentStyle: {
+                backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
+              },
+              animation: "none"
+            }}
+          >
+            <Stack.Screen name="loading"/>
+            <Stack.Screen name="(tabs)"/>
+            <Stack.Screen name="+not-found" />
+            <Stack.Screen name="sign-up"/>
+            <Stack.Screen name="sign-in"/>
+            <Stack.Screen name="validate"/>
+            <Stack.Screen name="error"/>
+          </Stack>
+        {/* </View> */}
+      </SafeAreaView>
     </SafeAreaProvider>
   );
 }

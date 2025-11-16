@@ -1,6 +1,13 @@
-import { atom } from 'jotai'
+import { atom, useAtom } from 'jotai'
 import { atomWithStorage, createJSONStorage, loadable } from 'jotai/utils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LineGraphPoint } from '@/components/LineGraph';
+import { HistoryGraphOption, VolumeTimespan } from '@/components/ExerciseData';
+import { Point3D } from '@/components/ThreeAxisGraph';
+import { TableData } from '@/components/DataTable';
+import { Gender, GoalStatus, PedStatus } from '@/app/sign-up';
+import { get } from 'lodash';
+import { fetchWrapper } from '@/middleware/helpers';
 
 const storage = createJSONStorage(() => AsyncStorage) as any;
 
@@ -27,7 +34,7 @@ export interface SetData {
 
 export interface ValidSetData {
   reps: number
-  weight: number
+  weight: number | null
   num_sets: number
   class: SetClass
 }
@@ -39,26 +46,27 @@ export const emptySetData: SetData = {
   "class": "working"
 }
 
-export type WeightType = 'free' | 'machine' | 'cable';
+export type WeightType = 'free' | 'machine' | 'cable' | 'calisthenic';
 
-export interface ExerciseFrequencyData {
-  days_past: number,
-  volume: number
-}
+export type BodyWeightRatios = Record<Gender, number>
 
-export interface WorkoutExercise {
+export interface Exercise {
   id: string
   name: string
   muscle_data: MuscleData[]
   is_body_weight: boolean
-  set_data: SetData[]
   description: string
   weight_type: WeightType
   is_custom: boolean
-  frequency: Record<number, number>
+  ratios?: BodyWeightRatios
 }
 
-// AsyncStorage.clear(); //! for testing
+//? base exercise: `variation_name` = undefined
+//? variation: `variation_name` = non empty string
+export interface WorkoutExercise extends Exercise {
+  variation_name?: string
+  set_data: SetData[]
+}
 
 export const workoutExercisesAtom = atomWithStorage<WorkoutExercise[]>('workoutExercisesAtom', [], storage, { getOnInit: true });
 export const loadableWorkoutExercisesAtom = loadable(workoutExercisesAtom);
@@ -68,73 +76,211 @@ export const workoutStartTimeAtom = atomWithStorage<number | null>('workoutStart
 export const muscleGroupToTargetsAtom = atomWithStorage<Record<string, string[]>>('muscleGroupToTargetsAtom', {});
 export const muscleTargetoGroupAtom = atomWithStorage<Record<string, string>>('muscleTargetoGroupAtom', {});
 
-export const showWorkoutStartOptionsAtom = atom<boolean>(true);
+export const fetchMappingsAtom = atom(
+  null,
+  async (get, set) => {
+    const data = await fetchWrapper({
+      route: 'muscles/get_maps',
+      method: 'GET'
+    })
+    if (!data || !data.group_to_targets || !data.target_to_group) {
+      throw new Error('muscle maps bad response');
+    }
+    set(muscleGroupToTargetsAtom, data.group_to_targets);
+    set(muscleGroupToTargetsAtom, data.target_to_group);
+  }
+)
 
-export const exerciseListAtom = atomWithStorage('exerciseListAtom', []);
+export type WorkoutScreen = 'start' | 'confirm' | 'workout';
+
+export const showWorkoutStartOptionsAtom = atom<WorkoutScreen>('start');
+
+//? base exercise: `variations` = list
+//? variation: `variations` = undefined
+export interface ExerciseListItem extends Exercise {
+  frequency: Record<number, number>
+  variations?: ExerciseListItem[]
+}
+
+export const exerciseListAtom = atomWithStorage<ExerciseListItem[]>('exerciseListAtom', []);
 
 export const editWorkoutExercisesAtom = atom<boolean>(false);
 
-// export const openSetOptionsAtom = atom<boolean[][]>([]);
-
-export interface WeightTimestamp {
-  weight: number
-  timestamp: number
+export interface ExerciseHistoryBaseData {
+  graph: LineGraphPoint[]
+  table: TableData<string[], string | number>
 }
 
-export interface NRepMaxData {
-  all_time: Record<string, WeightTimestamp>
-  history: Record<string, WeightTimestamp[]>
+export interface HistoryNRepMaxData {
+  all_time: ExerciseHistoryBaseData
+  history: Record<number, ExerciseHistoryBaseData>
 }
 
-export interface TimestampValue {
-  value: number
-  timestamp: number
+export interface HistoryVolumeData {
+  workout: ExerciseHistoryBaseData
+  timespan: Record<VolumeTimespan, ExerciseHistoryBaseData>
 }
 
-export interface HistorySetData {
-  reps: number
-  weight: number
-  num_sets: number
+export interface HistoryData {
+  graph: Record<HistoryGraphOption, LineGraphPoint[]>
+  table: TableData<string[], string | number>
+  started_at: number
 }
 
-export interface ExerciseHistory {
-  set_data: HistorySetData[],
-  timestamp: number
+export interface ExerciseHistoryData {
+  n_rep_max: HistoryNRepMaxData
+  volume: HistoryVolumeData
+  history: HistoryData[]
+  reps_sets_weight: Point3D[]
 }
 
-export interface ExerciseHistoricalData {
-  n_rep_max: NRepMaxData
-  volume: TimestampValue[]
-  history: ExerciseHistory[]
-  reps_sets_weight: HistorySetData[]
+export const emptyTableData: TableData<string[], string | number> = {
+  "headers": [],
+  "rows": []
 }
 
-export const emptyExerciseHistoricalData: ExerciseHistoricalData = {
+export const emptyHistoryBaseData: ExerciseHistoryBaseData = {
+  "graph": [],
+  "table": {...emptyTableData}
+}
+
+export const emptyExerciseHistoricalData: ExerciseHistoryData = {
   "n_rep_max": {
-    "all_time": {},
+    "all_time": {...emptyHistoryBaseData},
     "history": {}
   },
-  "volume": [],
+  "volume": {
+    "workout": {...emptyHistoryBaseData}, 
+    "timespan": {
+      "week": {...emptyHistoryBaseData},
+      "month": {...emptyHistoryBaseData},
+      "3_months": {...emptyHistoryBaseData},
+      "6_months": {...emptyHistoryBaseData},
+      "year": {...emptyHistoryBaseData},
+    }
+  },
   "history": [],
   "reps_sets_weight": []
 }
 
-export const exercisesHistoricalDataAtom = atomWithStorage<Record<string, ExerciseHistoricalData>>('exercisesHistoricalDataAtom', {}, storage);
+export const exercisesHistoricalDataAtom = atomWithStorage<Record<string, ExerciseHistoryData>>('exercisesHistoricalDataAtom', {}, storage);
 export const loadableExercisesHistoricalDataAtom = loadable(exercisesHistoricalDataAtom);
 
-export interface OverviewHistoricalStatsData {
+export interface PreviousWorkoutStatsData {
   volume: number
   num_sets: number
   reps: number
 }
 
-export interface OverviewHistoricalStats {
+export interface PreviousWorkoutStats {
   started_at: number
   duration: number
   num_exercises: number
-  totals: OverviewHistoricalStatsData
-  muscles: Record<string, Record<string, OverviewHistoricalStatsData>>
+  totals: PreviousWorkoutStatsData
+  muscles: Record<string, Record<string, PreviousWorkoutStatsData>>
 }
 
-export const overviewHistoricalStatsAtom = atomWithStorage<OverviewHistoricalStats[]>('overviewHistoricalStatsAtom', [], storage);
-export const loadableOverviewHistoricalStatsAtom = loadable(overviewHistoricalStatsAtom);
+export const previousWorkoutStatsAtom = atomWithStorage<PreviousWorkoutStats[]>('previousWorkoutStatsAtom', [], storage);
+export const loadablePreviousWorkoutStatsAtom = loadable(previousWorkoutStatsAtom);
+export const loadingPreviousWorkoutStatsAtom = atom<boolean>(false);
+
+export interface WorkoutTotalStats {
+  volume: number
+  num_sets: number
+  reps: number
+  duration: number
+  num_workouts: number
+  num_exercises: number
+}
+
+export const workoutTotalStatsAtom = atom<WorkoutTotalStats | null>(null)
+
+export interface WorkoutHistoryStatsMuscleValue extends PreviousWorkoutStatsData {
+  targets: Record<string, PreviousWorkoutStatsData>
+}
+
+export interface WorkoutHistoryStatsReplay {
+  exercise_id: string
+  exercise_name: string
+  variation_name: string | null
+  set_data: ValidSetData[]
+}
+
+export interface HistoryWorkoutStats extends PreviousWorkoutStatsData {
+  num_exercises: number
+}
+
+export interface WorkoutHistoryStats {
+  metadata: {
+    started_at: number
+    duration: number
+    top_groups: string[]
+  }
+  workout_stats: HistoryWorkoutStats
+  workout_muscle_stats: Record<string, WorkoutHistoryStatsMuscleValue>
+  replay: WorkoutHistoryStatsReplay[]
+}
+
+export const workoutHistoryStatsAtom = atom<WorkoutHistoryStats[] | null>(null)
+
+export interface UserData {
+  user_id: string
+  email: string
+  username: string
+  first_name: string
+  last_name: string
+  gender: Gender
+  goal_status: GoalStatus
+  height: number
+  ped_status: PedStatus
+  weight: number
+}
+
+export const userDataAtom = atomWithStorage<UserData | null>('userData', null, storage, { getOnInit: true })
+export const loadableUserDataAtom = loadable(userDataAtom);
+
+export type DistributionStatsMetric = 'volume' | 'num_sets' | 'reps' | 'num_exercises';
+
+export type DistributionStatsBase = Record<DistributionStatsMetric, number>
+
+export interface DistributionGroupStats extends DistributionStatsBase {
+  targets: Record<string, DistributionStatsBase>
+}
+
+export type DistributionStats = Record<string, DistributionGroupStats>
+
+export const distributionStatsAtom = atom<DistributionStats | null>(null);
+
+export type FavouriteStatsMetric = 'volume' | 'num_sets' | 'reps' | 'counter';
+export interface FavouriteExercisesFields {
+  exercise_id: string
+  exercise_name: string
+  variation_name?: string
+  groups: string[]
+}
+
+export type FavouriteExercisesStats = FavouriteExercisesFields & {
+  [K in FavouriteStatsMetric]: number
+}
+
+export const favouriteExerciseStatsAtom = atom<FavouriteExercisesStats[] | null>(null);
+
+export interface LeaderboardListItem {
+  user_id: string
+  username: string
+  rank: number
+  value: number
+}
+
+export interface LeaderboardData {
+  fracture: number | null
+  leaderboard: LeaderboardListItem[]
+  user_rank: number
+  max_rank: number
+  friend_ids: string[]
+  rank_data: any[]
+}
+
+export const volumeLeaderboardAtom = atom<LeaderboardData | null>(null);
+export const setLeaderboardAtom = atom<LeaderboardData | null>(null);
+export const repsLeaderboardAtom = atom<LeaderboardData | null>(null);

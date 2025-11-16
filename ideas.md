@@ -32,3 +32,4 @@
     - when workout, choose planned or swap
     - when in planned workout, allow to swap/remove exercises, allow to save as new, override current planned workout, or one off change
 - drop sets, counts as one set but allow to add weights at different reps
+- might need to switch from expo router to react navigation to fix screen flashing white issue

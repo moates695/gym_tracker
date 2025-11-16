@@ -15,6 +15,8 @@ interface WorkoutExerciseProps {
   exerciseIndex: number
 }
 
+// todo handle a variation name (might require changing the interface?)
+
 export default function workoutExercise(props: WorkoutExerciseProps) {
   const { exercise, exerciseIndex } = props; 
 
@@ -73,7 +75,20 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
         onPress={() => setIsExpanded(!isExpanded)}
         disabled={editExercises}
       >
-        <Text style={[styles.text, {fontWeight: 500}]}>{exercise.name}</Text>
+        <View style={{flexDirection: 'row', alignItems: 'baseline'}}>
+          <Text 
+            style={[styles.text, {fontWeight: 500}]}
+          >
+            {exercise.name}
+          </Text>
+          {exercise.variation_name !== undefined &&
+            <Text 
+              style={[styles.text, {paddingLeft: 4, fontSize: 12, fontStyle: 'italic' }]}
+            >
+              ({exercise.variation_name})
+            </Text>
+          }
+        </View>
         <Text style={styles.text}>{numSets} sets</Text>
       </TouchableOpacity>
       {isExpanded &&
@@ -82,16 +97,43 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
           <View style={styles.rowThin}>
             <View style={{flexDirection: 'row'}}>
               <TouchableOpacity
-                style={styles.thinTextButton}
+                style={[
+                  styles.thinTextButton,
+                  dataOption === 'heatmap' && styles.thinTextButtonHighlighted
+                ]}
                 onPress={() => handleDataExpanded('heatmap')}
               >
-                <Text style={styles.text}>heatmap</Text>
+                <Text 
+                  style={[
+                    styles.text,
+                    dataOption === 'heatmap' && {
+                      color: 'black'
+                    }
+                  ]}
+                >
+                  heatmap
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.thinTextButton, {marginLeft: 5}]}
+                style={[
+                  styles.thinTextButton,
+                  dataOption === 'data' && styles.thinTextButtonHighlighted,
+                  {
+                    marginLeft: 4
+                  }
+                ]}
                 onPress={() => handleDataExpanded('data')}
               >
-                <Text style={styles.text}>data</Text>
+                <Text 
+                  style={[
+                    styles.text,
+                    dataOption === 'data' && {
+                      color: 'black'
+                    }
+                  ]}
+                >
+                  data
+                </Text>
               </TouchableOpacity>
             </View>
             {dataOption === 'data' && 
@@ -106,7 +148,7 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
           {dataOption === 'data' &&
             <>
               <View style={styles.divider}/>
-              <ExerciseData exercise={exercise} exerciseIndex={exerciseIndex}/>
+              <ExerciseData exercise={exercise} />
             </>
           }
           {dataOption === 'heatmap' &&
@@ -168,4 +210,8 @@ const styles = StyleSheet.create({
     minWidth: 80,
     alignItems: 'center'
   },
+  thinTextButtonHighlighted: {
+    backgroundColor: '#e0e0e0ff',
+    borderColor: '#e0e0e0ff',
+  }
 })

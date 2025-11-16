@@ -12,11 +12,10 @@
         "gradleCommand": ":app:assembleRelease -x lint"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://subtly-ample-bluebird.ngrok-free.app",
-        "USE_REAL": "false"
+        "EXPO_PUBLIC_API_URL": "https://subtly-ample-bluebird.ngrok-free.app"
       }
     },
-    "testing": {
+    "preview": {
       "developmentClient": false, 
       "distribution": "internal",
       "android": {
@@ -25,8 +24,7 @@
         "gradleCommand": ":app:assembleRelease -x lint"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://subtly-ample-bluebird.ngrok-free.app",
-        "USE_REAL": "true"
+        "EXPO_PUBLIC_API_URL": "https://subtly-ample-bluebird.ngrok-free.app"
       }
     }
   }

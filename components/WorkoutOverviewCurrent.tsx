@@ -3,13 +3,13 @@ import { View, StyleSheet, Text, TouchableOpacity, Modal, Switch } from "react-n
 import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
 import { useAtom, useAtomValue } from "jotai";
-import { muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
-import { fetchWrapper, getBodyWeight, getValidSets } from "@/middleware/helpers";
+import { muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, userDataAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
+import { calcBodyWeight, calcValidWeight, fetchWrapper, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
 import { filterTimeSeries, timeSpanToMs, useDropdown } from "./ExerciseData";
 import { TimeSpanOption, TimeSpanOptionObject } from "./ExerciseData";
 import { Dropdown } from "react-native-element-dropdown";
-import DataTable from "./DataTable";
+import DataTable, { TableData } from "./DataTable";
 import LineGraph, { LineGraphPoint } from "./LineGraph";
 import { OptionsObject } from "./ChooseExerciseModal";
 
@@ -29,6 +29,7 @@ interface ContributionTypeOption {
 
 export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProps) {
   const exercises = useAtomValue(workoutExercisesAtom);
+  const userData = useAtomValue(userDataAtom);
 
   const muscleTypeOptions: MuscleTypeOption[] = [
     { label: 'muscle heads', value: 'target' },
@@ -56,9 +57,9 @@ export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProp
       if (validSets.length > 0) stats.num_valid_exercises++;
 
       for (const set_data of validSets) {
-        const weight = exercise.is_body_weight ? getBodyWeight(exercise) : (set_data.weight ?? 0);
-        const tempReps = (set_data.reps ?? 0);
-        const tempSets = (set_data.num_sets ?? 0);
+        const weight = calcValidWeight(exercise, userData, set_data);
+        const tempReps = set_data.reps;
+        const tempSets = set_data.num_sets;
 
         stats.volume += tempReps * weight * tempSets;
         stats.reps += tempReps;
@@ -68,16 +69,21 @@ export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProp
 
     return stats;
   })();
-  
-  const currentDataTableHeaders: string[] = ['Volume', 'Reps', 'Sets', 'Exercises'];
-  const currentDataTableRows: (number | string)[][] = [
-    [currentStats.volume, currentStats.reps, currentStats.num_sets, currentStats.num_valid_exercises]
-  ];
+
+  const currentTableData: TableData<string[], string | number> = {
+    'headers': ['volume', 'reps', 'sets', 'exercises'],
+    'rows': [{
+      volume: parseFloat(currentStats.volume.toFixed(2)),
+      reps: currentStats.reps,
+      sets: currentStats.num_sets,
+      exercises: currentStats.num_valid_exercises,
+    }]
+   }
 
   const getMuscleStats = () => {
-    const ratios: Record<string, any> = {
+    const stats: Record<string, any> = {
       "volume": {},
-      "sets": {},
+      "num_sets": {},
       "reps": {},
     };
 
@@ -87,52 +93,52 @@ export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProp
 
       let contributions: Record<string, number> = {
         "volume": 0,
-        "sets": 0,
+        "num_sets": 0,
         "reps": 0,
       };
       for (const set_data of validSets) {
-        const weight = exercise.is_body_weight ? getBodyWeight(exercise) : set_data.weight;
+        const weight = calcValidWeight(exercise, userData, set_data);
         const sets = set_data.num_sets;
         const reps = set_data.reps;
         
         contributions["volume"] += reps * weight * sets;
-        contributions["sets"] = sets;
+        contributions["num_sets"] = sets;
         contributions["reps"] = reps;
       }
 
-      for (const [ratioKey, ratioData] of Object.entries(ratios) as [string, any][]) {
+      for (const [statsKey, statsData] of Object.entries(stats) as [string, any][]) {
         for (const muscleData of exercise.muscle_data) {
           const groupName = muscleData.group_name;
 
-          if (!ratioData.hasOwnProperty(groupName)) {
-            ratioData[groupName] = {
+          if (!statsData.hasOwnProperty(groupName)) {
+            statsData[groupName] = {
               "targets": {}
             }
           }
 
           for (const targetData of muscleData.targets) {
             const targetName = targetData.target_name;
-            const targets = ratioData[groupName]["targets"];
+            const targets = statsData[groupName]["targets"];
 
             if (!targets.hasOwnProperty(targetName)) {
               targets[targetName] = 0;
             }
-            const weightFactor = ratioKey !== 'volume' ? 1 : (targetData.ratio / 10)
-            targets[targetName] += contributions[ratioKey] * weightFactor;
+            const ratioFactor = statsKey !== 'volume' ? 1 : (targetData.ratio / 10)
+            targets[targetName] += contributions[statsKey] * ratioFactor;
           }
         }
       }
     }
 
-    for (const [ratioKey, ratioData] of Object.entries(ratios) as [string, any][]) {
-      for (const groupData of Object.values(ratioData) as Record<string, any>[]) {
+    for (const [, statsData] of Object.entries(stats) as [string, any][]) {
+      for (const groupData of Object.values(statsData) as Record<string, any>[]) {
         const targetValues: number[] = Object.values(groupData["targets"]);
         const sum: number = targetValues.reduce((a, b) => a + b, 0);
         groupData["value"] = sum / targetValues.length;
       }
     }
 
-    return ratios;
+    return stats;
   };
 
   const getValueMap = (): Record<string, number> => {
@@ -155,10 +161,7 @@ export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProp
   return (
     <>
       <View style={styles.dataTableContainer}>
-        <DataTable 
-          headers={currentDataTableHeaders}
-          rows={currentDataTableRows}
-        />
+        <DataTable tableData={currentTableData}/>
       </View>
       <Text style={styles.text}>Choose a muscle level:</Text>
       {useDropdown(muscleTypeOptions, muscleTypeValue, setMuscleTypeValue)}

@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
 import WorkoutHeader from '@/components/WorkoutHeader';
+import StatsHeader from '@/components/StatsHeader';
 
 export default function TabLayout() {
   return (
@@ -14,8 +15,9 @@ export default function TabLayout() {
         headerShadowVisible: false,
         headerTintColor: '#fff',
         tabBarStyle: {
-        backgroundColor: 'black',
+          backgroundColor: 'black',
         },
+        sceneStyle: { backgroundColor: 'black' }
       }}
     >
       <Tabs.Screen
@@ -39,7 +41,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="workout"
         options={{
-          title: 'Workouts',
+          title: 'Workout',
           headerTitle: () => <WorkoutHeader />,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'accessibility' : 'accessibility-outline'} color={color} size={24} />
@@ -50,6 +52,7 @@ export default function TabLayout() {
         name="stats"
         options={{
           title: 'Stats',
+          headerTitle: () => <StatsHeader />,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'stats-chart' : 'stats-chart-outline'} color={color} size={24} />
           ),

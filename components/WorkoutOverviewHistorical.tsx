@@ -3,8 +3,8 @@ import { View, StyleSheet, Text, TouchableOpacity, Modal, Switch } from "react-n
 import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
 import { useAtom, useAtomValue } from "jotai";
-import { loadableOverviewHistoricalStatsAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
-import { fetchWrapper, getBodyWeight, getValidSets } from "@/middleware/helpers";
+import { loadablePreviousWorkoutStatsAtom, loadingPreviousWorkoutStatsAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, userDataAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
+import { calcBodyWeight, calcValidWeight, fetchWrapper, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
 import { filterTimeSeries, timeSpanToMs, useDropdown } from "./ExerciseData";
 import { TimeSpanOption, TimeSpanOptionObject } from "./ExerciseData";
@@ -16,7 +16,7 @@ import LoadingScreen from "@/app/loading";
 
 interface WorkoutOverviewHistoricalProps {}
 
-type HistoryComparisonType = 'workout' | 'muscle_group' | 'muscle_target';
+type HistoryComparisonType = 'workout' | 'muscles';
 interface HistoryComparisonOption {
   label: string
   value: HistoryComparisonType
@@ -37,37 +37,34 @@ interface ContributionTypeOption {
 export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoricalProps) {
   const exercises = useAtomValue(workoutExercisesAtom); 
   const muscleGroupToTargets = useAtomValue(muscleGroupToTargetsAtom);
-  // const overviewHistoricalStats = useAtomValue(overviewHistoricalStatsAtom);
-  const [overviewHistoricalStats, setOverviewHistoricalStats] = useAtom(overviewHistoricalStatsAtom);
-  const loadableOverviewHistoricalStats = useAtomValue(loadableOverviewHistoricalStatsAtom);
+  const [overviewHistoricalStats, setOverviewHistoricalStats] = useAtom(previousWorkoutStatsAtom);
+  const loadableOverviewHistoricalStats = useAtomValue(loadablePreviousWorkoutStatsAtom);
   const workoutStartTime = useAtomValue(workoutStartTimeAtom);
+  const loadingPreviousWorkoutStats = useAtomValue(loadingPreviousWorkoutStatsAtom);
+  const userData = useAtomValue(userDataAtom);
 
   const historyComparisonOptions: HistoryComparisonOption[] = [
     { label: 'workout totals', value: 'workout' },
-    { label: 'muscle group', value: 'muscle_group' },
-    { label: 'muscle target', value: 'muscle_target' },
+    { label: 'muscles', value: 'muscles' },
   ]
   const [historyComparisonValue, setHistoryComparisonValue] = useState<HistoryComparisonType>('workout')
 
   const muscleGroupOptions: OptionsObject[] = Object.keys(muscleGroupToTargets).map(group => (
-    {
-      label: group,
-      value: group
-    }
+    { label: group, value: group }
   ));
   const [muscleGroupValue, setMuscleGroupValue] = useState<string>(muscleGroupOptions[0].value);
 
-  const allMuscleTargetOptions = ((): Record<string, OptionsObject[]> => {
-    const optionsMap: Record<string, OptionsObject[]> = {};
-    for (const [group, targets] of Object.entries(muscleGroupToTargets)) {
-      optionsMap[group] = targets.map(name => ({
-        label: name,
-        value: name
-      }));
+  const muscleTargetOptions: OptionsObject[] = ((): OptionsObject[] => {
+    const options: OptionsObject[] = [{ label: 'all targets', value: 'all' }];
+    for (const target of muscleGroupToTargets[muscleGroupValue] ?? []) {
+      options.push({
+        label: target,
+        value: target
+      })
     }
-    return optionsMap;
+    return options;
   })();
-  const [muscleTargetValue, setMuscleTargetValue] = useState<string>(allMuscleTargetOptions[muscleGroupValue][0].value);
+  const [muscleTargetValue, setMuscleTargetValue] = useState<string>('all');
 
   const totalsContributionOptions: TotalsContributionTypeOption[] = [
     { label: 'volume', value: 'volume' },
@@ -97,11 +94,6 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
 
   const [workoutDuration, setWorkoutDuration] = useState<number>(0);
 
-  // useEffect(() => {
-  //   if (overviewHistoricalStats.length > 0) return;
-
-  // }, [overviewHistoricalStats]);
-
   useEffect(() => {
     if (workoutStartTime === null) return;
 
@@ -117,14 +109,12 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
 
   const handleChooseMuscleGroup = (value: string) => {
     setMuscleGroupValue(value);
-    if (historyComparisonValue === 'muscle_group') return;
-    setMuscleTargetValue(allMuscleTargetOptions[value][0].value);
+    setMuscleTargetValue('all');
   };
 
   const historyDataContributionsMap: Record<HistoryComparisonType, JSX.Element> = {
     workout: <>{useDropdown(totalsContributionOptions, totalsContributionValue, setTotalsContributionValue)}</>,
-    muscle_group: <>{useDropdown(contributionTypeOptions, contributionTypeValue, setContributionTypeValue)}</>,
-    muscle_target: <>{useDropdown(contributionTypeOptions, contributionTypeValue, setContributionTypeValue)}</>
+    muscles: <>{useDropdown(contributionTypeOptions, contributionTypeValue, setContributionTypeValue)}</>,
   };
 
   const lookbackComponent = (
@@ -161,16 +151,12 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
 
   const getHistoryPoints = (): LineGraphPoint[] => {
     let points: LineGraphPoint[] = [];
-    switch (historyComparisonValue) {
-      case 'workout':
-        points = getHistoryWorkoutPoints();
-        break;
-      case 'muscle_group':
-        points = getHistoryMuscleGroupPoints();
-        break;
-      case 'muscle_target':
-        points = getHistoryMuscleTargetPoints();  
-        break;
+    if (historyComparisonValue === 'workout') {
+      points = getHistoryWorkoutPoints();
+    } else if (muscleTargetValue === 'all') {
+      points = getHistoryMuscleGroupPoints();
+    } else {
+      points = getHistoryMuscleTargetPoints();
     }
     return filterTimeSeries(points, timeSpanOptionValue);
   };
@@ -239,22 +225,47 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
   };
 
   const getBarValueWorkout = (): number => {
-    const validExercises = [];
-    for (const exercise of exercises) {
-      validExercises.push(getValidSets(exercise));
-    }
+    // const validExercises = [];
+    // for (const exercise of exercises) {
+    //   validExercises.push(getValidSets(exercise));
+    // }
+
+    // if (totalsContributionValue === 'duration') {
+    //   return workoutDuration;
+    // } else if (totalsContributionValue === 'num_exercises') {
+    //   return validExercises.length;
+    // }
+
+    // let value = 0;
+    // for (const set_data_list of validExercises) {
+    //   for (const set_data of set_data_list) {
+    //     if (totalsContributionValue === 'volume') {
+    //       const weight = 0; // tod
+    //       value += set_data.reps * weight * set_data.num_sets;
+    //     } else if (totalsContributionValue === 'reps') {
+    //       value += set_data.reps * set_data.num_sets;
+    //     } else {
+    //       value += set_data.num_sets;
+    //     }
+    //   }
+    // }
+
+    // return value;
 
     if (totalsContributionValue === 'duration') {
       return workoutDuration;
-    } else if (totalsContributionValue === 'num_exercises') {
-      return validExercises.length;
     }
 
-    let value = 0;
-    for (const set_data_list of validExercises) {
-      for (const set_data of set_data_list) {
+    let numValidExercises = 0
+    let value = 0
+    for (const exercise of exercises) {
+      const validSets = getValidSets(exercise);
+      if (validSets.length > 0) numValidExercises++; 
+
+      for (const set_data of validSets) {
         if (totalsContributionValue === 'volume') {
-          value += set_data.reps * set_data.weight * set_data.num_sets;
+          const weight = calcValidWeight(exercise, userData, set_data);
+          value += set_data.reps * weight * set_data.num_sets;
         } else if (totalsContributionValue === 'reps') {
           value += set_data.reps * set_data.num_sets;
         } else {
@@ -263,6 +274,9 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
       }
     }
 
+    if (totalsContributionValue === 'num_exercises') {
+      return numValidExercises;
+    }
     return value;
   };
 
@@ -276,7 +290,8 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
       for (const muscle_data of exercise.muscle_data) {
         if (muscle_data.group_name !== muscleGroupValue) continue;
         for (const target_data of muscle_data.targets) {
-          if (historyComparisonValue === 'muscle_target' && target_data.target_name != muscleTargetValue) continue;
+          // if (historyComparisonValue === 'muscle_target' && target_data.target_name != muscleTargetValue) continue;
+          if (muscleTargetValue !== 'all' && target_data.target_name != muscleTargetValue) continue;
           if (target_data.ratio <= maxRatio) continue;
           maxRatio = target_data.ratio;
         }
@@ -286,7 +301,7 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
 
       for (const set_data of getValidSets(exercise)) {
         if (contributionTypeValue === 'volume') {
-          const weight = exercise.is_body_weight ? getBodyWeight(exercise) : set_data.weight
+          const weight = calcValidWeight(exercise, userData, set_data);
           value += set_data.reps * weight * set_data.num_sets * (maxRatio / 10);
         } else if (contributionTypeValue === 'reps') {
           value += set_data.reps * set_data.num_sets;
@@ -299,18 +314,11 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
     return value;
   };
 
-  const getOverviewStats = async () => {
-    const data = await fetchWrapper({
-      route: 'workout/overview/stats',
-      method: 'GET'
-    });
-    if (data === null) return;
-    setOverviewHistoricalStats(data.workouts);
-  };
-
-  if (['loading', 'hasError'].includes(loadableOverviewHistoricalStats.state)) {
-    getOverviewStats();
+  if (loadableOverviewHistoricalStats.state === 'loading' || loadingPreviousWorkoutStats) {
     return <LoadingScreen />
+  } else if (loadableOverviewHistoricalStats.state === 'hasError') {
+    console.log('error getting overview historical stats from storage');
+    setOverviewHistoricalStats([]);
   }
 
   return (
@@ -321,14 +329,16 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
         <>
           <Text style={styles.text}>Choose a muscle group:</Text>
           {useDropdown(muscleGroupOptions, muscleGroupValue, handleChooseMuscleGroup)}
+          <Text style={styles.text}>Choose a muscle target:</Text>
+          {useDropdown(muscleTargetOptions, muscleTargetValue, setMuscleTargetValue)}
         </>
       }
-      {historyComparisonValue === 'muscle_target' &&
+      {/* {historyComparisonValue === 'muscle_target' &&
         <>
           <Text style={styles.text}>Choose a muscle target:</Text>
           {useDropdown(allMuscleTargetOptions[muscleGroupValue], muscleTargetValue, setMuscleTargetValue)}
         </>
-      }
+      } */}
       <Text style={styles.text}>Choose a contribution type:</Text>
       {historyDataContributionsMap[historyComparisonValue]}
       {lookbackComponent}

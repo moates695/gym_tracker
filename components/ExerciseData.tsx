@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { View, StyleSheet, Text, Platform, TouchableOpacity, ScrollView, FlatList, StyleProp, ViewStyle } from "react-native"
-import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoricalData, TimestampValue, ExerciseHistory, loadableExercisesHistoricalDataAtom } from "@/store/general"
+import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoryData, loadableExercisesHistoricalDataAtom, emptyExerciseHistoricalData, HistoryData, ExerciseListItem } from "@/store/general"
 import ThreeAxisGraph, { Point3D } from './ThreeAxisGraph'
 import { useEffect, useRef, useState } from "react";
 import { useAtom, useAtomValue } from "jotai";
@@ -10,6 +10,10 @@ import { Dropdown } from 'react-native-element-dropdown';
 import CarouselDataTable from './CarouselDataTable';
 import { fetchWrapper, getValidSets } from '@/middleware/helpers';
 import LoadingScreen from '@/app/loading';
+import { OptionsObject } from './ChooseExerciseModal';
+import { timestampToDateStr } from '../middleware/helpers'
+import DataTable, { TableData } from './DataTable';
+import Feather from '@expo/vector-icons/Feather';
 
 // WORKOUT OVERVIEW DATA
 // list of exercises in the workout
@@ -31,10 +35,7 @@ import LoadingScreen from '@/app/loading';
 //    overall by sets, volume, reps
 //    per muscle group or target by sets, volume, reps
 
-interface ExerciseDataProps {
-  exercise: WorkoutExercise
-  exerciseIndex: number
-}
+
 
 type DataVisual = 'graph' | 'table';
 
@@ -62,13 +63,13 @@ interface VolumeOptionObject {
   value: VolumeOption
 }
 
-type VolumeTimespan = 'week' | 'month' | '3_months' | '6_months' | 'year';
+export type VolumeTimespan = 'week' | 'month' | '3_months' | '6_months' | 'year';
 interface VolumeTimespanObject {
   label: string
   value: VolumeTimespan
 }
 
-type HistoryGraphOption = 'weight_per_set' | 'volume_per_set' | 'weight_per_rep';
+export type HistoryGraphOption = 'weight_per_set' | 'volume_per_set' | 'weight_per_rep';
 interface HistoryGraphObject {
   label: string
   value: HistoryGraphOption
@@ -98,6 +99,7 @@ export const useDropdown = (options: any, value: any, setter: any, disabled: boo
         </View>
       )}
       disable={disabled}
+      autoScroll={false}
     />
   )
 };
@@ -118,15 +120,21 @@ export const filterTimeSeries = (points: LineGraphPoint[], timeSpanOptionValue: 
   });
 }
 
+interface ExerciseDataProps {
+  exercise: WorkoutExercise
+}
+
+// todo include bar graph and current points for exercise data to compare to previous
 export default function ExerciseData(props: ExerciseDataProps) {
-  const {exercise, exerciseIndex} = props;
+  const {exercise} = props;
 
   const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
-  const [exerciseData, setExerciseData] = useState<ExerciseHistoricalData>(exercisesHistoricalData[exercise.id]);
   const loadableExercisesHistoricalData = useAtomValue(loadableExercisesHistoricalDataAtom);
 
+  const exerciseHistory: ExerciseHistoryData = exercisesHistoricalData[exercise.id] ?? emptyExerciseHistoricalData;
+
   const dataOptions: DataOptionObject[] = [
-    { label: 'rep max', value: 'n_rep_max' },
+    { label: 'n rep max', value: 'n_rep_max' },
     { label: 'volume', value: 'volume' },
     { label: 'history', value: 'history' },
     { label: '3D plot', value: 'reps_sets_weight' },
@@ -139,24 +147,18 @@ export default function ExerciseData(props: ExerciseDataProps) {
   ]
   const [nRepMaxOptionValue, setNRepMaxOptionValue] = useState<NRepMaxDataOption>('all_time');
 
-  const [nRepMaxHistoryOptions, setNRepMaxHistoryOptions] = useState<any[]>([]);
+  const nRepMaxHistoryOptions: OptionsObject[] = ((): OptionsObject[] => {
+    const options: OptionsObject[] = [];
+    for (const rep of Object.keys(exerciseHistory.n_rep_max.history)) {
+      options.push({ label: rep, value: rep });
+    }
+    return options;
+  })();
   const [nRepMaxHistoryOptionValue, setNRepMaxHistoryOptionValue] = useState<string | null>(nRepMaxHistoryOptions[0]?.value ?? null);
 
   useEffect(() => {
-    try {
-      const temp: any[] = [];
-      for (const key in exerciseData['n_rep_max']['history']) {
-        temp.push({
-          label: key, value: key
-        })
-      }
-      setNRepMaxHistoryOptions(temp);
-      setNRepMaxHistoryOptionValue(temp[0]?.value ?? null);
-    } catch (error) {
-      console.log(error)
-      setNRepMaxHistoryOptions([]);
-    }
-  }, [exerciseData]);
+    setNRepMaxHistoryOptionValue(nRepMaxHistoryOptions[0]?.value ?? null);
+  }, [exerciseHistory]);
 
   const volumeOptions: VolumeOptionObject[] = [
     { label: 'workout', value: 'workout' },
@@ -195,306 +197,8 @@ export default function ExerciseData(props: ExerciseDataProps) {
   const [historyGraphOptionValue, setHistoryGraphOptionValue] = useState<HistoryGraphOption>('volume_per_set');
 
   const handleSwitchDataVisual = () => {
-    setDataVisual(dataVisual === 'graph' ? 'table' : 'graph')
+    setDataVisual(dataVisual === 'graph' ? 'table' : 'graph');
   }
-
-  const getPoints = (): LineGraphPoint[] => {
-    try {
-      switch (dataOptionValue) {
-        case 'n_rep_max':
-          return getNRepMaxPoints();
-        case 'volume':
-          return getVolumePoints();
-        case 'history':
-          return getHistoryPoints();
-        default:
-          return [];
-      }
-    } catch (error) {
-      console.log(error);
-      return [];
-    }
-  };
-
-  const getNRepMaxPoints = (): LineGraphPoint[] => {
-    switch (nRepMaxOptionValue) {
-      case 'all_time':
-        return getNRepMaxAllTimePoints();
-      case 'history':
-        return getNRepMaxHistoryPoints();
-    }
-  };
-
-  const getNRepMaxAllTimePoints = (): LineGraphPoint[] => {
-    const points: LineGraphPoint[] = [];
-    for (const [key, obj] of Object.entries(exerciseData['n_rep_max']['all_time'])) {
-      points.push({
-        'x': parseInt(key),
-        'y': parseFloat((obj as any).weight)
-      })
-    }
-    return points;
-  };
-
-  const getNRepMaxHistoryPoints = (): LineGraphPoint[] => {
-    if (nRepMaxHistoryOptionValue === null) return [];
-    const points: any[] = [];
-    for (const point of exerciseData['n_rep_max']['history'][nRepMaxHistoryOptionValue]) {
-      points.push({
-        "x": parseInt((point as any)["timestamp"]),
-        "y": parseFloat((point as any)["weight"]),
-      })
-    }
-    return filterTimeSeries(points, timeSpanOptionValue);
-  };
-
-  const getVolumePoints = (): LineGraphPoint[] => {
-    switch (volumeOptionValue) {
-      case 'workout':
-        return getVolumePerWorkoutPoints();
-      case 'timespan':
-        return getVolumePerBucketPoints();
-    }
-  };
-
-  const getVolumePerWorkoutPoints = (): LineGraphPoint[] => {
-    const points: LineGraphPoint[] = [];
-    for (const point of exerciseData["volume"]) {
-      points.push({
-        "x": Math.floor((point as TimestampValue)["timestamp"]),
-        "y": (point as TimestampValue)["value"]
-      })
-    }
-    return filterTimeSeries(points, timeSpanOptionValue);
-  };
-
-  const getVolumePerBucketPoints = (): LineGraphPoint[] => {
-    const {bucketData, now, bucketMs} = getBucketData();
-
-    const points: LineGraphPoint[] = [];
-    for (const [bucket, volume] of Object.entries(bucketData)) {
-      points.push({
-        x: now - (parseFloat(bucket) * bucketMs) - bucketMs / 2,
-        y: volume
-      })
-    }
-    return points;
-  };
-
-  const getBucketData = () => {
-    const now = Date.now();
-    const bucketMs = timeSpanToMs[volumeTimespanOptionValue];
-    const bucketData: Record<number, number> = {};
-    
-    for (const data of exerciseData.volume) {
-      const bucket = Math.floor((now - data.timestamp) / bucketMs);
-      if (!bucketData.hasOwnProperty(bucket)) {
-        bucketData[bucket] = 0;
-      }
-      bucketData[bucket] += data.value;
-    }
-    
-    return {
-      bucketData,
-      now,
-      bucketMs
-    };
-  };
-
-  const getHistoryPoints = (): LineGraphPoint[] => {
-    if (historyGraphOptionValue !== 'weight_per_rep') {
-      return getHistoryPointsSets();
-    } else {
-      return getHistoryPointsReps();
-    }
-  };
-
-  const getHistoryPointsSets = (): LineGraphPoint[] => {
-    const data = exerciseData["history"][historyListIndex];
-    if (data === undefined) return [];
-
-    const points: LineGraphPoint[] = [];
-    let set_num = 1;
-    data.set_data.map(set_data => {
-      for (let i = 0; i < set_data.num_sets; i++) {
-        let yValue = set_data.weight;
-        if (historyGraphOptionValue === 'volume_per_set') {
-          yValue *= set_data.reps
-        } 
-        points.push({
-          "x": set_num,
-          "y": yValue
-        })
-        set_num++;
-      }
-    });
-
-    return points;
-  };
-
-  const getHistoryPointsReps = (): LineGraphPoint[] => {
-    const data = exerciseData["history"][historyListIndex];
-    if (data === undefined) return [];
-
-    const points: LineGraphPoint[] = [];
-    let rep_num = 1;
-    data.set_data.map(set_data => {
-      for (let i = 0; i < set_data.num_sets; i++) {
-        for (let j = 0; j < set_data.reps; j++) {
-          points.push({
-            "x": rep_num,
-            "y": set_data.weight
-          })
-          rep_num++;
-        }
-      }
-    });
-
-    return points;
-  };
-
-  const getTable = (): JSX.Element => {
-    let headers = [];
-    let rows = [];
-
-    try {
-      switch (dataOptionValue) {
-        case 'n_rep_max':
-          [headers, rows] = getNRepMaxTable();
-          break;
-        case 'volume':
-          [headers, rows] = getVolumeTable();
-          break;
-        case 'history':
-          [headers, rows] = getHistoryTable();
-          break;
-        default:
-          return (<></>); 
-      }
-    } catch (error) {
-      console.log(error);
-      return (<></>);
-    }
-
-    // rows = rows.slice().reverse();
-
-    return (
-      <CarouselDataTable 
-        headers={headers}
-        rows={rows}
-      />
-    ) 
-  };
-
-  const getNRepMaxTable = (): [string[], (string | number)[][]] => {
-    switch (nRepMaxOptionValue) {
-      case 'all_time':
-        return getNRepMaxAllTimeTable();
-      case 'history':
-        return getNRepMaxHistoryTable(); 
-    }
-  };
-
-  const getNRepMaxAllTimeTable = (): [string[], (string | number)[][]] => {
-    const headers = ['Reps', 'Weight', 'Date'];
-    const rows: (number | string)[][] = [];
-    
-    for (const [reps, value] of Object.entries(exerciseData['n_rep_max']['all_time'])) {
-      rows.push([
-        reps,
-        value.weight,
-        timestampToDateStr(value.timestamp)
-      ])
-    }
-
-    return [headers, rows];
-  };
-
-  const getNRepMaxHistoryTable = (): [string[], (string | number)[][]] => {
-    if (nRepMaxHistoryOptionValue === null) return [[], []];
-
-    const headers = ['Weight', 'Date'];
-    const rows: (number | string)[][] = [];
-
-    for (const value of Object.values(exerciseData['n_rep_max']['history'][nRepMaxHistoryOptionValue])) {
-      rows.push([
-        value.weight,
-        timestampToDateStr(value.timestamp)
-      ])
-    }
-    rows.reverse();
-    
-    return [headers, rows];
-  };
-
-  const getVolumeTable = (): [string[], (string | number)[][]] => {
-    switch (volumeOptionValue) {
-      case 'workout':
-        return getVolumePerWorkoutTable();
-      case 'timespan':
-        return getVolumePerTimespanTable();
-    }
-  };
-
-  const getVolumePerWorkoutTable = (): [string[], (string | number)[][]] => {
-    const headers = ['Volume', 'Date'];
-    const rows: (number | string)[][] = [];
-    
-    for (const data of exerciseData["volume"]) {
-      rows.push([
-        data.value,
-        timestampToDateStr(data.timestamp)
-      ])
-    }
-    rows.reverse();
-
-    return [headers, rows];
-  };
-
-  const getVolumePerTimespanTable = (): [string[], (string | number)[][]] => {
-    const headers = ['Volume', 'Date Range'];
-    let rows: (number | string)[][] = [];
-    
-    const {bucketData, now, bucketMs} = getBucketData();
-    for (const [bucket, volume] of Object.entries(bucketData)) {
-      const date1 = now - parseInt(bucket) * bucketMs;
-      const date2 = now - parseInt(bucket) * bucketMs - bucketMs;
-      rows.push([
-        volume,
-        `${timestampToDateStr(date2)}-${timestampToDateStr(date1)}`
-      ])
-    }
-
-    return [headers, rows];
-  };
-
-  const getHistoryTable = (): [string[], (string | number)[][]] => {
-    const data = exerciseData["history"][historyListIndex];
-    if (data === undefined) return [[], []];
-
-    const headers = ['Reps', 'Weight', 'Sets'];
-    const rows: (number | string)[][] = [];
-
-    for (const set_data of data.set_data) {
-      rows.push([
-        set_data.reps,
-        set_data.weight,
-        set_data.num_sets
-      ])
-    }
-
-    return [headers, rows];
-  };
-
-  const timestampToDateStr = (timestamp: number): string => {
-    const localDate = new Date(timestamp);
-
-    const day = localDate.getDate().toString().padStart(2, '0');
-    const month = (localDate.getMonth() + 1).toString().padStart(2, '0');
-    const year = localDate.getFullYear();
-
-    return `${day}/${month}/${year}`;
-  };
 
   const renderItem = (item: any, selected: any): JSX.Element => {
     return (
@@ -529,11 +233,9 @@ export default function ExerciseData(props: ExerciseDataProps) {
   );
 
   const updateHistoryListIndex = (newIndex: number) => {
-    if (newIndex < 0 || newIndex >= (exerciseData?.history?.length ?? 0)) return;
+    if (newIndex < 0 || newIndex >= (exerciseHistory?.history?.length ?? 0)) return;
     setHistoryListIndex(newIndex);
   };
-
-  // todo graph for workout history, switch between graphs for each workout/day
 
   const nRepMaxComponent = (
     <>
@@ -548,9 +250,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
             {useDropdown(nRepMaxHistoryOptions, nRepMaxHistoryOptionValue, setNRepMaxHistoryOptionValue)}
           </View>
           {dataVisual === 'graph' &&
-            <>
-              {lookbackComponent}
-            </>
+            lookbackComponent
           } 
         </>
       }
@@ -583,45 +283,63 @@ export default function ExerciseData(props: ExerciseDataProps) {
           {useDropdown(historyGraphOptions, historyGraphOptionValue, setHistoryGraphOptionValue)}
         </View>
       }
-      <View style={[styles.row, {marginTop: 10}]}>
-        <TouchableOpacity
-          onPress={() => updateHistoryListIndex(historyListIndex - 1)}
-          style={[commonStyles.thinTextButton, {width: 50}]}
-        >
-          <Text style={styles.text}>newer</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => updateHistoryListIndex(historyListIndex + 1)}
-          style={[commonStyles.thinTextButton, {width: 50}]}
-        >
-          <Text style={styles.text}>older</Text>
-        </TouchableOpacity>
+      <View style={{flexDirection: 'row', marginTop: 10, justifyContent: 'space-around'}}>
+        <View style={{flexDirection: 'row', justifyContent: 'center'}}>
+          <TouchableOpacity
+            onPress={() => setHistoryListIndex(0)}
+            style={[commonStyles.thinTextButton, {width: 30}]}
+          >
+            <Feather name="chevrons-left" size={14} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => updateHistoryListIndex(historyListIndex - 1)}
+            style={[commonStyles.thinTextButton, {width: 30, marginLeft: 4}]}
+          >
+            <Feather name="chevron-left" size={14} color="white" />
+          </TouchableOpacity>
+        </View>
+        <View style={{flexDirection: 'row', justifyContent: 'center'}}>
+          <TouchableOpacity
+            onPress={() => updateHistoryListIndex(historyListIndex + 1)}
+            style={[commonStyles.thinTextButton, {width: 30}]}
+          >
+            <Feather name="chevron-right" size={14} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setHistoryListIndex(exerciseHistory.history.length - 1)}
+            style={[commonStyles.thinTextButton, {width: 30, marginLeft: 4}]}
+          >
+            <Feather name="chevrons-right" size={14} color="white" />
+          </TouchableOpacity>
+        </View>
       </View>
-      {exerciseData !== undefined &&
+      {exerciseHistory["history"][historyListIndex]?.started_at &&
         <Text 
           style={[styles.text, {alignSelf: 'center', margin: 5}]}
         >
-          Workout on {timestampToDateStr(exerciseData["history"][historyListIndex].timestamp)}
+          Workout on {timestampToDateStr(exerciseHistory["history"][historyListIndex]?.started_at)}
         </Text>
       }
     </>
   )
 
-  const get3DGraphPoints = (): Point3D[] => {
-    if (exerciseData === undefined) return [];
-    
-    const points: Point3D[] = [];
-    for (const data of exerciseData["reps_sets_weight"]) {
-      points.push({
-        x: data.num_sets,
-        y: data.weight,
-        z: data.reps
-      })
-    }
-    return points;
-  };
+  // const get3DGraphPoints = (): Point3D[] => {
+  //   if (exerciseHistory === undefined) return [];
+  //   return [];
 
-  const points3D = get3DGraphPoints();
+  //   // const points: Point3D[] = [];
+  //   // for (const data of exerciseHistory["reps_sets_weight"]) {
+  //   //   points.push({
+  //   //     x: data.num_sets,
+  //   //     y: data.weight,
+  //   //     z: data.reps
+  //   //   })
+  //   // }
+  //   // return points;
+  // };
+
+  // const points3D = get3DGraphPoints();
+  
   const repsSetsWeightComponent = (
     <>
       <View style={styles.row}>
@@ -630,11 +348,11 @@ export default function ExerciseData(props: ExerciseDataProps) {
         <Text style={{color: 'green'}}>weight</Text>
       </View>
       <Text style={styles.text}>data is normalised</Text>
-      {points3D.length < 0 ? 
+      {exerciseHistory.reps_sets_weight.length < 0 ? 
         <Text style={styles.text}>not enough data</Text>
       :
         <View style={{height: 350}}>
-          <ThreeAxisGraph points={get3DGraphPoints()}/>
+          <ThreeAxisGraph points={exerciseHistory.reps_sets_weight}/>
         </View>
       }
     </>
@@ -656,8 +374,6 @@ export default function ExerciseData(props: ExerciseDataProps) {
       setGraphScale('value');
     } else if (dataOptionValue === 'volume') {
       setGraphScale('time')
-    } else if (dataOptionValue === 'reps_sets_weight') {
-
     }
   }, [dataOptionValue, nRepMaxOptionValue]);
 
@@ -708,7 +424,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
         for (let j = 0; j < set_data.reps!; j++) {
           points.push({
             x: repNum,
-            y: set_data.weight,
+            y: set_data.weight ?? 0,
           });
           repNum++;
         }
@@ -718,44 +434,96 @@ export default function ExerciseData(props: ExerciseDataProps) {
 
   }; 
 
-  const dataVisualMap: Record<DataVisual, JSX.Element> = {
-    'graph': <LineGraph points={getPoints()} scale_type={graphScale} barValue={getBarValue()} currentPoints={getCurrentPoints()}/>,
-    'table': getTable()
-  }
-
-  const loadExerciseData = () => { 
-    if (loadableExercisesHistoricalData.state === 'hasData') {
-      const temp = exercisesHistoricalData[exercise.id];
-      if (temp !== undefined) {
-        setExerciseData(temp);
-        return;
+  // todo: filter time series points
+  const getPoints = (): LineGraphPoint[] => {
+    let points: LineGraphPoint[] = [];
+    let filterSeries = false;
+    try {
+      if (dataOptionValue === 'n_rep_max') {
+        if (nRepMaxOptionValue === 'all_time') {
+          points = exerciseHistory[dataOptionValue][nRepMaxOptionValue].graph;
+        } else if (nRepMaxHistoryOptionValue !== null) {
+          points = exerciseHistory[dataOptionValue][nRepMaxOptionValue][Number(nRepMaxHistoryOptionValue)].graph;
+          filterSeries = true;
+        }
+      } else if (dataOptionValue === 'volume') {
+        if (volumeOptionValue === 'workout') {
+          points = exerciseHistory[dataOptionValue][volumeOptionValue].graph;
+          filterSeries = true;
+        } else {
+          points = exerciseHistory[dataOptionValue][volumeOptionValue][volumeTimespanOptionValue].graph;
+        }
+      } else if (dataOptionValue === 'history') {
+        points = exerciseHistory[dataOptionValue][historyListIndex].graph[historyGraphOptionValue];
       }
+    } catch (error) {
+      console.log(error);
     }
 
-    if (loadableExercisesHistoricalData.state === 'loading' || exerciseData !== undefined) return;
-
-    const handleRefreshHistory = async () => {
-      const data = await fetchWrapper({
-        route: 'exercise/history',
-        method: 'GET',
-        params: {exercise_id: exercise.id}
-      })
-      setExercisesHistoricalData(prev => ({
-        ...prev,
-        [exercise.id]: data
-      }))
+    if (filterSeries) {
+      points = filterTimeSeries(points, timeSpanOptionValue);
     }
 
-    handleRefreshHistory();
+    return points;
   };
 
-  useEffect(() => {
-    loadExerciseData();
-  }, [loadableExercisesHistoricalData.state, exerciseData])
+  const getTableData = (): TableData<string[], string | number> => {
+    let tableData: TableData<string[], string | number> = {
+      headers: [],
+      rows: []
+    };
+    try {
+      if (dataOptionValue === 'n_rep_max') {
+        if (nRepMaxOptionValue === 'all_time') {
+          tableData = exerciseHistory[dataOptionValue][nRepMaxOptionValue].table;
+        } else if (nRepMaxHistoryOptionValue !== null) {
+          tableData = exerciseHistory[dataOptionValue][nRepMaxOptionValue][Number(nRepMaxHistoryOptionValue)].table;
+        }
+      } else if (dataOptionValue === 'volume') {
+        if (volumeOptionValue === 'workout') {
+          tableData = exerciseHistory[dataOptionValue][volumeOptionValue].table;
+        } else {
+          tableData = exerciseHistory[dataOptionValue][volumeOptionValue][volumeTimespanOptionValue].table;
+        }
+      } else if (dataOptionValue === 'history') {
+        tableData = exerciseHistory[dataOptionValue][historyListIndex].table;
+      }
+    } catch (error) {
+      console.log(error);
+    }
 
-  if (exerciseData === undefined) {
-    loadExerciseData();
+    return {
+      'headers': tableData.headers,
+      'rows': tableData.rows
+    };
+  };
+
+  const dataVisualMap: Record<DataVisual, JSX.Element> = {
+    'graph': <LineGraph points={getPoints()} scale_type={graphScale} barValue={getBarValue()} currentPoints={getCurrentPoints()}/>,
+    'table': <DataTable tableData={getTableData()} />
+  }
+
+  if (loadableExercisesHistoricalData.state === 'loading') {
     return <LoadingScreen />
+  } else if (loadableExercisesHistoricalData.state === 'hasError') {
+    console.log('error loading historical data from storage');
+    setExercisesHistoricalData({});
+  }
+
+  if (exerciseHistory.history.length === 0) {
+    return (
+      <View
+        style={{
+          height: 50,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <Text style={styles.text}>
+          this exercise has no historical data
+        </Text>
+      </View>
+    )
   }
 
   return (
@@ -775,7 +543,6 @@ export default function ExerciseData(props: ExerciseDataProps) {
             <Text style={styles.text}>switch visual</Text>
           </TouchableOpacity>
         </>
-        
       }
       
     </View>

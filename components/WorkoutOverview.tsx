@@ -3,7 +3,7 @@ import { View, StyleSheet, Text, TouchableOpacity, Modal, Switch } from "react-n
 import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
 import { useAtom, useAtomValue } from "jotai";
-import { exercisesHistoricalDataAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
+import { exercisesHistoricalDataAtom, loadingPreviousWorkoutStatsAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
 import { fetchWrapper, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
 import { filterTimeSeries, timeSpanToMs, useDropdown } from "./ExerciseData";
@@ -28,7 +28,8 @@ interface DisplayedDataOption {
 export default function WorkoutOverview(props: WorkoutOverviewProps) {
   const { onPress } = props;
   
-  const [overviewHistoricalStats, setOverviewHistoricalStats] = useAtom(overviewHistoricalStatsAtom);
+  const [, setPreviousWorkoutStats] = useAtom(previousWorkoutStatsAtom);
+  const [, setLoadingPreviousWorkoutStats] = useAtom(loadingPreviousWorkoutStatsAtom);
 
   const displayedDataOptions: DisplayedDataOption[] = [
     { label: 'current workout', value: 'current' },
@@ -37,12 +38,18 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
   const [displayedDataValue, setDisplayedDataValue] = useState<DisplayedDataType>('current');
 
   const getOverviewStats = async () => {
-    const data = await fetchWrapper({
-      route: 'workout/overview/stats',
-      method: 'GET'
-    });
-    if (data === null) return;
-    setOverviewHistoricalStats(data.workouts);
+    setLoadingPreviousWorkoutStats(true);
+    try {
+      const data = await fetchWrapper({
+        route: 'workout/overview/stats',
+        method: 'GET'
+      });
+      if (data === null) return;
+      setPreviousWorkoutStats(data.workouts);
+    } catch (error) {
+      console.log(error)
+    }
+    setLoadingPreviousWorkoutStats(false);
   };
 
   const displayDataMap: Record<DisplayedDataType, JSX.Element> = {

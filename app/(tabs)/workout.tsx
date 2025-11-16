@@ -3,26 +3,29 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollVi
 import { useAtom, useAtomValue } from "jotai";
 import { StatusBar } from 'expo-status-bar';
 
-import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom, editWorkoutExercisesAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, overviewHistoricalStatsAtom, loadableWorkoutExercisesAtom } from "@/store/general";
+import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom, editWorkoutExercisesAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, loadableWorkoutExercisesAtom, exercisesHistoricalDataAtom, userDataAtom, loadableUserDataAtom } from "@/store/general";
 import ChooseExercise from "@/components/ChooseExerciseModal";
 import WorkoutOverview from "@/components/WorkoutOverview";
 import { commonStyles } from "@/styles/commonStyles";
 import { fetchWrapper } from "@/middleware/helpers";
 import WorkoutExerciseRow from "@/components/WorkoutExerciseRow";
-import Constants from "expo-constants";
 import LoadingScreen from "../loading";
 
 export default function Workout() {
   const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom);
   const loadableWorkoutExercises = useAtomValue(loadableWorkoutExercisesAtom);
-  const [workoutStartTime, setWorkoutStartTime] = useAtom(workoutStartTimeAtom);
-  const [exerciseList, setExerciseList] = useAtom(exerciseListAtom);
+  const [, setWorkoutStartTime] = useAtom(workoutStartTimeAtom);
+  const [userData, setUserData] = useAtom(userDataAtom);
+  const loadableUserData = useAtomValue(loadableUserDataAtom);
+
+  const [, setExerciseList] = useAtom(exerciseListAtom);
   const [showStartOptions, setShowStartOptions] = useAtom(showWorkoutStartOptionsAtom);
   const [editExercises, setEditExercises] = useAtom(editWorkoutExercisesAtom);
-  const [overviewHistoricalStats, setOverviewHistoricalStats] = useAtom(overviewHistoricalStatsAtom);
+  const [, setOverviewHistoricalStats] = useAtom(previousWorkoutStatsAtom);
+  const [, setexercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
 
-  const [groupToTargets, setGroupToTargets] = useAtom(muscleGroupToTargetsAtom);
-  const [targetoGroup, setTargetoGroup] = useAtom(muscleTargetoGroupAtom);
+  const [, setGroupToTargets] = useAtom(muscleGroupToTargetsAtom);
+  const [, setTargetoGroup] = useAtom(muscleTargetoGroupAtom);
 
   const [chooseNewExercise, setChooseNewExercise] = useState<boolean>(false);
   const [showOverview, setShowOverview] = useState<boolean>(false);
@@ -48,21 +51,30 @@ export default function Workout() {
 
   // const getPreviousWorkouts = async () => {};
 
-  const createNewWorkout = async () => {
+  const startNewWorkout = async () => {
     setWorkoutExercises([]);
     setWorkoutStartTime(Date.now());
+    setexercisesHistoricalData({});
 
     getMuscleMaps();
     getOverviewStats();
   };
 
   const handleContinueWorkout = () => {
-    setShowStartOptions(false);
-  } 
+    setShowStartOptions('workout');
+  }
+
+  const handlePressNewWorkout = () => {
+    setShowStartOptions('confirm');
+  };
+
+  const handleCancelNewWorkout = () => {
+    setShowStartOptions('start');
+  };
 
   const handleStartNewWorkout = () => {
-    createNewWorkout();
-    setShowStartOptions(false);
+    startNewWorkout();
+    setShowStartOptions('workout');
   };
 
   const handleAddNewExercise = () => {
@@ -72,124 +84,182 @@ export default function Workout() {
 
   const handleShowOverview = () => {
     setEditExercises(false);
-    setShowOverview(true)
+    setShowOverview(true);
   };
 
   useEffect(() => {
     const getData = async () => {
-      const data = await fetchWrapper({
-      route: 'exercises/list/all',
-      method: 'GET'
-    });
-      if (data === null) return;
-      setExerciseList(data.exercises)
+      try {
+        const data = await fetchWrapper({
+          route: 'exercises/list/all',
+          method: 'GET'
+        });
+        if (data === null) return;
+        setExerciseList(data.exercises)
+      } catch (error) {
+        console.log(error);
+      }
     };
 
     getData();
   }, []);
 
   useEffect(() => {
-    if (workoutExercises && workoutExercises.length > 0) return;
+    if (workoutExercises.length > 0) return;
     setEditExercises(false);
   }, [workoutExercises, editExercises])
 
   useEffect(() => {
     getMuscleMaps();
-  }, [])
+  }, []);
 
-  if (loadableWorkoutExercises.state === 'loading') {
+  const fetchUserData = async () => {
+    try {
+      const data = await fetchWrapper({
+        route: 'users/data/get',
+        method: 'GET'
+      })
+      if (data === null) return;
+      setUserData(data.user_data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  if (loadableWorkoutExercises.state === 'loading' || loadableUserData.state === 'loading') {
     return <LoadingScreen delay={1000}/>
-  } else if (loadableWorkoutExercises.state === 'hasError') {
-    Alert.alert('error loading workout data');
+  }
+  if (loadableWorkoutExercises.state === 'hasError') {
+    Alert.alert('error loading current workout data');
+    setWorkoutExercises([]);
+  } 
+  if (loadableUserData.state === 'hasError') {
+    Alert.alert('error loading user data');
+    fetchUserData();
+  } else if (loadableUserData.state === 'hasData' && userData === null) {
+    return (
+      <Suspense fallback={<View style={{ flex: 1, backgroundColor: 'black' }} />}>
+        <SafeAreaView style={styles.container}> 
+          <Text style={commonStyles.text}>could not load user data</Text>
+          <TouchableOpacity 
+            style={styles.button}
+            onPress={fetchUserData}
+          >
+            <Text style={{ color: "white"}}>refresh</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      </Suspense>
+    )
   }
 
   return (
     <Suspense fallback={<View style={{ flex: 1, backgroundColor: 'black' }} />}>
-    <SafeAreaView style={styles.container}> 
-      {Platform.OS == 'android' &&
-        <StatusBar style="light" backgroundColor="black" translucent={false} />
-      }
-      {showStartOptions ?
-        <View>
-          {Object.keys(workoutExercises).length !== 0 &&
+      <SafeAreaView style={styles.container}> 
+        {Platform.OS == 'android' &&
+          <StatusBar style="light" backgroundColor="black" translucent={false} />
+        }
+        {showStartOptions === 'start' &&
+          <View>
+            {Object.keys(workoutExercises).length !== 0 &&
+              <TouchableOpacity 
+                style={styles.button}
+                onPress={() => handleContinueWorkout()}
+              >
+                <Text style={{ color: "white"}}>continue workout</Text>
+              </TouchableOpacity>
+            }
             <TouchableOpacity 
               style={styles.button}
-              onPress={() => handleContinueWorkout()}
+              onPress={() => handlePressNewWorkout()}
             >
-              <Text style={{ color: "white"}}>continue workout</Text>
+              <Text style={{ color: "white"}}>start new workout</Text>
             </TouchableOpacity>
-          }
-          <TouchableOpacity 
-            style={styles.button}
-            onPress={() => handleStartNewWorkout()}
-          >
-            <Text style={{ color: "white"}}>start new workout</Text>
-          </TouchableOpacity>
-        </View> 
-      : 
-        <View style={styles.workoutContainer}>
-          {workoutExercises.length === 0 &&
-            <Text style={{color:'white'}}>no exercises yet</Text>
-          }
-          <ScrollView 
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollViewContainer}
-          >
-              {workoutExercises.map((exercise, i) => {
-                return (
-                  <WorkoutExerciseRow 
-                    key={i}
-                    exercise={exercise} 
-                    exerciseIndex={i}
-                  />
-                )
-              })}
-          </ScrollView>
-          <View style={styles.row}>
-            <View style={styles.textContainer}>
+          </View> 
+        }
+        {showStartOptions === 'confirm' &&
+          <>
+            <Text style={commonStyles.text}>New workout will override existing</Text>
+            <View style={{marginTop: 8}}>
               <TouchableOpacity 
-                style={commonStyles.textButton}
-                onPress={() => handleAddNewExercise()}
+                style={styles.button}
+                onPress={() => handleStartNewWorkout()}
               >
-                <Text style={{ color: "white"}}>add new exercise</Text>
+                <Text style={{ color: "white"}}>start new</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.button}
+                onPress={() => handleCancelNewWorkout()}
+              >
+                <Text style={{ color: "white"}}>back</Text>
               </TouchableOpacity>
             </View>
-            <View style={styles.textContainer}>
-              <TouchableOpacity 
-                style={commonStyles.textButton}
-                onPress={handleShowOverview}
-              >
-                <Text style={{ color: "white"}}>overview</Text>
-              </TouchableOpacity>
+          </>
+        }
+        {showStartOptions === 'workout' &&
+          <View style={styles.workoutContainer}>
+            {workoutExercises.length === 0 &&
+              <Text style={{color:'white'}}>no exercises yet</Text>
+            }
+            <ScrollView 
+              style={styles.scrollView}
+              contentContainerStyle={styles.scrollViewContainer}
+            >
+                {workoutExercises.map((exercise, i) => {
+                  return (
+                    <WorkoutExerciseRow 
+                      key={i}
+                      exercise={exercise} 
+                      exerciseIndex={i}
+                    />
+                  )
+                })}
+            </ScrollView>
+            <View style={styles.row}>
+              <View style={styles.textContainer}>
+                <TouchableOpacity 
+                  style={commonStyles.textButton}
+                  onPress={() => handleAddNewExercise()}
+                >
+                  <Text style={{ color: "white"}}>choose exercise</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.textContainer}>
+                <TouchableOpacity 
+                  style={commonStyles.textButton}
+                  onPress={handleShowOverview}
+                >
+                  <Text style={{ color: "white"}}>overview</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.textContainer}>
+                <TouchableOpacity 
+                  style={[commonStyles.textButton, editExercises && {borderColor: 'green', backgroundColor: 'green'}]}
+                  onPress={() => setEditExercises(!editExercises)}
+                  disabled={workoutExercises.length === 0}
+                >
+                  <Text style={{ color: "white"}}>edit exercises</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            <View style={styles.textContainer}>
-              <TouchableOpacity 
-                style={[commonStyles.textButton, editExercises && {borderColor: 'green', backgroundColor: 'green'}]}
-                onPress={() => setEditExercises(!editExercises)}
-              >
-                <Text style={{ color: "white"}}>edit exercises</Text>
-              </TouchableOpacity>
-            </View>
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={chooseNewExercise}
+              onRequestClose={() => setChooseNewExercise(false)}
+            >
+              <ChooseExercise onChoose={() => setChooseNewExercise(false)}/>
+            </Modal>
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={showOverview}
+              onRequestClose={() => setShowOverview(false)}
+            >
+              <WorkoutOverview onPress={() => setShowOverview(false)}/>
+            </Modal>
           </View>
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={chooseNewExercise}
-            onRequestClose={() => setChooseNewExercise(false)}
-          >
-            <ChooseExercise onChoose={() => setChooseNewExercise(false)}/>
-          </Modal>
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={showOverview}
-            onRequestClose={() => setShowOverview(false)}
-          >
-            <WorkoutOverview onPress={() => setShowOverview(false)}/>
-          </Modal>
-        </View>
-      }    
-    </SafeAreaView>
+        }    
+      </SafeAreaView>
     </Suspense>
   )
 }

@@ -34,6 +34,7 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
     const tempSets = [...exercise.set_data];
     const tempSet = {...emptySetData};
     tempSet.class = setClass;
+    tempSet.num_sets = 1;
     tempSets.push(tempSet);
     updateExerciseSetData(tempSets);
   }

@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { View, StyleSheet, TouchableOpacity, Text, Alert } from "react-native";
 import ConfirmationModal from "./ConfirmationModal";
-import { useAtom } from "jotai";
-import { SetData, showWorkoutStartOptionsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
+import { useAtom, useAtomValue } from "jotai";
+import { SetData, showWorkoutStartOptionsAtom, userDataAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
 import { useRouter } from "expo-router";
-import { fetchWrapper, getValidSets, isValidSet } from "@/middleware/helpers";
+import { calcBodyWeight, fetchWrapper, getValidSets, isValidSet } from "@/middleware/helpers";
+import { commonStyles } from "@/styles/commonStyles";
 
 interface WorkoutFinishOptionsProps {
   onPress: () => void
@@ -15,6 +16,8 @@ type ConfirmationType = 'save' | 'discard'
 export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
   const { onPress } = props;
 
+  const userData = useAtomValue(userDataAtom);
+
   const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
   const [modalMessage, setModalMessage] = useState<string>('');
 
@@ -23,7 +26,7 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
   
   const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom)
   const [workoutStartTime, setWorkoutStartTime] = useAtom(workoutStartTimeAtom)
-  const [showWorkoutStartOptions, setShowWorkoutStartOptions] = useAtom(showWorkoutStartOptionsAtom)
+  const [, setShowWorkoutStartOptions] = useAtom(showWorkoutStartOptionsAtom)
 
   const router = useRouter();
   
@@ -69,12 +72,20 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
     for (const exercise of workoutExercises) {
       const validSets = getValidSets(exercise);
       if (validSets.length === 0) continue;
+
       const updatedValidSets = validSets.map(({ class: set_class, ...rest}) => ({
         ...rest,
         set_class
       }));
+      
+      if (exercise.is_body_weight) {
+        for (const set_data of updatedValidSets) {
+          set_data.weight = calcBodyWeight(userData, exercise.ratios!, set_data.weight);
+        }
+      }
+
       exerciseData.push({
-        "exercise_id": exercise.id,
+        "id": exercise.id,
         "set_data": updatedValidSets,
       })
     }
@@ -97,7 +108,7 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
 
     setWorkoutExercises([]);
     setWorkoutStartTime(null);
-    setShowWorkoutStartOptions(true);
+    setShowWorkoutStartOptions('start');
     onPress();
     router.replace('/(tabs)/workout'); //? go to recap screen?
   };
@@ -105,7 +116,7 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
   const discardWorkout = () => {
     setWorkoutExercises([]);
     setWorkoutStartTime(null);
-    setShowWorkoutStartOptions(true);
+    setShowWorkoutStartOptions('start');
     onPress();
     router.replace('/(tabs)/workout');
   };  
@@ -143,7 +154,11 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
               </TouchableOpacity>
             </View>
             <TouchableOpacity 
-              style={[styles.button, {borderColor: 'grey'}]}
+              style={[commonStyles.thinTextButton, {
+                borderColor: 'grey', 
+                alignSelf: 'center',
+                marginTop: 10,
+              }]}
               onPress={onPress}
             >
               <Text style={styles.text}>back</Text>

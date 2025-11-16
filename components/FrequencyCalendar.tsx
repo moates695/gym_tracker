@@ -1,5 +1,4 @@
 import React from "react";
-import { ExerciseFrequencyData } from "@/store/general";
 import { Col, Row, Grid } from "react-native-easy-grid";
 import { View, Text, StyleSheet } from "react-native";
 
@@ -9,19 +8,23 @@ export interface FrequencyCalendarProps {
 
 export default function FrequencyCalendar(props: FrequencyCalendarProps) {
   const { frequencyData } = props;
-  
-  // todo: handle less than 2 frequency data
-  if (Object.keys(frequencyData).length <= 2) {
-    return (
-      <Text style={styles.text}>not enough data</Text>
-    )
-  }
 
   const offset = 7 - ((new Date().getDay() + 6) % 7);
-  const minVolume = Math.min(...Object.values(frequencyData));
-  const maxVolume = Math.max(...Object.values(frequencyData));
-  const minRadius = 8;
+  const minRadius = 10;
   const maxRadius = 20;
+
+  const getRadius = (volume: number) => {
+    if (Object.keys(frequencyData).length < 2) {
+      return (maxRadius - minRadius) / 2;
+    }
+    const minVolume = Math.min(...Object.values(frequencyData));
+    const maxVolume = Math.max(...Object.values(frequencyData));
+    if (minVolume === maxVolume) {
+      return (maxRadius - minRadius) / 2;
+    }
+    
+    return minRadius + (volume - minVolume) * (maxRadius - minRadius) / (maxVolume - minVolume);
+  };
 
   const getDayDate = (daysAgo: number): number => {
     const date = new Date();
@@ -46,7 +49,7 @@ export default function FrequencyCalendar(props: FrequencyCalendarProps) {
         )
         continue;
       }
-      const radius = minRadius + (volume - minVolume) * (maxRadius - minRadius) / (maxVolume - minVolume);
+      const radius = getRadius(volume);
       cols.push(
         <Col key={j}>
           <View style={styles.cellContainer}>
@@ -63,40 +66,51 @@ export default function FrequencyCalendar(props: FrequencyCalendarProps) {
                   { translateX: -radius },
                   { translateY: -radius },
                 ],
-                zIndex: -1,
               }}
             />
-            <Text style={styles.text}>{dayDate}</Text>
+            <Text 
+              style={[
+                styles.text,
+                {zIndex: 5}
+              ]}
+            >
+              {dayDate}
+            </Text>
           </View>
         </Col>
       )
     }
     
     rows.push(
-      <Row key={i}>
+      <Row key={i} style={{alignItems: 'center'}}>
         {cols}
       </Row>
     )
   }
 
-  
-
   return (
-    <View style={styles.container}>
-      <Grid>
-        <Row>
-          {['M','T','W','T','F','S','S'].map((day_letter, i) => {
-            return (
-              <Col key={i}>
-                <View style={styles.cellContainer}>
-                  <Text style={styles.text}>{day_letter}</Text>
-                </View>
-              </Col>
-            )
-          })}
-        </Row>
-        {rows}
-      </Grid>
+    <View 
+      style={{
+        width: '100%',
+        alignItems: 'center',
+      }}
+    >
+      <View style={styles.container}>
+        <Grid>
+          <Row style={{alignItems: 'center'}}>
+            {['M','T','W','T','F','S','S'].map((day_letter, i) => {
+              return (
+                <Col key={i}>
+                  <View style={styles.cellContainer}>
+                    <Text style={styles.text}>{day_letter}</Text>
+                  </View>
+                </Col>
+              )
+            })}
+          </Row>
+          {rows}
+        </Grid>
+      </View>
     </View>
   )
 }
@@ -106,7 +120,6 @@ const styles = StyleSheet.create({
     color: 'white'
   },
   container: {
-    // backgroundColor: 'purple',
     width: '70%',
     height: 250,
   },

@@ -8,7 +8,7 @@ import { useAtom } from "jotai"
 import ConfirmationModal from "./ConfirmationModal"
 import cloneDeep from 'lodash/cloneDeep';
 import { AntDesign } from "@expo/vector-icons"
-import { set } from "lodash"
+// import { set } from "lodash"
 import LoadingScreen from "@/app/loading"
 
 interface WorkoutExerciseRowProps {
@@ -121,7 +121,7 @@ export default function WorkoutExerciseRow(props: WorkoutExerciseRowProps) {
               activeOpacity={1}
               disabled={exerciseIndex === 0}
             >
-              <AntDesign name='arrowup' size={20} color={moveUpPressOn ? "cyan" : "#ccc"} />
+              <AntDesign name='arrow-up' size={20} color={moveUpPressOn ? "cyan" : "#ccc"} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleMoveDown}
@@ -131,7 +131,7 @@ export default function WorkoutExerciseRow(props: WorkoutExerciseRowProps) {
               activeOpacity={1}
               disabled={exerciseIndex === exercises.length - 1}
             >
-              <AntDesign name='arrowdown' size={20} color={moveDownPressOn ? "cyan" : "#ccc"} />
+              <AntDesign name='arrow-down' size={20} color={moveDownPressOn ? "cyan" : "#ccc"} />
             </TouchableOpacity>
           </>
         }

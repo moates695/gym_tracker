@@ -8,13 +8,17 @@ import { jwtDecode } from "jwt-decode";
 import { fetchWrapper } from "@/middleware/helpers";
 import { commonStyles } from "@/styles/commonStyles";
 import { StatusBar } from "expo-status-bar";
+import { useAtom } from "jotai";
+import { userDataAtom } from "@/store/general";
 
-// todo resend validate email button if temp token valid
+// todo resend validate email button on timeout
 // TODO: fix rest of this file and refactor others
 
 export default function Validate() {
   const router = useRouter();
   
+  const [userData, setUserData] = useAtom(userDataAtom);
+
   const [tempToken, setTempToken] = useState<DecodedJWT | null>(null);
   const intervalRef = useRef<number | null>(null);
   const pathname = usePathname();
@@ -60,6 +64,7 @@ export default function Validate() {
       } else if (data.account_state === "good") {
         await SecureStore.deleteItemAsync("temp_token");
         await SecureStore.setItemAsync("auth_token", data.auth_token);
+        setUserData(data.user_data);
         router.replace("/(tabs)");
       }
     };
@@ -92,8 +97,15 @@ export default function Validate() {
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={commonStyles.boldText}>Validate</Text>
           <View style={{height: '100%', justifyContent: 'center', alignItems: 'center'}}>
-            <Text style={[styles.text, {marginBottom: 20}]}>
-              Check your emails for a validation link.
+            <Text 
+              style={[styles.text, {marginBottom: 5, fontSize: 16}]}
+            >
+              Check your emails for a validation link
+            </Text>
+            <Text 
+              style={[styles.text, {marginBottom: 30}]}
+            >
+              this page will refresh automatically
             </Text>
             <TouchableOpacity 
               onPress={async () => {
@@ -117,6 +129,7 @@ const styles = StyleSheet.create({
   },
   content: { 
     flex: 1,
-    padding: 30
+    padding: 30,
+    paddingTop: 50,
   },
 })

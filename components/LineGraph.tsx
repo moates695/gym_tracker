@@ -19,7 +19,12 @@ interface LineGraphProps  {
 // todo: ability to click on point and see data for it ?
 
 export default function LineGraph(props: LineGraphProps) {
-  const {points, scale_type, barValue = null, currentPoints = []} = props;
+  const {
+    points, 
+    scale_type, 
+    barValue = null, 
+    currentPoints = []
+  } = props;
 
   if (points.length === 0) {
     return (
@@ -61,11 +66,11 @@ export default function LineGraph(props: LineGraphProps) {
   };
 
   // Generate path for line
-  const pathData = points.map((point, index) => {
-    const x = getXPosition(point.x);
-    const y = getYPosition(point.y);
-    return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
-  }).join(' ');
+  // const pathData = points.map((point, index) => {
+  //   const x = getXPosition(point.x);
+  //   const y = getYPosition(point.y);
+  //   return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
+  // }).join(' ');
 
   const getPath = (points: LineGraphPoint[]): string => {
     return points.map((point, index) => {
@@ -76,18 +81,18 @@ export default function LineGraph(props: LineGraphProps) {
   };
 
   // Format date for labels
-  const formatDate = (timestamp: string | number | Date) => {
-    const date = new Date(timestamp);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
-  };
+  // const formatDate = (timestamp: string | number | Date) => {
+  //   const date = new Date(timestamp);
+  //   return `${date.getMonth() + 1}/${date.getDate()}`;
+  // };
 
-  const formatXLabel = (x: number) => {
-    if (scale_type === "value") {
-      return x.toPrecision(0)
-    }
-    const date = new Date(x);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
-  };
+  // const formatXLabel = (x: number) => {
+  //   if (scale_type === "value") {
+  //     return x.toPrecision(0)
+  //   }
+  //   const date = new Date(x);
+  //   return `${date.getMonth() + 1}/${date.getDate()}`;
+  // };
 
   const getBarPoints = (): string => {
     if (barValue == null) return '';
@@ -97,168 +102,146 @@ export default function LineGraph(props: LineGraphProps) {
     return `M ${x1} ${y} L ${x2} ${y}`;
   };
 
+  const circleRadius = 3;
+
+  const getBackgroundCircleRadius = (point: LineGraphPoint, points: LineGraphPoint[]): number => {
+    try {
+      for (const pt of points) {
+        const dist = Math.sqrt(Math.pow((point.x - pt.x), 2) + Math.pow((point.y - pt.y), 2));
+        if (dist >= circleRadius) continue;
+        return circleRadius + 2;
+      }
+    } catch (error) {}
+    return circleRadius;
+  };
+
+  // todo if current point exists in points => make it bigger to surround it
+  // todo if line between 2 points is the same, make current line bigger on background?
   return (
     <View style={styles.container}>
-      {points.length >= 2 ?      
-        <View style={styles.chartContainer}>
-          <Svg width={width} height={height}>
-            {/* Grid lines */}
-            {[0, 0.25, 0.5, 0.75, 1].map((ratio, index) => (
-              <G key={`grid-${index}`}>
-                <Line
-                  x1={padding}
-                  y1={padding + ratio * (height - 2 * padding)}
-                  x2={width - padding}
-                  y2={padding + ratio * (height - 2 * padding)}
-                  stroke="#999"
-                  strokeWidth="1"
-                />
-              </G>
-            ))}
-            
-            {/* Y-axis labels */}
-            {[0, 0.25, 0.5, 0.75, 1].map((ratio, index) => {
-              const value = yMax - ratio * (yMax - yMin);
+      <View style={styles.chartContainer}>
+        <Svg width={width} height={height}>
+          {/* Grid lines */}
+          {[0, 0.25, 0.5, 0.75, 1].map((ratio, index) => (
+            <G key={`grid-${index}`}>
+              <Line
+                x1={padding}
+                y1={padding + ratio * (height - 2 * padding)}
+                x2={width - padding}
+                y2={padding + ratio * (height - 2 * padding)}
+                stroke="#999"
+                strokeWidth="1"
+              />
+            </G>
+          ))}
+          
+          {/* Y-axis labels */}
+          {[0, 0.25, 0.5, 0.75, 1].map((ratio, index) => {
+            const value = yMax - ratio * (yMax - yMin);
+            return (
+              <SvgText
+                key={`y-label-${index}`}
+                x={padding - 10}
+                y={padding + ratio * (height - 2 * padding) + 5}
+                fontSize="12"
+                fill="#999"
+                textAnchor="end"
+              >
+                {value.toFixed(1)}
+              </SvgText>
+            );
+          })}
+          
+          {/* X-axis labels */}
+          {scale_type === 'value' && 
+            [0, 0.2, 0.4, 0.6, 0.8, 1].map((ratio, index) => {
+              const value = xMax - ratio * (xMax - xMin);
               return (
                 <SvgText
-                  key={`y-label-${index}`}
-                  x={padding - 10}
-                  y={padding + ratio * (height - 2 * padding) + 5}
+                  key={`x-label-${index}`}
+                  x={getXPosition(value) + padding / 2 - 15}
+                  y={height - 10}
                   fontSize="12"
                   fill="#999"
                   textAnchor="end"
                 >
-                  {value.toFixed(1)}
+                  {Math.round(value)}
                 </SvgText>
               );
-            })}
-            
-            {/* X-axis labels */}
-            {/* {scale_type === 'value' && 
-              points.map((point, index) => {
-                const label = point.x.toFixed(0);
-                return (
-                  <SvgText
-                    key={`x-label-${index}`}
-                    x={getXPosition(point.x) + padding / 2 - 10}
-                    y={height - 10}
-                    fontSize="12"
-                    fill="#999"
-                    textAnchor="end"
-                  >
-                    {label}
-                  </SvgText>
-                );
-              })
-            } */}
-            {scale_type === 'value' && 
-              [0, 0.2, 0.4, 0.6, 0.8, 1].map((ratio, index) => {
-                const value = xMax - ratio * (xMax - xMin);
-                return (
-                  <SvgText
-                    key={`x-label-${index}`}
-                    x={getXPosition(value) + padding / 2 - 15}
-                    y={height - 10}
-                    fontSize="12"
-                    fill="#999"
-                    textAnchor="end"
-                  >
-                    {Math.round(value)}
-                  </SvgText>
-                );
-              })
-            }
-            {scale_type === 'time' &&
-              [0, 0.33, 0.67, 1].map((ratio, index) => {
-                const value = xMax - ratio * (xMax - xMin);
-                // const dd = String(new Date(value).getDate()).padStart(2,'0');
-                const mm = String(new Date(value).getMonth()+1).padStart(2,'0');
-                const yy = String(new Date(value).getFullYear()).slice(-2);
-                const dateStr = `${mm}/${yy}`;
-                return (
-                  <SvgText
-                    key={`x-label-${index}`}
-                    x={getXPosition(value) + padding / 2}
-                    y={height - 10}
-                    fontSize="12"
-                    fill="#999"
-                    textAnchor="end"
-                  >
-                    {dateStr}
-                  </SvgText>
-                );
-              })
-            }
-            
-            {barValue !== null &&
-              <Path
-                d={getBarPoints()}
-                stroke="orange"
-                strokeWidth="2"
-                fill="none"
-              />
-            }
-            {currentPoints.length >= 2 &&
-              <>
-              <Path
-                d={getPath(currentPoints)}
-                stroke="orange"
-                strokeWidth="2"
-                fill="none"
-              />
-              {currentPoints.map((point, index) => (
-                <Circle
-                  key={`point-${index}`}
-                  cx={getXPosition(point.x)}
-                  cy={getYPosition(point.y)}
-                  r="3"
-                  fill="black"
-                  stroke="orange"
-                  strokeWidth="2"
-                />
-              ))}
-              </>
-            }
+            })
+          }
+          {scale_type === 'time' &&
+            [0, 0.33, 0.67, 1].map((ratio, index) => {
+              const value = xMax - ratio * (xMax - xMin);
+              // const dd = String(new Date(value).getDate()).padStart(2,'0');
+              const mm = String(new Date(value).getMonth()+1).padStart(2,'0');
+              const yy = String(new Date(value).getFullYear()).slice(-2);
+              const dateStr = `${mm}/${yy}`;
+              return (
+                <SvgText
+                  key={`x-label-${index}`}
+                  x={getXPosition(value) + padding / 2}
+                  y={height - 10}
+                  fontSize="12"
+                  fill="#999"
+                  textAnchor="end"
+                >
+                  {dateStr}
+                </SvgText>
+              );
+            })
+          }
+          
+          {currentPoints.length > 1 &&
+            <Path
+              d={getPath(currentPoints)}
+              stroke="orange"
+              strokeWidth="5"
+              fill="none"
+            />
+          }
+          {currentPoints.map((point, index) => (
+            <Circle
+              key={`point-${index}`}
+              cx={getXPosition(point.x)}
+              cy={getYPosition(point.y)}
+              r={getBackgroundCircleRadius(point, points)}
+              fill="black"
+              stroke="orange"
+              strokeWidth="2"
+            />
+          ))}          
 
-            {/* Line path */}
+          {points.length > 1 &&
             <Path
               d={getPath(points)}
               stroke="cyan"
               strokeWidth="2"
               fill="none"
             />
-
-            {/* Data points */}
-            {points.map((point, index) => (
-              <Circle
-                key={`point-${index}`}
-                cx={getXPosition(point.x)}
-                cy={getYPosition(point.y)}
-                r="3"
-                fill="black"
-                stroke="cyan"
-                strokeWidth="2"
-              />
-            ))}
-
-            
-          </Svg>
-        </View>
-      :
-        <>
-          {points.length > 0 ?
-            <View>
-              <Text style={styles.text}>not enough data to graph</Text>
-            </View>
-          :
-            <View>
-              <Text style={styles.text}>no data</Text>
-            </View>
           }
-        </>
-        
-        
-      }
+          {points.map((point, index) => (
+            <Circle
+              key={`point-${index}`}
+              cx={getXPosition(point.x)}
+              cy={getYPosition(point.y)}
+              r={circleRadius}
+              fill="black"
+              stroke="cyan"
+              strokeWidth="2"
+            />
+          ))}
+
+          {barValue !== null &&
+            <Path
+              d={getBarPoints()}
+              stroke="orange"
+              strokeWidth="2"
+              fill="none"
+            />
+          }
+        </Svg>
+      </View>
     </View>
   );
 }
@@ -272,6 +255,7 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: 100,
   },
   title: {
     fontSize: 20,

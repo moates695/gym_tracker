@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import { Text, StyleSheet, View, TouchableOpacity, Modal } from 'react-native'
 import { workoutStartTimeAtom, showWorkoutStartOptionsAtom} from '@/store/general'
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { commonStyles } from '@/styles/commonStyles';
 import WorkoutFinishOptions from './WorkoutFinishOptions';
 
 export default function WorkoutHeader() {
-  const [workoutStartTime, setWorkoutStartTime] = useAtom(workoutStartTimeAtom);
-  const [showStartOptions, setShowStartOptions] = useAtom(showWorkoutStartOptionsAtom);
+  const workoutStartTime = useAtomValue(workoutStartTimeAtom);
+  const showStartOptions = useAtomValue(showWorkoutStartOptionsAtom);
   const [timeString, setTimeString] = useState<string>('');
   const [showFinishOptions, setShowFinishOptions] = useState<boolean>(false);
 
@@ -31,10 +31,10 @@ export default function WorkoutHeader() {
 
   return (
     <View style={styles.row}>
-      <View style={[styles.rowObject, {width: showStartOptions ? '100%' : '30%'}]}>
+      <View style={[styles.rowObject, {width: showStartOptions !== 'workout' ? '100%' : '30%'}]}>
         <Text style={commonStyles.boldText}>Workout</Text>
       </View>
-      {!showStartOptions &&
+      {showStartOptions === 'workout' &&
         <>
           <View style={[styles.rowObject, {alignItems: 'center'}]}>
             <Text style={[styles.text, {fontFamily: 'monospace'}]}>{timeString}</Text>

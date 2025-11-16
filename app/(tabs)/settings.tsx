@@ -4,12 +4,14 @@ import React from 'react';
 import { Text, View, StyleSheet, SafeAreaView, Platform, TouchableOpacity } from 'react-native';
 import * as SecureStore from "expo-secure-store";
 import { useRouter } from 'expo-router';
-import { useAtom } from 'jotai';
-import { workoutExercisesAtom } from '@/store/general';
+import { useAtom, useAtomValue } from 'jotai';
+import { userDataAtom, workoutExercisesAtom } from '@/store/general';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Settings() {
   const router = useRouter();
+
+  const userData = useAtomValue(userDataAtom);
 
   const logOut = async () => {
     await SecureStore.deleteItemAsync('temp_token');
@@ -24,6 +26,8 @@ export default function Settings() {
         <StatusBar style="light" backgroundColor="black" translucent={false} />
       }
       <View>
+        <Text style={commonStyles.text}>{userData?.username}</Text>
+        <Text style={commonStyles.text}>{userData?.email}</Text>
         <TouchableOpacity 
           style={styles.button}
           onPress={logOut}

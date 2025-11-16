@@ -18,6 +18,11 @@ interface ExerciseSetProps {
   openOptions: boolean
 }
 
+interface SetClassOption {
+  label: string
+  value: SetClass
+}
+
 export default function ExerciseSet(props: ExerciseSetProps) {
   const { exercise, exerciseIndex, set_data, setIndex, openOptions } = props;
 
@@ -31,16 +36,11 @@ export default function ExerciseSet(props: ExerciseSetProps) {
 
   const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false);
   const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
-
-  interface SetClassOption {
-    label: string
-    value: SetClass
-  }
-
+  
   const classOptions: SetClassOption[] = [
+    { label: 'warmup', value: 'warmup' },
     { label: 'working', value: 'working' },
     { label: 'dropset', value: 'dropset' },
-    { label: 'warmup', value: 'warmup' },
     { label: 'cooldown', value: 'cooldown' },
   ]
   const [classOptionValue, setClassOptionValue] = useState<SetClass>(set_data.class);
@@ -225,7 +225,7 @@ export default function ExerciseSet(props: ExerciseSetProps) {
               activeOpacity={1}
               disabled={setIndex === 0}
             >
-              <AntDesign name='arrowup' size={20} color={moveUpPressOn ? "cyan" : "#ccc"} />
+              <AntDesign name='arrow-up' size={20} color={moveUpPressOn ? "cyan" : "#ccc"} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleMoveDown}
@@ -235,7 +235,7 @@ export default function ExerciseSet(props: ExerciseSetProps) {
               activeOpacity={1}
               disabled={setIndex === exercise.set_data.length - 1}
             >
-              <AntDesign name='arrowdown' size={20} color={moveDownPressOn ? "cyan" : "#ccc"} />
+              <AntDesign name='arrow-down' size={20} color={moveDownPressOn ? "cyan" : "#ccc"} />
             </TouchableOpacity>
           </>
         :
