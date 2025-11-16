@@ -63,7 +63,7 @@ export default function SignInScreen() {
   const handleSubmit = async (): Promise<void> => {
     setSubmitting(true);
     try {
-      const response = await fetch(`${Constants.expoConfig?.extra?.apiUrl}/sign-in`, {
+      const response = await fetch(`${Constants.expoConfig?.extra?.apiUrl}/register/sign-in`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -72,7 +72,7 @@ export default function SignInScreen() {
       });
 
       const data = await fetchWrapper({
-        route: 'sign-in',
+        route: '/register/sign-in',
         method: 'POST',
         body: formData,
         token_str: 'temp_token'

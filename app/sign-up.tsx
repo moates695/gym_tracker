@@ -316,7 +316,7 @@ export default function SignUpScreen() {
       form_copy.height = parseFloat(formData.height);
       form_copy.weight = parseFloat(formData.weight);
 
-      const response = await fetch(`${Constants.expoConfig?.extra?.apiUrl}/register`, {
+      const response = await fetch(`${Constants.expoConfig?.extra?.apiUrl}/register/new`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

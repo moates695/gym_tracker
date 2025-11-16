@@ -63,7 +63,7 @@ export default function RootLayout() {
       }
 
       const data = await fetchWrapper({
-        route: 'login',
+        route: 'register/login',
         method: 'GET',
       });
       if (!data || !data.account_state) throw new Error("response not ok");
