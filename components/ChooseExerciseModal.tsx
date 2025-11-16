@@ -78,17 +78,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
             <ChooseExerciseItem exercise={item} onChoose={onChoose} />
           )}
           showsVerticalScrollIndicator={false}
-        >
-          {displayedExercises.map((displayedExercise, i) => {
-            return (
-              <ChooseExerciseItem 
-                key={displayedExercise.id} 
-                exercise={displayedExercise} 
-                onChoose={onChoose}
-              />
-            )
-          })}
-        </FlatList>
+        />
         <TouchableOpacity 
           onPress={onChoose}
           style={[commonStyles.thinTextButton, {

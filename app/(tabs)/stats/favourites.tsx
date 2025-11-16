@@ -2,12 +2,12 @@ import LoadingScreen from "@/app/loading";
 import { OptionsObject } from "@/components/ChooseExerciseModal";
 import { useDropdown } from "@/components/ExerciseData";
 import { fetchWrapper } from "@/middleware/helpers";
-import { favouriteExerciseStatsAtom, FavouriteStatsMetric, muscleGroupToTargetsAtom, muscleTargetoGroupAtom } from "@/store/general";
+import { FavouriteExercisesStats, favouriteExerciseStatsAtom, FavouriteStatsMetric, muscleGroupToTargetsAtom, muscleTargetoGroupAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useRouter } from "expo-router";
 import { useAtom } from "jotai";
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, FlatList, StyleSheet } from "react-native";
 
 interface MetricOption {
   label: string
@@ -81,12 +81,19 @@ export default function StatsFavourites() {
     refreshData();
   }, []);
 
+  const getFilteredData = (): FavouriteExercisesStats[] => {
+    if (favouriteStats === null) return [];
+    return favouriteStats
+            .filter((stats) => { 
+              if (muscleGroupValue === 'all') return true;
+              return stats.groups.includes(muscleGroupValue); 
+            })
+            .sort((a, b) => b[metricOptionValue] - a[metricOptionValue])
+  };
+
   return (
     <View 
-      style={{
-        flex: 1,
-        backgroundColor: 'black',
-      }}
+      style={{flex: 1}}
     >
       <TouchableOpacity
         style={[commonStyles.button, {width: 50}]}
@@ -120,48 +127,49 @@ export default function StatsFavourites() {
               {useDropdown(metricOptions, metricOptionValue, setMetricOptionValue)}
               <Text style={commonStyles.text}>Choose a muscle group:</Text>
               {useDropdown(muscleGroupOptions, muscleGroupValue, setMuscleGroupValue)}
-              <ScrollView
+              <View
                 style={{
-                  marginTop: 10,
-                  marginBottom: 10
+                  flex: 1,
+                  alignItems: 'center',
                 }}
               >
-                <View
+                <FlatList 
                   style={{
-                    flex: 1,
+                    marginTop: 10,
+                    marginBottom: 10,
+                  }}
+                  contentContainerStyle={{
                     alignItems: 'center'
                   }}
-                >
-                  {favouriteStats
-                    .filter((stats) => { 
-                      if (muscleGroupValue === 'all') return true;
-                      return stats.groups.includes(muscleGroupValue); 
-                    })
-                    .sort((a, b) => b[metricOptionValue] - a[metricOptionValue])
-                    .map((stats, i) => {
-                      return (
-                        <View 
-                          key={stats.exercise_id}
-                          style={{
-                            flexDirection: 'row',
-                            width: '95%',
-                            justifyContent: 'space-between',
-                            padding: 5,
-                            backgroundColor: i % 2 ? '#000000': '#222328ff',
-                            borderRadius: 5,
-                          }}
-                        >
-                          <View>
-                            <Text style={commonStyles.text}>{stats.exercise_name}</Text>
-                            {stats.variation_name && <Text style={commonStyles.text}>({stats.variation_name})</Text>}
-                          </View>
-                          <Text style={commonStyles.text}>{stats[metricOptionValue]}</Text>
-                        </View>
-                      )
-                    })
-                  } 
-                </View>
-              </ScrollView>
+                  data={getFilteredData()}
+                  keyExtractor={(item) => item.exercise_id}
+                  renderItem={({ item, index }) => (
+                    <View 
+                      style={{
+                        flexDirection: 'row',
+                        width: '98%',
+                        justifyContent: 'space-between',
+                        padding: 5,
+                        backgroundColor: index % 2 ? '#000000': '#222328ff',
+                        borderRadius: 5,
+                      }}
+                    >
+                      <View>
+                        <Text style={commonStyles.text}>
+                          {item.exercise_name}
+                        </Text>
+                        {item.variation_name && 
+                          <Text style={commonStyles.text}>
+                            ({item.variation_name})
+                          </Text>
+                        }
+                      </View>
+                      <Text style={commonStyles.text}>{item[metricOptionValue]}</Text>
+                    </View>
+                  )}
+                  showsVerticalScrollIndicator={false}
+                />
+              </View>
             </View>
           }
         </>

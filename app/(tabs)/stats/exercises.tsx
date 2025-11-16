@@ -1,3 +1,4 @@
+import LoadingScreen from "@/app/loading";
 import ChooseExerciseItem from "@/components/ChooseExerciseItem";
 import ExerciseListFilter from "@/components/ExerciseListFilter";
 import ExerciseStatsItem from "@/components/ExerciseStatsItem";
@@ -7,7 +8,7 @@ import { commonStyles } from "@/styles/commonStyles";
 import { useRouter } from "expo-router";
 import { useAtom } from "jotai";
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, FlatList } from "react-native";
 
 export default function StatsExercises() {
   const router = useRouter();
@@ -17,16 +18,23 @@ export default function StatsExercises() {
   const [displayedExercises, setDisplayedExercises] = useState<ExerciseListItem[]>(exercisesList); 
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [loadingExerciseList, setLoadingExerciseList] = useState<boolean>(false); 
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
   const handleExercisesRefresh = async () => {
-    setLoadingExerciseList(true);
-    const data = await fetchWrapper({
-      route: 'exercises/list/all',
-      method: 'GET'
-    });
-    if (!data || !data.exercises) return;
-    setExercisesList(data.exercises);
-    setLoadingExerciseList(false);
+    try {
+      setLoadingExerciseList(true);
+      const data = await fetchWrapper({
+        route: 'exercises/list/all',
+        method: 'GET'
+      });
+      if (!data || !data.exercises) throw new Error('bas response');
+      setExercisesList(data.exercises);
+    } catch (error) {
+      console.log(error);
+      setExercisesList([]);
+    } finally {
+      setLoadingExerciseList(false);
+    }
   };
 
   return (
@@ -61,19 +69,36 @@ export default function StatsExercises() {
         </TouchableOpacity>
       </View>
       <ExerciseListFilter showFilters={showFilters} exercisesList={exercisesList} setDisplayedExercises={setDisplayedExercises} />
-      {displayedExercises.length === 0 &&
-        <Text style={commonStyles.text}>no exercises</Text>
+      {loadingExerciseList ?
+        <LoadingScreen />
+      :
+        <>
+          {displayedExercises.length === 0 &&
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Text style={commonStyles.text}>
+                no exercises
+              </Text>
+            </View>
+          }
+          <FlatList 
+            style={{
+              marginTop: 10,
+              marginBottom: 10,
+            }}
+            data={displayedExercises}
+            renderItem={({ item }) => (
+              <ExerciseStatsItem exercise={item} />
+            )}
+            showsVerticalScrollIndicator={false}
+          />
+        </>
       }
-      <ScrollView style={styles.scrollView}>
-        {displayedExercises.map((displayedExercise, i) => {
-          return (
-            <ExerciseStatsItem 
-              key={displayedExercise.id}
-              exercise={displayedExercise}
-            />
-          )
-        })}
-      </ScrollView>
     </View>
   )
 }

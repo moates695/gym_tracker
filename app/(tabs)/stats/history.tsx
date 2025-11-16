@@ -5,7 +5,7 @@ import { workoutHistoryStatsAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useAtom } from "jotai";
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, SafeAreaView, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, SafeAreaView, ScrollView, FlatList } from "react-native";
 
 export default function StatsDistribution() {
   const [workoutHistoryStats, setWorkoutHistoryStats] = useAtom(workoutHistoryStatsAtom);
@@ -61,21 +61,17 @@ export default function StatsDistribution() {
               <Text style={commonStyles.text}>no previous workouts!</Text>
             </View>
           :
-              <ScrollView
-                style={{
-                  marginTop: 10,
-                  marginBottom: 10
-                }}
-              >
-                {workoutHistoryStats.map((historyStats, i) => {
-                  return (
-                    <HistoryStatsItem 
-                      key={i}
-                      stats={historyStats}
-                    />
-                  )
-                })}
-              </ScrollView>
+            <FlatList 
+              style={{
+                marginTop: 10,
+                marginBottom: 10,
+              }}
+              data={workoutHistoryStats}
+              renderItem={({ item }) => (
+                <HistoryStatsItem stats={item} />
+              )}
+              showsVerticalScrollIndicator={false}
+            />
           }      
         </>
       }
