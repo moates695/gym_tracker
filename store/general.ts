@@ -91,7 +91,9 @@ export const fetchMappingsAtom = atom(
   }
 )
 
-export const showWorkoutStartOptionsAtom = atom<boolean>(true);
+export type WorkoutScreen = 'start' | 'confirm' | 'workout';
+
+export const showWorkoutStartOptionsAtom = atom<WorkoutScreen>('start');
 
 //? base exercise: `variations` = list
 //? variation: `variations` = undefined

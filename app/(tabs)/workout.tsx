@@ -60,14 +60,22 @@ export default function Workout() {
     getOverviewStats();
   };
 
-  const handleStartNewWorkout = () => {
-    startNewWorkout();
-    setShowStartOptions(false);
+  const handleContinueWorkout = () => {
+    setShowStartOptions('workout');
+  }
+
+  const handlePressNewWorkout = () => {
+    setShowStartOptions('confirm');
   };
 
-  const handleContinueWorkout = () => {
-    setShowStartOptions(false);
-  } 
+  const handleCancelNewWorkout = () => {
+    setShowStartOptions('start');
+  };
+
+  const handleStartNewWorkout = () => {
+    startNewWorkout();
+    setShowStartOptions('workout');
+  };
 
   const handleAddNewExercise = () => {
     setEditExercises(false);
@@ -150,7 +158,7 @@ export default function Workout() {
         {Platform.OS == 'android' &&
           <StatusBar style="light" backgroundColor="black" translucent={false} />
         }
-        {showStartOptions ?
+        {showStartOptions === 'start' &&
           <View>
             {Object.keys(workoutExercises).length !== 0 &&
               <TouchableOpacity 
@@ -162,12 +170,32 @@ export default function Workout() {
             }
             <TouchableOpacity 
               style={styles.button}
-              onPress={() => handleStartNewWorkout()}
+              onPress={() => handlePressNewWorkout()}
             >
               <Text style={{ color: "white"}}>start new workout</Text>
             </TouchableOpacity>
           </View> 
-        : 
+        }
+        {showStartOptions === 'confirm' &&
+          <>
+            <Text style={commonStyles.text}>New workout will override existing</Text>
+            <View style={{marginTop: 8}}>
+              <TouchableOpacity 
+                style={styles.button}
+                onPress={() => handleStartNewWorkout()}
+              >
+                <Text style={{ color: "white"}}>start new</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.button}
+                onPress={() => handleCancelNewWorkout()}
+              >
+                <Text style={{ color: "white"}}>back</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        }
+        {showStartOptions === 'workout' &&
           <View style={styles.workoutContainer}>
             {workoutExercises.length === 0 &&
               <Text style={{color:'white'}}>no exercises yet</Text>

@@ -70,12 +70,6 @@ export default function Stats() {
           >
             <DataTable tableData={tableData1} />
             <DataTable tableData={tableData2} />
-            {/* <Text style={commonStyles.text}>Volume: {parseFloat(workoutTotalStats?.volume.toFixed(2))}</Text>
-            <Text style={commonStyles.text}>Sets: {workoutTotalStats?.num_sets}</Text>
-            <Text style={commonStyles.text}>Reps: {workoutTotalStats?.reps}</Text>
-            <Text style={commonStyles.text}>Duration: {Math.round(workoutTotalStats?.duration)}</Text>
-            <Text style={commonStyles.text}># workouts: {workoutTotalStats?.num_workouts}</Text>
-            <Text style={commonStyles.text}># exercises : {workoutTotalStats?.num_exercises}</Text> */}
           </View>
         }
         
@@ -111,7 +105,7 @@ export default function Stats() {
         </TouchableOpacity>
         <View style={{alignItems: 'center'}}>
           <TouchableOpacity
-            style={[commonStyles.thinTextButton, {width: 50}]}
+            style={[commonStyles.thinTextButton, {width: 50, marginTop: 10}]}
             onPress={() => fetchWorkoutTotalStats()}
           >
             <Text style={styles.text}>refresh</Text>

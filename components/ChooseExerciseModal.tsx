@@ -70,17 +70,6 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
         {displayedExercises.length === 0 &&
           <Text style={styles.text}>no exercises</Text>
         }
-        {/* <ScrollView style={styles.scrollView}>
-          {displayedExercises.map((displayedExercise, i) => {
-            return (
-              <ChooseExerciseItem 
-                key={displayedExercise.id} 
-                exercise={displayedExercise} 
-                onChoose={onChoose}
-              />
-            )
-          })}
-        </ScrollView> */}
         <FlatList 
           style={styles.scrollView}
           data={displayedExercises}
@@ -102,7 +91,9 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
         </FlatList>
         <TouchableOpacity 
           onPress={onChoose}
-          style={commonStyles.thinTextButton}
+          style={[commonStyles.thinTextButton, {
+            alignSelf: 'center'
+          }]}
         >
           <Text style={styles.text}>close</Text>
         </TouchableOpacity>

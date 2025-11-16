@@ -5,6 +5,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { SetData, showWorkoutStartOptionsAtom, userDataAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
 import { useRouter } from "expo-router";
 import { calcBodyWeight, fetchWrapper, getValidSets, isValidSet } from "@/middleware/helpers";
+import { commonStyles } from "@/styles/commonStyles";
 
 interface WorkoutFinishOptionsProps {
   onPress: () => void
@@ -107,7 +108,7 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
 
     setWorkoutExercises([]);
     setWorkoutStartTime(null);
-    setShowWorkoutStartOptions(true);
+    setShowWorkoutStartOptions('start');
     onPress();
     router.replace('/(tabs)/workout'); //? go to recap screen?
   };
@@ -115,7 +116,7 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
   const discardWorkout = () => {
     setWorkoutExercises([]);
     setWorkoutStartTime(null);
-    setShowWorkoutStartOptions(true);
+    setShowWorkoutStartOptions('start');
     onPress();
     router.replace('/(tabs)/workout');
   };  
@@ -153,7 +154,11 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
               </TouchableOpacity>
             </View>
             <TouchableOpacity 
-              style={[styles.button, {borderColor: 'grey'}]}
+              style={[commonStyles.thinTextButton, {
+                borderColor: 'grey', 
+                alignSelf: 'center',
+                marginTop: 10,
+              }]}
               onPress={onPress}
             >
               <Text style={styles.text}>back</Text>
