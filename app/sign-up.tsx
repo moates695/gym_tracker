@@ -9,7 +9,6 @@ import { StatusBar } from "expo-status-bar";
 import { commonStyles } from "@/styles/commonStyles";
 import { OptionsObject } from "@/components/ChooseExerciseModal";
 import { useDropdown } from "@/components/ExerciseData";
-import { fetchWrapper } from "@/middleware/helpers";
 import Constants from 'expo-constants';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 // import DatePicker from 'react-native-date-picker'
@@ -87,7 +86,7 @@ export default function SignUpScreen() {
   const usernameTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [usernameState, setUsernameState] = useState<UsernameState>(null);
   const [isTimeoutActive, setIsTimeoutActive] = useState<boolean>(false);
-  const [submitting, SetSubmitting] = useState<boolean>(false);
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
   const genderOptions: GenderOption[] = [
     { label: 'male', value: 'male' },
@@ -308,8 +307,9 @@ export default function SignUpScreen() {
     return areFormDataFieldsEmpty() || isFormInError() || isTimeoutActive || submitting;
   };
 
+  // todo: if register fails, navigate to first screen when error occurs (details vs stats)
   const handleSubmit = async (): Promise<void> => {
-    SetSubmitting(true);
+    setSubmitting(true);
     
     try {
       let form_copy: Record<any, any> = { ...formData};
@@ -343,7 +343,7 @@ export default function SignUpScreen() {
       console.log(error);
       Alert.alert("error during registration")
     } finally {
-      SetSubmitting(false);
+      setSubmitting(false);
     }
   };
 
@@ -360,12 +360,6 @@ export default function SignUpScreen() {
     ped_status: "PED use",
     date_of_birth: "Date of birth"
   }
-
-  // const formDataOptions: Record<string, string[]> = {
-  //   gender: ["male", "female", "other"] as Gender[],
-  //   goal_status: ["bulking", "cutting", "maintaining"] as GoalStatus[],
-  //   ped_status: ["natural", "juicing", "silent"] as PedStatus[]
-  // }
 
   const isRequiredMap: Record<keyof FormData, boolean> = {
     email: true,

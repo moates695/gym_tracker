@@ -72,7 +72,7 @@ export default function SignInScreen() {
       });
 
       const data = await fetchWrapper({
-        route: '/register/sign-in',
+        route: 'register/sign-in',
         method: 'POST',
         body: formData,
         token_str: 'temp_token'
@@ -126,16 +126,6 @@ export default function SignInScreen() {
   const isButtonDisabled = () => {
     return formData.email === '' || formData.password === '' || submitting;
   };
-
-  // const fetchMappings = async () => {
-  //   const data = await fetchWrapper({
-  //     route: 'muscles/get_maps',
-  //     method: 'GET'
-  //   })
-  //   if (!data || !data.group_to_targets || !data.target_to_group) throw new Error('muscle maps bad response');
-  //   setGroupToTargets(data.group_to_targets);
-  //   setTargetoGroup(data.target_to_group);
-  // };
 
   return ( 
     <KeyboardAwareScrollView
