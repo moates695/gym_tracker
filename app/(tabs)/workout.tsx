@@ -65,6 +65,10 @@ export default function Workout() {
   }
 
   const handlePressNewWorkout = () => {
+    if (Object.keys(workoutExercises).length === 0) {
+      handleStartNewWorkout();
+      return;
+    }
     setShowStartOptions('confirm');
   };
 

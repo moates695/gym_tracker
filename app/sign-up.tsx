@@ -50,7 +50,6 @@ interface PedOption {
 type SignUpScreen = 'details' | 'stats';
 type UsernameState = null | 'checking' | 'good' | 'error';
 // todo: add body fat percentage
-// todo: show mandatory fields with red asterix
 
 export default function SignUpScreen() {
   const router = useRouter();

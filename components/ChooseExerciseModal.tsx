@@ -11,6 +11,7 @@ import workoutExercise from "./WorkoutExercise";
 import { Dropdown } from "react-native-element-dropdown";
 import { useDropdown } from "./ExerciseData";
 import ExerciseListFilter from "./ExerciseListFilter";
+import LoadingScreen from "@/app/loading";
 
 interface ChooseExerciseProps {
   onChoose: () => void
@@ -28,14 +29,23 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
 
   const [displayedExercises, setDisplayedExercises] = useState<ExerciseListItem[]>(exercisesList); 
   const [showFilters, setShowFilters] = useState<boolean>(false);  
+  const [refreshing, setRefreshing] = useState<boolean>(false);
 
   const handleExercisesRefresh = async () => {
-    const data = await fetchWrapper({
-      route: 'exercises/list/all',
-      method: 'GET'
-    });
-    if (!data || !data.exercises) return;
-    setExercisesList(data.exercises);
+    try {
+      setRefreshing(true);
+      const data = await fetchWrapper({
+        route: 'exercises/list/all',
+        method: 'GET'
+      });
+      if (!data || !data.exercises) return;
+      setExercisesList(data.exercises);
+    } catch (error) {
+      console.log(error);
+      setExercisesList([]);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   useEffect(() => {
@@ -70,23 +80,29 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
         {displayedExercises.length === 0 &&
           <Text style={styles.text}>no exercises</Text>
         }
-        <FlatList 
-          style={styles.scrollView}
-          data={displayedExercises}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <ChooseExerciseItem exercise={item} onChoose={onChoose} />
-          )}
-          showsVerticalScrollIndicator={false}
-        />
-        <TouchableOpacity 
-          onPress={onChoose}
-          style={[commonStyles.thinTextButton, {
-            alignSelf: 'center'
-          }]}
-        >
-          <Text style={styles.text}>close</Text>
-        </TouchableOpacity>
+        {refreshing ?
+          <LoadingScreen />
+        :
+          <>
+            <FlatList 
+              style={styles.scrollView}
+              data={displayedExercises}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <ChooseExerciseItem exercise={item} onChoose={onChoose} />
+              )}
+              showsVerticalScrollIndicator={false}
+            />
+            <TouchableOpacity 
+              onPress={onChoose}
+              style={[commonStyles.thinTextButton, {
+                alignSelf: 'center'
+              }]}
+            >
+              <Text style={styles.text}>close</Text>
+            </TouchableOpacity>
+          </>
+        }
       </View>
     </View>
   )
