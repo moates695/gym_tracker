@@ -1,5 +1,5 @@
 import { useAtom } from "jotai";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import React, { View, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native"
 import { SetData, WorkoutExercise, workoutExercisesAtom, emptySetData, SetClass} from "@/store/general";
 import ConfirmationModal from "./ConfirmationModal";
@@ -48,15 +48,14 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.row, styles.headerRow]}>
-        {!openOptions &&
-          <>
-            <Text style={[styles.text, styles.header]}>reps</Text>
-            <Text style={[styles.text, styles.header]}>{exercise.is_body_weight ? '+/- weight' : 'weight'}</Text>
-            <Text style={[styles.text, styles.header]}>sets</Text>
-          </>
-        }
-      </View>
+      {!openOptions &&
+        <View style={[styles.row, {paddingRight: 6}]}>
+          <View style={{width: 18}}/>
+          <Text style={[styles.text, styles.header]}>reps</Text>
+          <Text style={[styles.text, styles.header]}>{exercise.is_body_weight ? '+/- weight' : 'weight'}</Text>
+          <Text style={[styles.text, styles.header]}>sets</Text>
+        </View>
+      }
       {exercise.set_data.map((set_data: SetData, index: number) => (
         <ExerciseSet 
           key={index} 

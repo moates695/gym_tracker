@@ -1,6 +1,6 @@
 import { useAtom } from "jotai";
 import { useEffect, useState } from "react";
-import React, { View, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native"
+import React, { View, StyleSheet, Text, TextInput, TouchableOpacity, Image } from "react-native"
 import { emptySetData, SetClass, SetData, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
 import ConfirmationModal from "./ConfirmationModal";
 import ShiftTextInput from "./ShiftTextInput";
@@ -22,6 +22,13 @@ interface SetClassOption {
   label: string
   value: SetClass
 }
+
+export const classImageMap: Record<SetClass, any> = {
+  working: require('../assets/images/working_set.png'),
+  dropset: require('../assets/images/drop_set.png'),
+  warmup: require('../assets/images/warmup_set.png'),
+  cooldown: require('../assets/images/cooldown_set.png'),
+};
 
 export default function ExerciseSet(props: ExerciseSetProps) {
   const { exercise, exerciseIndex, set_data, setIndex, openOptions } = props;
@@ -84,6 +91,19 @@ export default function ExerciseSet(props: ExerciseSetProps) {
     setExercises(tempExercises);
   };
 
+  const handleShiftReps = (increase: boolean) => {
+    const tempSetData = [...exercise.set_data];
+    let num = tempSetData[setIndex].reps;
+    if (increase) {
+      num = num !== null ? ++num : 1
+    } else {
+      if (num === 0 || num === null) return;
+      num = --num;
+    }
+    tempSetData[setIndex].reps = num;
+    updateExerciseSetData(tempSetData);
+  }
+
   const handleShiftSet = (increase: boolean) => {
     const tempSetData = [...exercise.set_data];
     let num = tempSetData[setIndex].num_sets;
@@ -91,7 +111,7 @@ export default function ExerciseSet(props: ExerciseSetProps) {
       num = num !== null ? ++num : 1
     } else {
       if (num === 0 || num === null) return;
-      tempSetData[setIndex].num_sets = --num;
+      num = --num;
     }
     tempSetData[setIndex].num_sets = num;
     updateExerciseSetData(tempSetData);
@@ -173,6 +193,9 @@ export default function ExerciseSet(props: ExerciseSetProps) {
     const tempSetData = [...exercise.set_data];
     const tempSet = tempSetData[setIndex];
     tempSet.class = newClass
+    // if (newClass === 'dropset') {
+    //   tempSet.num_sets = 1;
+    // }
     updateExerciseSetData(tempSetData);
   };
 
@@ -180,19 +203,24 @@ export default function ExerciseSet(props: ExerciseSetProps) {
     setClassOptionValue(set_data.class);
   }, [set_data])
 
-  // todo: make this an icon? (emojis are kinda cringe)
-  const classMap: Record<SetClass, string> = {
-    working: '💪',
-    dropset: '⬇️',
-    warmup: '🔥',
-    cooldown: '❄️',
+  const cycleSetClass = () => {
+    const order: SetClass[] = ['warmup','working','dropset','cooldown']
+    let index = order.indexOf(set_data.class);
+    if (index === -1) return;
+    index++;
+    if (index >= order.length) {
+      index = 0;
+    }
+    handleUpdateSetClass(order[index]);
   };
+
+
 
   return (
     <>
-      <View style={styles.row}>
+      <>
         {openOptions ?
-          <>
+          <View style={styles.row}>
             <View style={styles.valueRow}>
               <Text style={styles.text}>{set_data.reps ?? 0}</Text>
               <Text style={styles.text}>{displayWeight !== '' ? displayWeight : '0.0'}</Text>
@@ -237,43 +265,52 @@ export default function ExerciseSet(props: ExerciseSetProps) {
             >
               <AntDesign name='arrow-down' size={20} color={moveDownPressOn ? "cyan" : "#ccc"} />
             </TouchableOpacity>
-          </>
+          </View>
         :
-          <>
-            {/* <Text 
-              style={[styles.text, {justifyContent: 'center'}]}
+          <View style={{flexDirection: 'row', paddingLeft: 10, alignItems: 'center'}}>
+            <TouchableOpacity
+              onPress={cycleSetClass}
             >
-              {classMap[set_data.class]}
-            </Text> */}
-            <TextInput 
-              style={styles.textInput}
-              keyboardType="number-pad"
-              onChangeText={(text) => handleUpdateInteger(text, 'reps')}
-              value={(set_data.reps ?? '').toString()}
-            />
-            <TextInput 
-              style={styles.textInput}
-              keyboardType="number-pad"
-              onChangeText={(text) => handleUpdateWeight(text)}
-              value={displayWeight}
-            />
-            {set_data.class !== 'dropset' ?
-              <ShiftTextInput
-                onChangeText={(text) => handleUpdateInteger(text, 'num_sets')}
-                value={(set_data.num_sets ?? '').toString()}
-                shiftPress={(increase: boolean) => handleShiftSet(increase)}
+              <Image
+                source={classImageMap[set_data.class]}
+                style={{
+                  width: 20,
+                  height: 20,
+                  marginRight: -6,
+                }}
+                resizeMode="contain" // optional
               />
-            :
+            </TouchableOpacity>
+            <View style={styles.row}>
+              <ShiftTextInput
+                onChangeText={(text) => handleUpdateInteger(text, 'reps')}
+                value={(set_data.reps ?? '').toString()}
+                shiftPress={(increase: boolean) => handleShiftReps(increase)}
+              />
               <TextInput 
                 style={styles.textInput}
                 keyboardType="number-pad"
-                value={'1'}
-                editable={false}
+                onChangeText={(text) => handleUpdateWeight(text)}
+                value={displayWeight}
               />
-            }
-          </>
+              {set_data.class !== 'dropset' ?
+                <ShiftTextInput
+                  onChangeText={(text) => handleUpdateInteger(text, 'num_sets')}
+                  value={(set_data.num_sets ?? '').toString()}
+                  shiftPress={(increase: boolean) => handleShiftSet(increase)}
+                />
+              :
+                <TextInput 
+                  style={styles.textInput}
+                  keyboardType="number-pad"
+                  value={'1'}
+                  editable={false}
+                />
+              }
+            </View>
+          </View>
         }
-      </View>
+      </>
       <ConfirmationModal visible={deleteModalVisible} onConfirm={handleConfirm} onCancel={handleCancel} message="Delete set?" confirm_string="yeah" cancel_string="nah"/>
     </>
   )
@@ -301,7 +338,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     width: '100%',
     justifyContent: 'space-around',
-    paddingBottom: 5
+    paddingBottom: 5,
+    alignItems: 'center'
   },
   headerRow: {
     width: '93.5%'

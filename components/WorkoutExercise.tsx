@@ -37,14 +37,14 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
 
   useEffect(() => {
     const reducer = (sum: number, obj: SetData): number => {
-      return sum + (obj.num_sets ?? 0)
+      return sum + (obj.class === 'dropset' ? 1 : obj.num_sets ?? 0)
     };
     setNumSets(getValidSets(exercise).reduce(reducer, 0));
   }, [exercise.set_data]);
 
   const handleRefreshHistory = async () => {
     const data = await fetchWrapper({
-      route: 'exercise/history',
+      route: 'exercises/history',
       method: 'GET',
       params: {exercise_id: exercise.id}
     })

@@ -6,13 +6,14 @@ import React from "react";
 import * as Font from 'expo-font';
 import { MaterialIcons, AntDesign, Ionicons, Feather } from '@expo/vector-icons';
 import { fetchWrapper, loadFonts } from "@/middleware/helpers";
-import { useColorScheme, View } from 'react-native';
+import { useColorScheme, View, Image } from 'react-native';
 import * as SystemUI from "expo-system-ui"
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { useAtom } from "jotai";
-import { distributionStatsAtom, exerciseListAtom, favouriteExerciseStatsAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, userDataAtom, workoutExercisesAtom, workoutHistoryStatsAtom, workoutTotalStatsAtom } from "@/store/general";
+import { distributionStatsAtom, exerciseListAtom, favouriteExerciseStatsAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, SetClass, userDataAtom, workoutExercisesAtom, workoutHistoryStatsAtom, workoutTotalStatsAtom } from "@/store/general";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from 'expo-status-bar';
+import { classImageMap } from "@/components/ExerciseSet";
 
 export interface DecodedJWT {
   email: string
@@ -112,6 +113,7 @@ export default function RootLayout() {
             fetchWorkoutTotalStats(),
             fetchDistributionStats(),
             fetchFavouriteStats(),
+            preloadImages()
           ])
         } catch (error) {
           console.log(error);
@@ -223,6 +225,12 @@ export default function RootLayout() {
     }
   };
 
+  const preloadImages = () => {
+    Object.values(classImageMap).forEach(img => {
+      Image.resolveAssetSource(img)
+    })
+  };
+
   const initialSetup = async () => {
     await Promise.all([
       checkUserState(),
@@ -232,6 +240,8 @@ export default function RootLayout() {
   useEffect(() => {
     initialSetup();
   }, []);
+
+  
 
   return (
     // <SafeAreaProvider style={{ backgroundColor: 'black' }}>

@@ -84,6 +84,11 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
         }
       }
 
+      for (const set_data of exercise.set_data) {
+        if (set_data.class !== 'dropset') continue;
+        set_data.num_sets = 1;
+      }
+
       exerciseData.push({
         "id": exercise.id,
         "set_data": updatedValidSets,
