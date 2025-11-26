@@ -122,6 +122,8 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
         borderStyle: 'solid',
         borderWidth: 1,
         padding: 5,
+        paddingLeft: 12,
+        paddingRight: 12,
         borderRadius: 5,
         margin: 2,
       }}
@@ -143,9 +145,11 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
             </Text>
           </TouchableOpacity>
           <DataTable tableData={getTableData()} />
+          <Text style={commonStyles.text}>Choose a data display:</Text>
           {useDropdown(displayOptions, displayOptionValue, setDisplayOptionValue)}
           {displayOptionValue !== 'replay' &&
             <>
+              <Text style={commonStyles.text}>Choose a metric:</Text>
               {useDropdown(statOptions, statOptionValue, setStatOptionValue)}
             </>
           }
@@ -180,6 +184,7 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
                     alignSelf: 'flex-start'
                   }}
                 >
+                  <Text style={commonStyles.text}>Choose a muscle grouping:</Text>
                   {useDropdown(muscleOptions, muscleOptionValue, setMuscleOptionValue)}
                 </View>
                 <MuscleGroupSvg valueMap={getValueMap()} showGroups={muscleOptionValue === 'group'}/>

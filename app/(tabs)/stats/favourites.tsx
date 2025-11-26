@@ -96,7 +96,7 @@ export default function StatsFavourites() {
       style={{flex: 1}}
     >
       <TouchableOpacity
-        style={[commonStyles.button, {width: 50}]}
+        style={[commonStyles.thinTextButton, {width: 50}]}
         onPress={refreshData}
         disabled={loadingStats}
       >

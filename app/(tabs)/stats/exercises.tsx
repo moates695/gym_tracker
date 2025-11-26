@@ -53,7 +53,7 @@ export default function StatsExercises() {
         }}
       >
         <TouchableOpacity
-          style={[commonStyles.button, {width: 50}]}
+          style={[commonStyles.thinTextButton, {width: 50}]}
           onPress={handleExercisesRefresh}
           disabled={loadingExerciseList}
         >

@@ -97,10 +97,13 @@ export default function StatsDistribution() {
   }, [exercisesMeta]);
   const [exerciseValue, setExerciseValue] = useState<string | null>(null);
 
+  const updateExerciseValue = (value: string) => {
+    setExerciseValue(value);
+  };
+
   const variationOptions = useMemo<Record<string, OptionsObject[]>>(() => {
     const optionsMap: Record<string, OptionsObject[]> = {};
     for (const [exerciseId, exerciseMeta] of Object.entries(exercisesMeta)) {
-      if (Object.keys(exerciseMeta.variations).length === 0) continue;
       optionsMap[exerciseId] = Object.entries(exerciseMeta.variations).map(([id, name]) => ({
         label: name,
         value: id
@@ -112,7 +115,7 @@ export default function StatsDistribution() {
     }
     return optionsMap;
   }, [exercisesMeta]);
-  const [variationValue, setVariationValue] = useState<string | null>(null);
+  const [variationValue, setVariationValue] = useState<string>('base');
 
   const exerciseMetricOptions: ExerciseLeaderboardOption[] = [
     { label: 'volume', value: 'volume' },
@@ -127,14 +130,14 @@ export default function StatsDistribution() {
     if (leaderboardValue === 'overall') {
       return `overall:${overallMetricValue}`;
     } else if (leaderboardValue === 'exercise') {
-      if (exerciseMetricValue === null) return null;
+      // if (exerciseMetricValue === null) return null;
       if (variationValue === null || variationValue === 'base') {
         return `exercise:${exerciseValue}:${exerciseMetricValue}`
       } else {
         return `exercise:${exerciseValue}:${variationValue}:${exerciseMetricValue}`
       }
     }
-    throw new Error("unknown leaderboard type")
+    throw new Error("unknown leaderboard type");
   }; 
 
   const reload = async () => {
@@ -294,6 +297,12 @@ export default function StatsDistribution() {
     )
   };
 
+  if (leaderboardValue === 'exercise' && exerciseValue === null) {
+    return (
+      <Text style={commonStyles.text}>error loading exercise data</Text>
+    )
+  }
+
   return (
     <View 
       style={{
@@ -301,48 +310,51 @@ export default function StatsDistribution() {
         backgroundColor: 'black',
       }}
     >
-      <Text style={commonStyles.text}>Choose leaderboard:</Text>
-      {useDropdown(leaderboardOptions, leaderboardValue, setLeaderboardValue)}
-      {leaderboardValue === 'overall' &&
-        <>
-          <Text style={commonStyles.text}>Choose a metric:</Text>
-          {useDropdown(overallMetricOptions, overallMetricValue, setOverallMetricValue)}
-        </>
-      }
-      {leaderboardValue === 'exercise' &&
-        <>
-          {exerciseValue === null ?
-            <>
-              <Text>error loading exercise data</Text>
-            </>
-          :
-            <>
-              <Text style={commonStyles.text}>Choose an exercise:</Text>
-              {useDropdown(exerciseOptions, exerciseValue, setExerciseValue)}
-              {/* {(variationOptions?.[exerciseValue] ?? []).length > 0 &&
-                <>
-                  <Text style={commonStyles.text}>Choose a variation:</Text>
-                  {useDropdown(variationOptions[exerciseValue], variationValue, setVariationValue)}
-                </>
-              } */}
-              {(variationOptions?.[exerciseValue] ?? []).length > 0 &&
-                <>
-                  <Text style={commonStyles.text}>Choose a variation:</Text>
-                  {useDropdown(variationOptions[exerciseValue], variationValue, setVariationValue)}
-                </>
-              }
-              <Text style={commonStyles.text}>Choose a metric:</Text>
-              {useDropdown(exerciseMetricOptions, exerciseMetricValue, setExerciseMetricValue)}
-            </>
-          }
-        </>
-      }
       <TouchableOpacity
         onPress={() => reload()}
-        style={[commonStyles.thinTextButton, {marginTop: 8}]}
+        style={[commonStyles.thinTextButton, {marginBottom: 4}]}
       >
         <Text style={commonStyles.text}>reload</Text>
       </TouchableOpacity>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          marginBottom: 4
+        }}
+      >
+        <View>
+          <Text style={commonStyles.text}>Choose leaderboard:</Text>
+          {useDropdown(leaderboardOptions, leaderboardValue, setLeaderboardValue)}
+        </View>
+        // todo switch between overall and exercise metrics
+        <View>
+          <Text style={commonStyles.text}>Choose a metric:</Text>
+          {useDropdown(overallMetricOptions, overallMetricValue, setOverallMetricValue)}
+        </View>
+      </View>
+      {leaderboardValue === 'exercise' &&
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-around',
+          }}
+        >
+          <View>
+            <Text style={commonStyles.text}>Choose an exercise:</Text>
+            {useDropdown(exerciseOptions, exerciseValue, setExerciseValue)}
+          </View>
+          <View>
+            <Text style={commonStyles.text}>Choose a variation:</Text>
+            {useDropdown(
+              variationOptions[exerciseValue ?? ''],
+              variationValue,
+              setVariationValue,
+              (variationOptions?.[exerciseValue ?? ''] ?? []).length === 0
+            )}
+          </View>
+        </View>
+      }
       {renderLeaderboard()}
     </View>
   )
