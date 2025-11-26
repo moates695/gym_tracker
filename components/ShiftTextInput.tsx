@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
   },
   container: {
     height: '100%',
-    width: '25%',
+    width: '30%',
     borderColor: '#ccc',
     borderWidth: 2,
     borderRadius: 5,

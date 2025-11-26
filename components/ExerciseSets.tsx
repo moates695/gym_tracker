@@ -49,11 +49,25 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
   return (
     <View style={styles.container}>
       {!openOptions &&
-        <View style={[styles.row, {paddingRight: 6}]}>
-          <View style={{width: 18}}/>
-          <Text style={[styles.text, styles.header]}>reps</Text>
-          <Text style={[styles.text, styles.header]}>{exercise.is_body_weight ? '+/- weight' : 'weight'}</Text>
-          <Text style={[styles.text, styles.header]}>sets</Text>
+        <View style={{
+          flexDirection: 'row',
+          width: '100%',
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingBottom: 4
+        }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              marginLeft: 34,
+              marginRight: 34,
+              justifyContent: 'space-around',
+            }}
+          >
+            <Text style={[styles.text, styles.header]}>reps</Text>
+            <Text style={[styles.text, styles.header]}>{exercise.is_body_weight ? '+/- weight' : 'weight'}</Text>
+            <Text style={[styles.text, styles.header]}>sets</Text>
+          </View>
         </View>
       }
       {exercise.set_data.map((set_data: SetData, index: number) => (
@@ -70,13 +84,22 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
         <View style={{ flex: 1 }} />
           <TouchableOpacity
             onPress={() => handleNewSet('working')}
-            style={[commonStyles.thinTextButton, {borderColor: 'green', marginTop: 5}]}
+            style={[commonStyles.thinTextButton, {
+              borderColor: 'green', 
+              marginTop: 5,
+              width: 80,
+            }]}
           >
             <Text style={styles.text}>new set</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => handleNewSet('dropset')}
-            style={[commonStyles.thinTextButton, {borderColor: 'green', marginTop: 5, marginLeft: 20}]}
+            style={[commonStyles.thinTextButton, {
+              borderColor: 'green', 
+              marginTop: 5, 
+              marginLeft: 20,
+              width: 80,
+            }]}
           >
             <Text style={styles.text}>dropset</Text>
           </TouchableOpacity>

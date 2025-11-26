@@ -49,7 +49,6 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
     try {
       updateLoadingExerciseHistory(exercise.workout_exercise_id, true);
 
-      await new Promise(resolve => setTimeout(resolve, 1500));
       const data = await fetchWrapper({
         route: 'exercises/history',
         method: 'GET',

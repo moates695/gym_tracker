@@ -267,21 +267,40 @@ export default function ExerciseSet(props: ExerciseSetProps) {
             </TouchableOpacity>
           </View>
         :
-          <View style={{flexDirection: 'row', paddingLeft: 10, alignItems: 'center'}}>
+          <View 
+            style={{
+              flexDirection: 'row', 
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingBottom: 5,
+              width: '100%',
+            }}
+          >
             <TouchableOpacity
               onPress={cycleSetClass}
+              style={{
+                width: 30, 
+                height: 30,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
               <Image
                 source={classImageMap[set_data.class]}
                 style={{
-                  width: 20,
-                  height: 20,
-                  marginRight: -6,
+                  width: 22,
+                  height: 22,
                 }}
-                resizeMode="contain" // optional
+                resizeMode="contain"
               />
             </TouchableOpacity>
-            <View style={styles.row}>
+            <View 
+              style={{
+                flex: 1,
+                flexDirection: 'row',
+                justifyContent: 'space-around',
+              }}
+            >
               <ShiftTextInput
                 onChangeText={(text) => handleUpdateInteger(text, 'reps')}
                 value={(set_data.reps ?? '').toString()}
@@ -300,14 +319,35 @@ export default function ExerciseSet(props: ExerciseSetProps) {
                   shiftPress={(increase: boolean) => handleShiftSet(increase)}
                 />
               :
-                <TextInput 
-                  style={styles.textInput}
-                  keyboardType="number-pad"
-                  value={'1'}
-                  editable={false}
-                />
+                <View style={{width: '30%', justifyContent: 'center', alignItems: 'center'}}>
+                  {/* <TextInput 
+                    style={[styles.textInput, {width: '100%'}]}
+                    keyboardType="number-pad"
+                    value={'1'}
+                    editable={false}
+                  /> */}
+                  <Text style={commonStyles.text}>1</Text>
+                </View>
               }
             </View>
+            <TouchableOpacity
+              onPress={handleCopySet}
+              style={[styles.button, {
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 30, 
+                height: 30
+              }]}
+              onPressIn={() => setCopyPressOn(true)}
+              onPressOut={() => setCopyPressOn(false)}
+              activeOpacity={1}
+            >
+              <Ionicons 
+                name={copyPressOn ? 'copy' : 'copy-outline'} 
+                color={'green'} 
+                size={22} 
+              />
+            </TouchableOpacity>
           </View>
         }
       </>
