@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { View, StyleSheet, Text, Platform, TouchableOpacity, ScrollView, FlatList, StyleProp, ViewStyle } from "react-native"
-import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoryData, loadableExercisesHistoricalDataAtom, emptyExerciseHistoricalData, HistoryData, ExerciseListItem } from "@/store/general"
+import { exercisesHistoricalDataAtom, WorkoutExercise, ExerciseHistoryData, loadableExercisesHistoricalDataAtom, emptyExerciseHistoricalData, HistoryData, ExerciseListItem, loadingExerciseHistoryAtom } from "@/store/general"
 import ThreeAxisGraph, { Point3D } from './ThreeAxisGraph'
-import { useEffect, useRef, useState } from "react";
-import { useAtom, useAtomValue } from "jotai";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import LineGraph, {LineGraphPoint, LineGraphScale} from './LineGraph';
 import { commonStyles } from '@/styles/commonStyles';
 import { Dropdown } from 'react-native-element-dropdown';
@@ -130,6 +130,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
 
   const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
   const loadableExercisesHistoricalData = useAtomValue(loadableExercisesHistoricalDataAtom);
+  const loadingExerciseHistory = useAtomValue(loadingExerciseHistoryAtom);
 
   const exerciseHistory: ExerciseHistoryData = exercisesHistoricalData[exercise.id] ?? emptyExerciseHistoricalData;
 
@@ -503,7 +504,8 @@ export default function ExerciseData(props: ExerciseDataProps) {
     'table': <DataTable tableData={getTableData()} />
   }
 
-  if (loadableExercisesHistoricalData.state === 'loading') {
+  if (loadableExercisesHistoricalData.state === 'loading' || 
+    (loadingExerciseHistory[exercise.workout_exercise_id] ?? false)) {
     return <LoadingScreen />
   } else if (loadableExercisesHistoricalData.state === 'hasError') {
     console.log('error loading historical data from storage');
@@ -543,8 +545,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
             <Text style={styles.text}>switch visual</Text>
           </TouchableOpacity>
         </>
-      }
-      
+      }      
     </View>
   )
 }

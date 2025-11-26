@@ -14,6 +14,7 @@ import { distributionStatsAtom, exerciseListAtom, favouriteExerciseStatsAtom, mu
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from 'expo-status-bar';
 import { classImageMap } from "@/components/ExerciseSet";
+import 'react-native-get-random-values';
 
 export interface DecodedJWT {
   email: string

@@ -64,12 +64,16 @@ export interface Exercise {
 //? base exercise: `variation_name` = undefined
 //? variation: `variation_name` = non empty string
 export interface WorkoutExercise extends Exercise {
+  workout_exercise_id: string
   variation_name?: string
   set_data: SetData[]
+  // loadingHistory: boolean
 }
 
 export const workoutExercisesAtom = atomWithStorage<WorkoutExercise[]>('workoutExercisesAtom', [], storage, { getOnInit: true });
 export const loadableWorkoutExercisesAtom = loadable(workoutExercisesAtom);
+
+export const loadingExerciseHistoryAtom = atom<Record<string, boolean>>({});
 
 export const workoutStartTimeAtom = atomWithStorage<number | null>('workoutStartTimeAtom', Date.now(), storage);
 
