@@ -240,7 +240,7 @@ export default function StatsDistribution() {
       }}
     >
       <TouchableOpacity
-        style={[commonStyles.thinTextButton, {width: 50}]}
+        style={[commonStyles.thinTextButton, {width: 50, marginBottom: 4, marginLeft: 12}]}
         onPress={refreshData}
         disabled={loadingDistributions}
       >

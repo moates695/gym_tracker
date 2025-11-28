@@ -21,7 +21,7 @@ export default ({ config }: any) => {
       },
       extra: {
         apiUrl: process.env.EXPO_PUBLIC_API_URL,
-        useReal: process.env.USE_REAL,
+        apiTimeoutMs: process.env.EXPO_API_TIMEOUT_MS,
         "eas": {
           "projectId": "1a09967a-b075-4243-9269-a14a1d0e4d8c"
         }

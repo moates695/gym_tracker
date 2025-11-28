@@ -12,7 +12,8 @@
         "gradleCommand": ":app:assembleRelease -x lint"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://subtly-ample-bluebird.ngrok-free.app"
+        "EXPO_PUBLIC_API_URL": "https://subtly-ample-bluebird.ngrok-free.app",
+        "EXPO_API_TIMEOUT_MS": 5000
       }
     },
     "preview": {
@@ -24,7 +25,8 @@
         "gradleCommand": ":app:assembleRelease -x lint"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://subtly-ample-bluebird.ngrok-free.app"
+        "EXPO_PUBLIC_API_URL": "https://subtly-ample-bluebird.ngrok-free.app",
+        "EXPO_API_TIMEOUT_MS": 5000
       }
     }
   }

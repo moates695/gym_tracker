@@ -16,6 +16,9 @@ interface FetchWrapperArgs {
 }
 
 export const fetchWrapper = async ({route, method, params = {}, body, token_str = 'auth_token'}: FetchWrapperArgs) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), parseInt(Constants.expoConfig?.extra?.apiTimeoutMs));
+
   try {
     let url = `${Constants.expoConfig?.extra?.apiUrl}/${route}`;
     url = `${url}?${new URLSearchParams(params).toString()}`;
@@ -27,7 +30,8 @@ export const fetchWrapper = async ({route, method, params = {}, body, token_str 
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json"
       },
-      ...(method === 'POST' && {body: JSON.stringify(body)})         
+      ...(method === 'POST' && {body: JSON.stringify(body)}),
+      signal: controller.signal  
     });
     
     if (!response.ok) {
@@ -46,6 +50,8 @@ export const fetchWrapper = async ({route, method, params = {}, body, token_str 
   } catch (error) {
     console.log(error)
     return null;
+  } finally {
+    clearTimeout(id);
   }
 }
 

@@ -98,10 +98,14 @@ export default function StatsDistribution() {
   const [exerciseValue, setExerciseValue] = useState<string | null>(null);
 
   const updateExerciseValue = (value: string) => {
+    if (value === exerciseValue) return;
+    setVariationValue('base');
     setExerciseValue(value);
   };
 
-  const variationOptions = useMemo<Record<string, OptionsObject[]>>(() => {
+  const [variationOptions, setVariationOptions] = useState<Record<string, OptionsObject[]>>({});
+
+  const updateVariationOptions = (exercisesMeta: ExercisesMeta) => {
     const optionsMap: Record<string, OptionsObject[]> = {};
     for (const [exerciseId, exerciseMeta] of Object.entries(exercisesMeta)) {
       optionsMap[exerciseId] = Object.entries(exerciseMeta.variations).map(([id, name]) => ({
@@ -113,8 +117,9 @@ export default function StatsDistribution() {
         value: 'base'
       })
     }
-    return optionsMap;
-  }, [exercisesMeta]);
+    setVariationOptions(optionsMap);
+  };
+  
   const [variationValue, setVariationValue] = useState<string>('base');
 
   const exerciseMetricOptions: ExerciseLeaderboardOption[] = [
@@ -130,8 +135,7 @@ export default function StatsDistribution() {
     if (leaderboardValue === 'overall') {
       return `overall:${overallMetricValue}`;
     } else if (leaderboardValue === 'exercise') {
-      // if (exerciseMetricValue === null) return null;
-      if (variationValue === null || variationValue === 'base') {
+      if (variationValue === 'base') {
         return `exercise:${exerciseValue}:${exerciseMetricValue}`
       } else {
         return `exercise:${exerciseValue}:${variationValue}:${exerciseMetricValue}`
@@ -141,11 +145,12 @@ export default function StatsDistribution() {
   }; 
 
   const reload = async () => {
-    const promises = [fetchLeaderboard()];
-    if (leaderboardValue === 'exercise') {
-      promises.push(fetchExercisesMeta());
+    if (leaderboardValue === 'overall') {
+      await fetchLeaderboard();
+      return;
     }
-    await Promise.all(promises);
+    await fetchExercisesMeta();
+    await fetchLeaderboard();
   };
 
   const fetchExercisesMeta = async () => {
@@ -163,7 +168,7 @@ export default function StatsDistribution() {
 
       if (Object.keys(exercisesMeta).length === 0) {
         setExerciseValue(null);
-        setVariationValue(null);
+        setVariationValue('base');
         return
       }
       
@@ -173,12 +178,15 @@ export default function StatsDistribution() {
         setExerciseValue(exerciseId);
       }
 
-      const variationIds = Object.keys(exercisesMeta[exerciseId].variations); 
-      if (variationIds.length === 0) {
-        setVariationValue(null);
-      } else if (variationValue === null || !(variationValue in exercisesMeta[exerciseId].variations)) {
-        setVariationValue(variationIds[0]);
-      }
+      updateVariationOptions(exercisesMeta);
+      setVariationValue('base');
+
+      // const variationIds = Object.keys(exercisesMeta[exerciseId].variations); 
+      // if (variationIds.length === 0) {
+      //   setVariationValue('base');
+      // } else if (variationValue === null || !(variationValue in exercisesMeta[exerciseId].variations)) {
+      //   setVariationValue(variationIds[0]);
+      // }
 
     } catch (error) {
       console.log(error);
@@ -225,7 +233,7 @@ export default function StatsDistribution() {
       case 'overall':
         return `stats/leaderboard/${leaderboardValue}/${overallMetricValue}`;
       case 'exercise':
-        if (variationValue === null || variationValue === 'base') {
+        if (variationValue === 'base') {
           return `stats/leaderboard/${leaderboardValue}/${exerciseValue}/${exerciseMetricValue}`;
         } else {
           return `stats/leaderboard/${leaderboardValue}/${variationValue}/${exerciseMetricValue}`;
@@ -289,7 +297,7 @@ export default function StatsDistribution() {
           <Text 
             style={[commonStyles.text, {alignSelf: 'center', paddingBottom: 5}]}
           >
-            Rank {leaderboardData.user_rank}/{leaderboardData.max_rank}, that's the {getPercentile(leaderboardData.user_rank, leaderboardData.max_rank)} percentile
+            Rank: {leaderboardData.user_rank}/{leaderboardData.max_rank} | Percentile: {getPercentile(leaderboardData.user_rank, leaderboardData.max_rank)}
           </Text>
         }
         
@@ -303,6 +311,12 @@ export default function StatsDistribution() {
     )
   }
 
+  const chooseVariationDisabled = (): boolean => {
+    if (exerciseValue === null) return true;
+    if (!(exerciseValue in variationOptions)) return true;
+    return variationOptions[exerciseValue].length <= 1
+  };
+
   return (
     <View 
       style={{
@@ -312,37 +326,45 @@ export default function StatsDistribution() {
     >
       <TouchableOpacity
         onPress={() => reload()}
-        style={[commonStyles.thinTextButton, {marginBottom: 4}]}
+        style={[commonStyles.thinTextButton, {marginBottom: 4, marginLeft: 14}]}
       >
         <Text style={commonStyles.text}>reload</Text>
       </TouchableOpacity>
       <View
         style={{
           flexDirection: 'row',
-          justifyContent: 'space-around',
-          marginBottom: 4
+          justifyContent: 'space-between',
+          marginBottom: 4,
+          marginLeft: 14,
+          marginRight: 14,
         }}
       >
         <View>
           <Text style={commonStyles.text}>Choose leaderboard:</Text>
           {useDropdown(leaderboardOptions, leaderboardValue, setLeaderboardValue)}
         </View>
-        // todo switch between overall and exercise metrics
         <View>
           <Text style={commonStyles.text}>Choose a metric:</Text>
-          {useDropdown(overallMetricOptions, overallMetricValue, setOverallMetricValue)}
+          {leaderboardValue === 'overall' &&
+            useDropdown(overallMetricOptions, overallMetricValue, setOverallMetricValue)
+          }
+          {leaderboardValue === 'exercise' &&
+            useDropdown(exerciseMetricOptions, exerciseMetricValue, setExerciseMetricValue)
+          }
         </View>
       </View>
       {leaderboardValue === 'exercise' &&
         <View
           style={{
             flexDirection: 'row',
-            justifyContent: 'space-around',
+            justifyContent: 'space-between',
+            marginLeft: 14,
+             marginRight: 14,  
           }}
         >
           <View>
             <Text style={commonStyles.text}>Choose an exercise:</Text>
-            {useDropdown(exerciseOptions, exerciseValue, setExerciseValue)}
+            {useDropdown(exerciseOptions, exerciseValue, updateExerciseValue)}
           </View>
           <View>
             <Text style={commonStyles.text}>Choose a variation:</Text>
@@ -350,7 +372,7 @@ export default function StatsDistribution() {
               variationOptions[exerciseValue ?? ''],
               variationValue,
               setVariationValue,
-              (variationOptions?.[exerciseValue ?? ''] ?? []).length === 0
+              chooseVariationDisabled()
             )}
           </View>
         </View>
