@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     // marginTop: 50,
     backgroundColor: 'black',
     paddingTop: 10,
-    paddingBottom: 10,
+    paddingBottom: 20,
     alignItems: 'center',
     elevation: 5,
     borderWidth: 2,
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     flex: 0.95,
     width: '100%',
     borderTopWidth: 0.5,
-    borderTopColor: "#ccc",
+    borderTopColor: "#ccc",    
   },
   modalText: {
     marginBottom: 15,

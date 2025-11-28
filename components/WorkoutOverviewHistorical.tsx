@@ -113,52 +113,25 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
   };
 
   const historyDataContributionsMap: Record<HistoryComparisonType, JSX.Element> = {
-    workout: <>{useDropdown(totalsContributionOptions, totalsContributionValue, setTotalsContributionValue)}</>,
-    muscles: <>{useDropdown(contributionTypeOptions, contributionTypeValue, setContributionTypeValue)}</>,
-  };
-
-  const lookbackComponent = (
-    <>
-      <Text style={styles.text}>Choose a lookback:</Text>
-      <Dropdown
-        data={timeSpanOptions}
-        value={timeSpanOptionValue}
-        labelField="label"
-        valueField="value"
-        onChange={item => {setTimeSpanOptionValue(item.value)}}
-        style={styles.dropdownButton}
-        selectedTextStyle={styles.dropdownText}
-        containerStyle={styles.dropdownContainerStyle}
-        renderItem={(item, selected) => renderItem(item, selected)}
-      />
-    </>
-  );
-
-  const renderItem = (item: any, selected: any): JSX.Element => {
-    return (
-      <View
-        style={{
-          padding: 10,
-          borderWidth: selected ? 1 : 0,
-          borderColor: selected ? 'red' : 'transparent',
-          backgroundColor: 'black',
-        }}
-      >
-        <Text style={{ color: selected ? 'red' : 'white' }}>{item.label}</Text>
-      </View>
-    )
+    workout: useDropdown(totalsContributionOptions, totalsContributionValue, setTotalsContributionValue),
+    muscles: useDropdown(contributionTypeOptions, contributionTypeValue, setContributionTypeValue),
   };
 
   const getHistoryPoints = (): LineGraphPoint[] => {
-    let points: LineGraphPoint[] = [];
-    if (historyComparisonValue === 'workout') {
-      points = getHistoryWorkoutPoints();
-    } else if (muscleTargetValue === 'all') {
-      points = getHistoryMuscleGroupPoints();
-    } else {
-      points = getHistoryMuscleTargetPoints();
+    try {
+      let points: LineGraphPoint[] = [];
+      if (historyComparisonValue === 'workout') {
+        points = getHistoryWorkoutPoints();
+      } else if (muscleTargetValue === 'all') {
+        points = getHistoryMuscleGroupPoints();
+      } else {
+        points = getHistoryMuscleTargetPoints();
+      }
+      return filterTimeSeries(points, timeSpanOptionValue);
+    } catch (error) {
+      console.log(`getHistoryPoints error: ${error}`)
+      return [];
     }
-    return filterTimeSeries(points, timeSpanOptionValue);
   };
 
   const getHistoryWorkoutPoints = (): LineGraphPoint[] => {
@@ -218,40 +191,18 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
   };
 
   const getBarValue = (): number => {
-    if (historyComparisonValue === 'workout') {
-      return getBarValueWorkout();
+    try {
+        if (historyComparisonValue === 'workout') {
+        return getBarValueWorkout();
+      }
+      return getBarValueMuscle();
+    } catch (error) {
+      console.log(error);
+      return 0;
     }
-    return getBarValueMuscle();
   };
 
   const getBarValueWorkout = (): number => {
-    // const validExercises = [];
-    // for (const exercise of exercises) {
-    //   validExercises.push(getValidSets(exercise));
-    // }
-
-    // if (totalsContributionValue === 'duration') {
-    //   return workoutDuration;
-    // } else if (totalsContributionValue === 'num_exercises') {
-    //   return validExercises.length;
-    // }
-
-    // let value = 0;
-    // for (const set_data_list of validExercises) {
-    //   for (const set_data of set_data_list) {
-    //     if (totalsContributionValue === 'volume') {
-    //       const weight = 0; // tod
-    //       value += set_data.reps * weight * set_data.num_sets;
-    //     } else if (totalsContributionValue === 'reps') {
-    //       value += set_data.reps * set_data.num_sets;
-    //     } else {
-    //       value += set_data.num_sets;
-    //     }
-    //   }
-    // }
-
-    // return value;
-
     if (totalsContributionValue === 'duration') {
       return workoutDuration;
     }
@@ -321,6 +272,38 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
     setOverviewHistoricalStats([]);
   }
 
+  const lookbackComponent = (
+    <>
+      <Text style={styles.text}>Choose a lookback:</Text>
+      <Dropdown
+        data={timeSpanOptions}
+        value={timeSpanOptionValue}
+        labelField="label"
+        valueField="value"
+        onChange={item => {setTimeSpanOptionValue(item.value)}}
+        style={styles.dropdownButton}
+        selectedTextStyle={styles.dropdownText}
+        containerStyle={styles.dropdownContainerStyle}
+        renderItem={(item, selected) => renderItem(item, selected)}
+      />
+    </>
+  );
+
+  const renderItem = (item: any, selected: any): JSX.Element => {
+    return (
+      <View
+        style={{
+          padding: 10,
+          borderWidth: selected ? 1 : 0,
+          borderColor: selected ? 'red' : 'transparent',
+          backgroundColor: 'black',
+        }}
+      >
+        <Text style={{ color: selected ? 'red' : 'white' }}>{item.label}</Text>
+      </View>
+    )
+  };
+
   return (
     <>
       <Text style={styles.text}>Choose a comparison:</Text>
@@ -333,12 +316,6 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
           {useDropdown(muscleTargetOptions, muscleTargetValue, setMuscleTargetValue)}
         </>
       }
-      {/* {historyComparisonValue === 'muscle_target' &&
-        <>
-          <Text style={styles.text}>Choose a muscle target:</Text>
-          {useDropdown(allMuscleTargetOptions[muscleGroupValue], muscleTargetValue, setMuscleTargetValue)}
-        </>
-      } */}
       <Text style={styles.text}>Choose a contribution type:</Text>
       {historyDataContributionsMap[historyComparisonValue]}
       {lookbackComponent}

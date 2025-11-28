@@ -207,6 +207,7 @@ export default function Workout() {
             <ScrollView 
               style={styles.scrollView}
               contentContainerStyle={styles.scrollViewContainer}
+              showsVerticalScrollIndicator={false}
             >
                 {workoutExercises.map((exercise, i) => {
                   return (
