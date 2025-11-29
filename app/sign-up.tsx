@@ -79,7 +79,8 @@ export default function SignUpScreen() {
     height: "",
     weight: "",
     gender: "",
-    goal_status: ""
+    goal_status: "",
+    date_of_birth: ""
   });
 
   const usernameTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -247,6 +248,7 @@ export default function SignUpScreen() {
         setUsernameState('error');
       
       } catch (error) {
+        console.log(error)
         setInError({
           ...inError,
           'username': "error checking username"
@@ -303,7 +305,7 @@ export default function SignUpScreen() {
   };
 
   const isButtonDisabled = (): boolean => {
-    return areFormDataFieldsEmpty() || isFormInError() || isTimeoutActive || submitting;
+    return areFormDataFieldsEmpty() || isFormInError() || isTimeoutActive || submitting || formData.date_of_birth === "";
   };
 
   // todo: if register fails, navigate to first screen when error occurs (details vs stats)
@@ -328,7 +330,12 @@ export default function SignUpScreen() {
 
       if (data.status === "success") { 
         await SecureStore.setItemAsync("temp_token", data.temp_token);
-        router.replace("/validate");
+        router.replace({
+          pathname: "/validate",
+          params: {
+            previousScreen: 'sign-up'
+          }
+        });
         return;
       }
 

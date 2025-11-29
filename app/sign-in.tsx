@@ -95,7 +95,12 @@ export default function SignInScreen() {
           await SecureStore.deleteItemAsync("temp_token");
           Alert.alert("account exists, error sending validation email")
         } else {
-          router.replace("/validate");
+          router.replace({
+            pathname: "/validate",
+            params: {
+              previousScreen: 'sign-in'
+            }
+          });
         }
       } else if (data.status === "incorrect-password") {
         setInError({
