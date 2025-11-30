@@ -48,7 +48,7 @@ interface PedOption {
 }
 
 type SignUpScreen = 'details' | 'stats';
-type UsernameState = null | 'checking' | 'good' | 'error';
+type UniqueStringState = null | 'checking' | 'good' | 'error';
 // todo: add body fat percentage
 
 export default function SignUpScreen() {
@@ -83,9 +83,12 @@ export default function SignUpScreen() {
     date_of_birth: ""
   });
 
+  const emailTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [emailState, setEmailState] = useState<UniqueStringState>('good');
+
   const usernameTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [usernameState, setUsernameState] = useState<UsernameState>(null);
-  const [isTimeoutActive, setIsTimeoutActive] = useState<boolean>(false);
+  const [usernameState, setUsernameState] = useState<UniqueStringState>(null);
+
   const [submitting, setSubmitting] = useState<boolean>(false);
 
   const genderOptions: GenderOption[] = [
@@ -180,11 +183,14 @@ export default function SignUpScreen() {
 
   };
 
-  // const handleSelectChange = (field: string, value: string): void => {
-  //   setFormData({
-  //     ...formData,
-  //     [field]: value
-  //   })
+  // const validateEmail = (email: string) => {
+  //   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //   if (!email.trim() || !emailPattern.test(email)) {
+  //     setInError({
+  //       ...inError,
+  //       'email': 'invalid email'
+  //     })
+  //   }
   // };
 
   const validateEmail = (email: string) => {
@@ -194,7 +200,47 @@ export default function SignUpScreen() {
         ...inError,
         'email': 'invalid email'
       })
+      return;
     }
+
+    if (emailTimeoutRef.current) {
+      clearTimeout(emailTimeoutRef.current);
+    }
+    if (email.trim() === '') {
+      setEmailState(null);
+      return
+    }
+    setEmailState('checking');
+    emailTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `${Constants.expoConfig?.extra?.apiUrl}/register/check/email?` + 
+          new URLSearchParams({ email }).toString()
+        );
+        if (!response.ok) throw new Error('response not ok');
+
+        const data = await response.json();
+  
+        if (data.taken === false) {
+          setEmailState('good');
+          return;
+        }
+
+        setInError({
+          ...inError,
+          'username': "email is taken"
+        })
+        setEmailState('error');
+      
+      } catch (error) {
+        console.log(error)
+        setInError({
+          ...inError,
+          'username': "error checking email"
+        })
+        setEmailState('error');
+      }
+    }, 750);
   };
 
   const validatePassword = (password: string) => {
@@ -216,6 +262,7 @@ export default function SignUpScreen() {
     })
   } 
 
+  // todo impose limits on username length?
   const validateUsername = (username: string) => {
     if (usernameTimeoutRef.current) {
       clearTimeout(usernameTimeoutRef.current);
@@ -225,7 +272,6 @@ export default function SignUpScreen() {
       return
     }
     setUsernameState('checking');
-    setIsTimeoutActive(true);
     usernameTimeoutRef.current = setTimeout(async () => {
       try {
         const response = await fetch(
@@ -254,8 +300,6 @@ export default function SignUpScreen() {
           'username': "error checking username"
         })
         setUsernameState('error');
-      } finally {
-        setIsTimeoutActive(false);
       }
     }, 750);
   };
@@ -286,27 +330,47 @@ export default function SignUpScreen() {
     })
   };
 
-  const areFormDataFieldsEmpty = (): boolean => {
-    for (const key in formData) {
-      if (key === 'date_of_birth') continue;
-      if (!isRequiredMap[key as keyof FormData]) continue;
-      if (formData[key as keyof FormData].trim().length !== 0) continue;
-      return true;
+  // const areFormDataFieldsEmpty = (): boolean => {
+  //   for (const key in formData) {
+  //     if (key === 'date_of_birth') continue;
+  //     if (!isRequiredMap[key as keyof FormData]) continue;
+  //     if (formData[key as keyof FormData].trim().length !== 0) continue;
+  //     return true;
+  //   }
+  //   return false;
+  // };
+
+  // const isFormInError = (): boolean => {
+  //   for (const value of Object.values(inError)) {
+  //     if (value.length === 0) continue;
+  //     return true;
+  //   }
+  //   return false;
+  // };
+
+  const isNextButtonDisabled = (): boolean => {
+    const keys = ["email", "password", "username"];
+    for (const key of keys) {
+      if (formData[key as keyof FormData].trim().length === 0) return true;
+      if (inError[key] != "") return true; 
     }
+    if (usernameState !== 'good' || emailState !== 'good') return true;
     return false;
   };
 
-  const isFormInError = (): boolean => {
-    for (const value of Object.values(inError)) {
-      if (value.length === 0) continue;
-      return true;
+  const isSubmitButtonDisabled = (): boolean => {
+    const keys = ["height", "weight"];
+    for (const key of keys) {
+      if (formData[key as keyof FormData].trim().length === 0) return true;
+      if (inError[key] != "") return true; 
     }
+    if (submitting || formData.date_of_birth === "" || isNextButtonDisabled()) return true;
     return false;
   };
 
-  const isButtonDisabled = (): boolean => {
-    return areFormDataFieldsEmpty() || isFormInError() || isTimeoutActive || submitting || formData.date_of_birth === "";
-  };
+  // const isButtonDisabled = (): boolean => {
+  //   return areFormDataFieldsEmpty() || isFormInError() || isTimeoutActive || submitting || formData.date_of_birth === "";
+  // };
 
   // todo: if register fails, navigate to first screen when error occurs (details vs stats)
   const handleSubmit = async (): Promise<void> => {
@@ -455,14 +519,13 @@ export default function SignUpScreen() {
                   <TouchableOpacity 
                     onPress={() => setSignUpScreen('stats')}
                     style={{
-                      // backgroundColor: isButtonDisabled() ? "#ccc" : "#0db80d",
-                      backgroundColor: "#0db80d",
+                      backgroundColor: isNextButtonDisabled() ? "#ccc" : "#0db80d",
                       padding: 12,
                       borderRadius: 5,
                       width: "30%",
                       alignItems: "center"
                     }}
-                    // disabled={isButtonDisabled()}
+                    disabled={isNextButtonDisabled()}
                   >
                     <Text style={{ color: "white"}}>next</Text>
                   </TouchableOpacity>
@@ -470,7 +533,7 @@ export default function SignUpScreen() {
                 <View style={styles.buttonContainer}>
                   <TouchableOpacity 
                     onPress={() => router.replace("/sign-in")}
-                    disabled={submitting}
+                    disabled={isNextButtonDisabled()}
                   >
                     <Text style={{ color: "white"}}>already have an account?</Text>
                   </TouchableOpacity>
@@ -572,13 +635,13 @@ export default function SignUpScreen() {
                     <TouchableOpacity 
                       onPress={handleSubmit}
                       style={{
-                        backgroundColor: isButtonDisabled() ? "#ccc" : "#0db80d",
+                        backgroundColor: isSubmitButtonDisabled() ? "#ccc" : "#0db80d",
                         padding: 12,
                         borderRadius: 5,
                         width: "30%",
                         alignItems: "center"
                       }}
-                      disabled={isButtonDisabled()}
+                      disabled={isSubmitButtonDisabled()}
                     >
                       <Text style={{ color: "white"}}>{submitting ? 'submitting' : 'sign up'}</Text>
                     </TouchableOpacity>

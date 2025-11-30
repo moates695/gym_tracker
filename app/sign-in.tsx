@@ -84,39 +84,19 @@ export default function SignInScreen() {
           ...inError,
           ['email']: 'email does not exist'
         })
-      } else if (data.status === "unverified") {
-        await SecureStore.setItemAsync("temp_token", data.token)
-        const resendData = await fetchWrapper({
-          route: 'register/validate/resend',
-          method: 'POST',
-          token_str: 'temp_token'
-        })
-        if (resendData === null) {
-          await SecureStore.deleteItemAsync("temp_token");
-          Alert.alert("account exists, error sending validation email")
-        } else {
-          router.replace({
-            pathname: "/validate",
-            params: {
-              previousScreen: 'sign-in'
-            }
-          });
-        }
       } else if (data.status === "incorrect-password") {
         setInError({
           ...inError,
           ['password']: 'password is incorrect'
         })
-      } else if (data.status === "signed-in") {
-        await SecureStore.deleteItemAsync("temp_token");
-        await SecureStore.setItemAsync("auth_token", data.token);
-        setUserData(data.user_data);
-        // await Promise.all([
-        //   loadFonts(),
-        //   fetchMappings(),
-        // ])
-        await loadInitialNecessary(fetchMappings);
-        router.replace('/(tabs)');
+      } else if (data.status === "good") {
+        await SecureStore.setItemAsync("temp_token", data.temp_token);
+        router.replace({
+          pathname: "/validate",
+          params: {
+            previousScreen: 'sign-in'
+          }
+        });
       } else {
         throw new Error("Return status not recognised")
       }
