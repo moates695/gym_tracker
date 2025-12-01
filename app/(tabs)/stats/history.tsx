@@ -50,7 +50,8 @@ export default function StatsDistribution() {
         <LoadingScreen />
       :
         <>
-          {workoutHistoryStats === null ?
+
+          {workoutHistoryStats === null || workoutHistoryStats.length === 0 ?
             <View
               style={{
                 flex: 1,

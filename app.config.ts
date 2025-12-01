@@ -11,13 +11,21 @@ export default ({ config }: any) => {
     expo: {
       name: "Gym Junkie",
       slug: "gym-junkie",
-      version: "1.0.0",
+      version: "0.0.1",
       orientation: "portrait",
+      icon: "./assets/images/android_icon.png",
       userInterfaceStyle: "automatic",
       android: {
+        versionCode: 1,
+        icon: "./assets/images/android_icon.png",
         compileSdkVersion: 34,
         targetSdkVersion: 34,
-        package: "com.moates.gymjunkie"
+        package: "com.moates.gymjunkie",
+        adaptiveIcon: {
+          foregroundImage: "./assets/images/android_icon.png",
+          backgroundColor: "#000000"
+        },
+        displayName: "Gym Junkie"
       },
       extra: {
         apiUrl: process.env.EXPO_PUBLIC_API_URL,
@@ -29,7 +37,19 @@ export default ({ config }: any) => {
       owner: "moates",
       plugins: [
         "expo-asset",
-        "expo-font"
+        "expo-font",
+        [
+          "expo-splash-screen",
+          {
+            "backgroundColor": "#ffffff",
+            "image": "./assets/images/ios_icon.png",
+            "dark": {
+              "image": "./assets/images/ios_icon.png",
+              "backgroundColor": "#181818ff"
+            },
+            "imageWidth": 200
+          }
+        ]
       ]
     },
   }

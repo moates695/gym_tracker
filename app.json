@@ -1,11 +1,10 @@
 {
   "expo": {
-    "name": "app",
+    "name": "Gym Junkie",
     "slug": "app",
-    "version": "1.0.0",
+    "version": "0.0.1",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "icon": "./assets/images/android_icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "backgroundColor": "#000000",
@@ -18,31 +17,35 @@
       }
     },
     "android": {
+      "versionCode": 1,
+      "icon": "./assets/images/android_icon.png",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon.png",
+        "foregroundImage": "./assets/images/android_icon.png",
         "backgroundColor": "#000000"
       },
       "backgroundColor": "#000000",
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "Gym Junkie",
+      "compileSdkVersion": 34,
+      "targetSdkVersion": 34,
+      "displayName": "Gym Junkie"
     },
     "splash": {
       "backgroundColor": "#000000"
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#000000"
+          "backgroundColor": "#ffffff",
+          "image": "./assets/images/ios_icon.png",
+          "dark": {
+            "image": "./assets/images/ios_icon.png",
+            "backgroundColor": "#181818ff"
+          },
+          "imageWidth": 200
         }
       ],
       "expo-secure-store",
@@ -52,6 +55,11 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "1a09967a-b075-4243-9269-a14a1d0e4d8c"
+      }
     }
   }
 }

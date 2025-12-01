@@ -13,7 +13,7 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://subtly-ample-bluebird.ngrok-free.app",
-        "EXPO_API_TIMEOUT_MS": 5000
+        "EXPO_API_TIMEOUT_MS": "5000"
       }
     },
     "preview": {
@@ -25,8 +25,20 @@
         "gradleCommand": ":app:assembleRelease -x lint"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://subtly-ample-bluebird.ngrok-free.app",
-        "EXPO_API_TIMEOUT_MS": 5000
+        "EXPO_PUBLIC_API_URL": "https://gymjunkie.moates.com.a",
+        "EXPO_API_TIMEOUT_MS": "5000"
+      }
+    },
+    "internal_bundle": {
+      "channel": "internal",
+      "distribution": "store",
+      "android": {
+        "buildType": "app-bundle",
+        "image": "latest"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://gymjunkie.moates.com.au",
+        "EXPO_API_TIMEOUT_MS": "5000"
       }
     }
   }

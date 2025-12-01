@@ -289,6 +289,6 @@ export const volumeLeaderboardAtom = atom<LeaderboardData | null>(null);
 export const setLeaderboardAtom = atom<LeaderboardData | null>(null);
 export const repsLeaderboardAtom = atom<LeaderboardData | null>(null);
 
-export type HeatMapOption = 'ironbow' | 'inferno' | 'viridis' | 'jet' | 'hot' | 'cool' | 'plasma';
-export const chosenHeatMap = atomWithStorage<HeatMapOption>('ironbow', 'ironbow', storage, { getOnInit: true });
+export type HeatMapOption = 'bluered' | 'ironbow' | 'inferno' | 'viridis' | 'jet' | 'hot' | 'cool' | 'plasma';
+export const chosenHeatMap = atomWithStorage<HeatMapOption>('bluered', 'bluered', storage, { getOnInit: true });
 export const loadableChosenHeatMap = loadable(chosenHeatMap);

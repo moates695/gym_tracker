@@ -24,6 +24,7 @@ export default function Settings() {
   const [heatmap, setHeatmap] = useAtom(chosenHeatMap);
 
   const heatmapOptions: HeatmapOptionObject[] = [
+    {label: 'blue red', value: 'bluered'},
     {label: 'ironbow', value: 'ironbow'},
     {label: 'inferno', value: 'inferno'},
     {label: 'viridis', value: 'viridis'},
@@ -58,7 +59,8 @@ export default function Settings() {
           flexDirection: 'row',
           justifyContent: 'center',
           alignItems: 'center',
-          marginTop: 5
+          marginTop: 5,
+          marginBottom: 20,
         }}
       >
         <Text style={commonStyles.text}>min</Text>

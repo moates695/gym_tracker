@@ -8,6 +8,13 @@ import LoadingScreen from "@/app/loading";
 import { useMemo } from "react";
 
 export const heatMaps: Record<HeatMapOption, any> = {
+  bluered: [
+    { pos: 0.0, color: { r: 0,   g: 0,   b: 255 } }, // Blue
+    { pos: 0.25, color: { r: 85,  g: 0,   b: 255 } }, // Blue-violet
+    { pos: 0.50, color: { r: 170, g: 0,   b: 170 } }, // Purple
+    { pos: 0.75, color: { r: 255, g: 0,   b: 85  } }, // Red-violet
+    { pos: 1.0, color: { r: 255, g: 0,   b: 0   } }, // Red
+  ],
   ironbow: [
     { pos: 0.0,  color: { r: 0,   g: 0,   b: 20  } },  // Nearly black
     { pos: 0.2,  color: { r: 0,   g: 0,   b: 180 } },  // Deep blue

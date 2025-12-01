@@ -140,6 +140,14 @@ export default function StatsDistribution() {
     return data;
   };
 
+  const canDisplayRadarData = (radarData: any) => {
+    let count = 0;
+    for (const data of radarData) {
+      if (data.value === 0) count++;
+    }
+    return count < radarData.length;
+  };
+
   const getValueMap = (): Record<string, number> => {
     const map: Record<string, number> = {};
     if (distributions === null) return map;
@@ -232,6 +240,8 @@ export default function StatsDistribution() {
     }
   };
 
+  const radarData = getRadarData();
+
   return (
     <View 
       style={{
@@ -265,21 +275,34 @@ export default function StatsDistribution() {
                     alignItems: 'center',
                   }}
                 >
-                  <RadarChart 
-                    data={getRadarData()}
-                    gradientColor={{
-                      startColor: '#00000000',
-                      endColor: '#00000000',
-                      count: 4,
-                    }}
-                    strokeWidth={[0.5, 0.5, 0.5, 0.5, 1]}
-                    strokeOpacity={[1, 1, 1, 1, 0.13]}
-                    labelColor="#f6f6f6ff"
-                    dataFillColor="#ff9430ff"
-                    dataFillOpacity={0.8}
-                    dataStroke="#ff7f08ff"
-                    labelSize={12}
-                  />
+                  {canDisplayRadarData(radarData) ?
+                    <RadarChart 
+                      data={radarData}
+                      gradientColor={{
+                        startColor: '#00000000',
+                        endColor: '#00000000',
+                        count: 4,
+                      }}
+                      strokeWidth={[0.5, 0.5, 0.5, 0.5, 1]}
+                      strokeOpacity={[1, 1, 1, 1, 0.13]}
+                      labelColor="#f6f6f6ff"
+                      dataFillColor="#ff9430ff"
+                      dataFillOpacity={0.8}
+                      dataStroke="#ff7f08ff"
+                      labelSize={12}
+                    />
+                  :
+                    <View
+                      style={{
+                        height: 100,
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <Text style={commonStyles.text}>
+                        cannot show empty radar data
+                      </Text>
+                    </View>
+                  }
                 </View>
               :
                 <Text style={commonStyles.text}>chest does not have enough targets to show a radar :(</Text>

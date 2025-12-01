@@ -30,10 +30,10 @@ export default function Stats() {
     }
   };
 
-  useEffect(() => {
-    if (workoutTotalStats !== null) return;
-    fetchWorkoutTotalStats();
-  }, []);
+  // useEffect(() => {
+  //   if (workoutTotalStats !== null) return;
+  //   fetchWorkoutTotalStats();
+  // }, []);
 
   const tableData1: TableData<string[], string | number> = {
     headers: ['volume','sets','reps'],
