@@ -5,15 +5,16 @@ import { jwtDecode } from "jwt-decode";
 import React from "react";
 import * as Font from 'expo-font';
 import { MaterialIcons, AntDesign, Ionicons, Feather } from '@expo/vector-icons';
-import { fetchWrapper, loadFonts } from "@/middleware/helpers";
+import { fetchWrapper, loadFonts, useAwaitLoadable } from "@/middleware/helpers";
 import { useColorScheme, View, Image } from 'react-native';
 import * as SystemUI from "expo-system-ui"
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { useAtom } from "jotai";
-import { distributionStatsAtom, exerciseListAtom, favouriteExerciseStatsAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, SetClass, userDataAtom, workoutExercisesAtom, workoutHistoryStatsAtom, workoutTotalStatsAtom } from "@/store/general";
+import { distributionStatsAtom, exerciseListAtom, favouriteExerciseStatsAtom, loadableChosenHeatMap, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, SetClass, userDataAtom, workoutExercisesAtom, workoutHistoryStatsAtom, workoutTotalStatsAtom } from "@/store/general";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from 'expo-status-bar';
 import { classImageMap } from "@/components/ExerciseSet";
+import 'react-native-get-random-values';
 
 export interface DecodedJWT {
   email: string
@@ -45,7 +46,6 @@ export default function RootLayout() {
   const checkUserState = async () => {
     // await SecureStore.deleteItemAsync("auth_token"); //!!!! for testing new user
     // await AsyncStorage.clear(); //!!!!! clear storage
-
     router.replace("/loading");
 
     const auth_token = await SecureStore.getItemAsync("auth_token");
@@ -80,25 +80,31 @@ export default function RootLayout() {
       if (data.account_state == "none") {
         router.replace("/sign-up");
       } else if (data.account_state == "unverified") {
-        const temp_token = await SecureStore.getItemAsync("temp_token");
-        if (!temp_token || (jwtDecode(temp_token) as DecodedJWT).exp < Date.now() / 1000 - 120) {
-          await SecureStore.deleteItemAsync("temp_token");
-          router.replace("/sign-in");
-          return;
-        }
-        const data2 = await fetchWrapper({
-          route: 'register/validate/resend',
-          method: 'POST',
-          token_str: 'temp_token'
+        // const temp_token = await SecureStore.getItemAsync("temp_token");
+        // if (!temp_token || (jwtDecode(temp_token) as DecodedJWT).exp < Date.now() / 1000 - 120) {
+        //   await SecureStore.deleteItemAsync("temp_token");
+        //   router.replace("/sign-in");
+        //   return;
+        // }
+        // const data2 = await fetchWrapper({
+        //   route: 'register/validate/resend',
+        //   method: 'POST',
+        //   token_str: 'temp_token'
+        // })
+        // if (!data2) {
+        //   await SecureStore.deleteItemAsync("temp_token");
+        //   router.replace("/sign-in");
+        // } else {
+        //   router.replace("/validate");
+        // }
+        router.replace({
+          pathname: "/validate",
+          params: {
+            previousScreen: 'sign-in'
+          }
         })
-        if (!data2) {
-          await SecureStore.deleteItemAsync("temp_token");
-          router.replace("/sign-in");
-        } else {
-          router.replace("/validate");
-        }
       } else if (data.account_state == "good") {
-        // todo: group these into a single request (get all startup data at once)
+        // todo: group these into a single request (get all startup data at once) ?
         await Promise.all([
           loadFonts(),
           fetchUserData(),

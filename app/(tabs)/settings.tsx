@@ -1,17 +1,41 @@
 import { commonStyles } from '@/styles/commonStyles';
 import { StatusBar } from 'expo-status-bar';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Text, View, StyleSheet, SafeAreaView, Platform, TouchableOpacity } from 'react-native';
 import * as SecureStore from "expo-secure-store";
 import { useRouter } from 'expo-router';
 import { useAtom, useAtomValue } from 'jotai';
-import { userDataAtom, workoutExercisesAtom } from '@/store/general';
+import { chosenHeatMap, HeatMapOption, userDataAtom, workoutExercisesAtom } from '@/store/general';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { OptionsObject } from '@/components/ChooseExerciseModal';
+import { useDropdown } from '@/components/ExerciseData';
+import { LinearGradient } from 'expo-linear-gradient';
+import { getColorList, heatMaps } from '@/components/MuscleGroupSvg';
+
+interface HeatmapOptionObject {
+  label: string
+  value: HeatMapOption
+}
 
 export default function Settings() {
   const router = useRouter();
 
   const userData = useAtomValue(userDataAtom);
+  const [heatmap, setHeatmap] = useAtom(chosenHeatMap);
+
+  const heatmapOptions: HeatmapOptionObject[] = [
+    {label: 'ironbow', value: 'ironbow'},
+    {label: 'inferno', value: 'inferno'},
+    {label: 'viridis', value: 'viridis'},
+    {label: 'jet', value: 'jet'},
+    {label: 'hot', value: 'hot'},
+    {label: 'cool', value: 'cool'},
+    {label: 'plasma', value: 'plasma'},
+  ];
+
+  const colourRange = useMemo(() => {
+    return getColorList(heatMaps[heatmap])
+  }, [heatmap]);
 
   const logOut = async () => {
     await SecureStore.deleteItemAsync('temp_token');
@@ -25,6 +49,36 @@ export default function Settings() {
       {Platform.OS == 'android' &&
         <StatusBar style="light" backgroundColor="black" translucent={false} />
       }
+      <View>
+        <Text style={styles.text}>Choose a heat map:</Text>
+        {useDropdown(heatmapOptions, heatmap, setHeatmap)}
+      </View>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginTop: 5
+        }}
+      >
+        <Text style={commonStyles.text}>min</Text>
+        <LinearGradient
+          colors={colourRange}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={{
+            height: 10,
+            width: 140,
+            borderWidth: 1,
+            borderColor: '#000',
+            borderRadius: 0,
+            marginTop: 2,
+            marginLeft: 5,
+            marginRight: 5,
+          }}
+        />
+        <Text style={commonStyles.text}>max</Text>
+      </View>
       <View>
         <Text style={commonStyles.text}>{userData?.username}</Text>
         <Text style={commonStyles.text}>{userData?.email}</Text>

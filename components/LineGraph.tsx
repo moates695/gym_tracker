@@ -39,12 +39,15 @@ export default function LineGraph(props: LineGraphProps) {
   const padding = 50;
   
   // Calculate min/max values
-  const xMin = Math.min(...points.map(p => p.x));
+  let xMin = Math.min(...points.map(p => p.x));
   let xMax = Math.max(...points.map(p => p.x));
   if (currentPoints.length !== 0) {
-    const tempMax = Math.max(...currentPoints.map(p => p.x));
-    if (tempMax > xMax) xMax = tempMax;
-
+    const currXMax = Math.max(...currentPoints.map(p => p.x));
+    if (currXMax > xMax) xMax = currXMax;
+  }
+  if (xMin === xMax) {
+    xMin = xMin - 100
+    xMax = xMax + 100
   }
   // const yMin = Math.min(...points.map(p => p.y));
   const yMin = 0;
@@ -52,8 +55,11 @@ export default function LineGraph(props: LineGraphProps) {
   if (barValue !== null && barValue > yMax) {
     yMax = barValue;
   } else if (currentPoints.length !== 0) {
-    const tempMax = Math.max(...currentPoints.map(p => p.y));
-    if (tempMax > yMax) yMax = tempMax;
+    const currYMax = Math.max(...currentPoints.map(p => p.y));
+    if (currYMax > yMax) yMax = currYMax;
+  }
+  if (yMin == yMax) {
+    yMax = 100;
   }
 
   // Position calculation functions
@@ -66,12 +72,6 @@ export default function LineGraph(props: LineGraphProps) {
   };
 
   // Generate path for line
-  // const pathData = points.map((point, index) => {
-  //   const x = getXPosition(point.x);
-  //   const y = getYPosition(point.y);
-  //   return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
-  // }).join(' ');
-
   const getPath = (points: LineGraphPoint[]): string => {
     return points.map((point, index) => {
       const x = getXPosition(point.x);
@@ -99,6 +99,9 @@ export default function LineGraph(props: LineGraphProps) {
     const x1 = getXPosition(xMin);
     const x2 = getXPosition(xMax);
     const y = getYPosition(barValue < yMax ? barValue : yMax);
+    console.log(x1)
+    console.log(x2)
+    console.log(y)
     return `M ${x1} ${y} L ${x2} ${y}`;
   };
 
@@ -174,7 +177,7 @@ export default function LineGraph(props: LineGraphProps) {
             [0, 0.33, 0.67, 1].map((ratio, index) => {
               const value = xMax - ratio * (xMax - xMin);
               // const dd = String(new Date(value).getDate()).padStart(2,'0');
-              const mm = String(new Date(value).getMonth()+1).padStart(2,'0');
+              const mm = String(new Date(value).getMonth() + 1).padStart(2,'0');
               const yy = String(new Date(value).getFullYear()).slice(-2);
               const dateStr = `${mm}/${yy}`;
               return (

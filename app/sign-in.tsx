@@ -63,55 +63,32 @@ export default function SignInScreen() {
   const handleSubmit = async (): Promise<void> => {
     setSubmitting(true);
     try {
-      const response = await fetch(`${Constants.expoConfig?.extra?.apiUrl}/register/sign-in`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData)
-      });
-
       const data = await fetchWrapper({
         route: 'register/sign-in',
         method: 'POST',
         body: formData,
         token_str: 'temp_token'
       })
-      if (data === null) throw new Error(`HTTP error! Status: ${response.status}`);
+      if (!data) throw new Error(`bad response`);
 
       if (data.status === "none") {
         setInError({
           ...inError,
           ['email']: 'email does not exist'
         })
-      } else if (data.status === "unverified") {
-        await SecureStore.setItemAsync("temp_token", data.token)
-        const resendData = await fetchWrapper({
-          route: 'register/validate/resend',
-          method: 'POST',
-          token_str: 'temp_token'
-        })
-        if (resendData === null) {
-          await SecureStore.deleteItemAsync("temp_token");
-          Alert.alert("account exists, error sending validation email")
-        } else {
-          router.replace("/validate");
-        }
       } else if (data.status === "incorrect-password") {
         setInError({
           ...inError,
           ['password']: 'password is incorrect'
         })
-      } else if (data.status === "signed-in") {
-        await SecureStore.deleteItemAsync("temp_token");
-        await SecureStore.setItemAsync("auth_token", data.token);
-        setUserData(data.user_data);
-        // await Promise.all([
-        //   loadFonts(),
-        //   fetchMappings(),
-        // ])
-        await loadInitialNecessary(fetchMappings);
-        router.replace('/(tabs)');
+      } else if (data.status === "good") {
+        await SecureStore.setItemAsync("temp_token", data.temp_token);
+        router.replace({
+          pathname: "/validate",
+          params: {
+            previousScreen: 'sign-in'
+          }
+        });
       } else {
         throw new Error("Return status not recognised")
       }
@@ -124,7 +101,7 @@ export default function SignInScreen() {
   }
 
   const isButtonDisabled = () => {
-    return formData.email === '' || formData.password === '' || submitting;
+    return formData.email === '' || formData.password === '' || submitting || inError.email != '' || inError.password != '';
   };
 
   return ( 
@@ -140,7 +117,10 @@ export default function SignInScreen() {
       {Platform.OS === 'android' &&
         <StatusBar style="light" backgroundColor="black" translucent={false} />
       }
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <TouchableWithoutFeedback 
+        onPress={Keyboard.dismiss}
+        accessible={false}
+      >
         <ScrollView 
           contentContainerStyle={{flexGrow: 1, padding: 30, paddingTop: 50}}
           keyboardShouldPersistTaps="handled"

@@ -4,11 +4,12 @@ import { Text, StyleSheet } from "react-native"
 import ExerciseSets from "./ExerciseSets";
 import React from 'react-native'
 import ExerciseData from "./ExerciseData";
-import { editWorkoutExercisesAtom, exercisesHistoricalDataAtom, SetData, WorkoutExercise } from "@/store/general"
-import { useAtom } from "jotai";
+import { editWorkoutExercisesAtom, exercisesHistoricalDataAtom, loadingExerciseHistoryAtom, SetData, WorkoutExercise } from "@/store/general"
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { commonStyles } from "@/styles/commonStyles";
 import { fetchWrapper, getExerciseValueMap, getValidSets, isValidSet } from "@/middleware/helpers"
 import MuscleGroupSvg from "./MuscleGroupSvg";
+import { updateLoadingExerciseHistoryAtom } from "@/store/actions";
 
 interface WorkoutExerciseProps {
   exercise: WorkoutExercise
@@ -22,6 +23,8 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
 
   const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
   const [editExercises, _] = useAtom(editWorkoutExercisesAtom);  
+  const loadingExerciseHistory = useAtomValue(loadingExerciseHistoryAtom);
+  const updateLoadingExerciseHistory = useSetAtom(updateLoadingExerciseHistoryAtom)
 
   const [numSets, setNumSets] = useState<number>(0);
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
@@ -43,15 +46,23 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
   }, [exercise.set_data]);
 
   const handleRefreshHistory = async () => {
-    const data = await fetchWrapper({
-      route: 'exercises/history',
-      method: 'GET',
-      params: {exercise_id: exercise.id}
-    })
-    setExercisesHistoricalData(prev => ({
-      ...prev,
-      [exercise.id]: data
-    }))
+    try {
+      updateLoadingExerciseHistory(exercise.workout_exercise_id, true);
+
+      const data = await fetchWrapper({
+        route: 'exercises/history',
+        method: 'GET',
+        params: {exercise_id: exercise.id}
+      })
+      setExercisesHistoricalData(prev => ({
+        ...prev,
+        [exercise.id]: data
+      }))
+    } catch (error) {
+      console.log('error fetching exercises history')
+    } finally {
+      updateLoadingExerciseHistory(exercise.workout_exercise_id, false);
+    }
   }
 
   const handleDataExpanded = (option: DataOption) => {
@@ -140,6 +151,7 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
               <TouchableOpacity
                 onPress={handleRefreshHistory}
                 style={commonStyles.thinTextButton}
+                disabled={loadingExerciseHistory[exercise.workout_exercise_id] ?? false}
               >
                 <Text style={styles.text}>refresh data</Text>
               </TouchableOpacity>

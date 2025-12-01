@@ -1,18 +1,21 @@
+import LoadingScreen from "@/app/loading";
 import DataTable, { TableData } from "@/components/DataTable";
 import { fetchWrapper } from "@/middleware/helpers";
 import { workoutTotalStatsAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { Stack, useRouter } from "expo-router";
 import { useAtom } from "jotai";
-import React, { Suspense, useEffect } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { SafeAreaView, View, StyleSheet, Text, TouchableOpacity } from "react-native";
 
 export default function Stats() {
   const router = useRouter();
 
   const [workoutTotalStats, setWorkoutTotalStats] = useAtom(workoutTotalStatsAtom);
-  
+  const [loadingStats, setLoadingStats] = useState<boolean>(false);
+
   const fetchWorkoutTotalStats = async () => {
+    setLoadingStats(true);
     try {
       const data = await fetchWrapper({
         route: 'stats/workout_totals',
@@ -22,6 +25,8 @@ export default function Stats() {
       setWorkoutTotalStats(data.totals);
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoadingStats(false);
     }
   };
 
@@ -53,26 +58,42 @@ export default function Stats() {
     ]
   }
 
+  const statsTotals = (): JSX.Element => {
+    if (loadingStats) {
+      return (
+        <View
+          style={{
+            height: 120,
+            backgroundColor: 'red'
+          }}
+        > 
+          <LoadingScreen />
+        </View>
+      )
+    } else if (workoutTotalStats === null) {
+      return (
+        <Text style={commonStyles.text}>stats haven't loaded</Text> 
+      )
+    } else {
+      return (
+        <View
+          style={{
+            width: '100%',
+            height: 120,
+            justifyContent: 'center',
+          }}
+        >
+          <DataTable tableData={tableData1} />
+          <DataTable tableData={tableData2} />
+        </View>
+      )
+    }
+  };
+
   return (
     <Suspense fallback={<View style={{ flex: 1, backgroundColor: 'black' }} />}>
       <SafeAreaView style={styles.container}>
-        {workoutTotalStats === null ?
-          <>
-            <Text style={commonStyles.text}>stats haven't loaded</Text> 
-          </>
-        :
-          <View
-            style={{
-              width: '100%',
-              height: 'auto',
-              justifyContent: 'center',
-            }}
-          >
-            <DataTable tableData={tableData1} />
-            <DataTable tableData={tableData2} />
-          </View>
-        }
-        
+        {statsTotals()}
         <TouchableOpacity
           style={[styles.button, {width: 200}]}
           onPress={() => router.replace('/(tabs)/stats/distributions')}
@@ -107,6 +128,7 @@ export default function Stats() {
           <TouchableOpacity
             style={[commonStyles.thinTextButton, {width: 50, marginTop: 10}]}
             onPress={() => fetchWorkoutTotalStats()}
+            disabled={loadingStats}
           >
             <Text style={styles.text}>refresh</Text>
           </TouchableOpacity>

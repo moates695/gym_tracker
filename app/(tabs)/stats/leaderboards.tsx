@@ -97,10 +97,17 @@ export default function StatsDistribution() {
   }, [exercisesMeta]);
   const [exerciseValue, setExerciseValue] = useState<string | null>(null);
 
-  const variationOptions = useMemo<Record<string, OptionsObject[]>>(() => {
+  const updateExerciseValue = (value: string) => {
+    if (value === exerciseValue) return;
+    setVariationValue('base');
+    setExerciseValue(value);
+  };
+
+  const [variationOptions, setVariationOptions] = useState<Record<string, OptionsObject[]>>({});
+
+  const updateVariationOptions = (exercisesMeta: ExercisesMeta) => {
     const optionsMap: Record<string, OptionsObject[]> = {};
     for (const [exerciseId, exerciseMeta] of Object.entries(exercisesMeta)) {
-      if (Object.keys(exerciseMeta.variations).length === 0) continue;
       optionsMap[exerciseId] = Object.entries(exerciseMeta.variations).map(([id, name]) => ({
         label: name,
         value: id
@@ -110,9 +117,10 @@ export default function StatsDistribution() {
         value: 'base'
       })
     }
-    return optionsMap;
-  }, [exercisesMeta]);
-  const [variationValue, setVariationValue] = useState<string | null>(null);
+    setVariationOptions(optionsMap);
+  };
+  
+  const [variationValue, setVariationValue] = useState<string>('base');
 
   const exerciseMetricOptions: ExerciseLeaderboardOption[] = [
     { label: 'volume', value: 'volume' },
@@ -127,22 +135,22 @@ export default function StatsDistribution() {
     if (leaderboardValue === 'overall') {
       return `overall:${overallMetricValue}`;
     } else if (leaderboardValue === 'exercise') {
-      if (exerciseMetricValue === null) return null;
-      if (variationValue === null || variationValue === 'base') {
+      if (variationValue === 'base') {
         return `exercise:${exerciseValue}:${exerciseMetricValue}`
       } else {
         return `exercise:${exerciseValue}:${variationValue}:${exerciseMetricValue}`
       }
     }
-    throw new Error("unknown leaderboard type")
+    throw new Error("unknown leaderboard type");
   }; 
 
   const reload = async () => {
-    const promises = [fetchLeaderboard()];
-    if (leaderboardValue === 'exercise') {
-      promises.push(fetchExercisesMeta());
+    if (leaderboardValue === 'overall') {
+      await fetchLeaderboard();
+      return;
     }
-    await Promise.all(promises);
+    await fetchExercisesMeta();
+    await fetchLeaderboard();
   };
 
   const fetchExercisesMeta = async () => {
@@ -160,7 +168,7 @@ export default function StatsDistribution() {
 
       if (Object.keys(exercisesMeta).length === 0) {
         setExerciseValue(null);
-        setVariationValue(null);
+        setVariationValue('base');
         return
       }
       
@@ -170,12 +178,15 @@ export default function StatsDistribution() {
         setExerciseValue(exerciseId);
       }
 
-      const variationIds = Object.keys(exercisesMeta[exerciseId].variations); 
-      if (variationIds.length === 0) {
-        setVariationValue(null);
-      } else if (variationValue === null || !(variationValue in exercisesMeta[exerciseId].variations)) {
-        setVariationValue(variationIds[0]);
-      }
+      updateVariationOptions(exercisesMeta);
+      setVariationValue('base');
+
+      // const variationIds = Object.keys(exercisesMeta[exerciseId].variations); 
+      // if (variationIds.length === 0) {
+      //   setVariationValue('base');
+      // } else if (variationValue === null || !(variationValue in exercisesMeta[exerciseId].variations)) {
+      //   setVariationValue(variationIds[0]);
+      // }
 
     } catch (error) {
       console.log(error);
@@ -222,7 +233,7 @@ export default function StatsDistribution() {
       case 'overall':
         return `stats/leaderboard/${leaderboardValue}/${overallMetricValue}`;
       case 'exercise':
-        if (variationValue === null || variationValue === 'base') {
+        if (variationValue === 'base') {
           return `stats/leaderboard/${leaderboardValue}/${exerciseValue}/${exerciseMetricValue}`;
         } else {
           return `stats/leaderboard/${leaderboardValue}/${variationValue}/${exerciseMetricValue}`;
@@ -286,12 +297,24 @@ export default function StatsDistribution() {
           <Text 
             style={[commonStyles.text, {alignSelf: 'center', paddingBottom: 5}]}
           >
-            Rank {leaderboardData.user_rank}/{leaderboardData.max_rank}, that's the {getPercentile(leaderboardData.user_rank, leaderboardData.max_rank)} percentile
+            Rank: {leaderboardData.user_rank}/{leaderboardData.max_rank} | Percentile: {getPercentile(leaderboardData.user_rank, leaderboardData.max_rank)}
           </Text>
         }
         
       </>
     )
+  };
+
+  if (leaderboardValue === 'exercise' && exerciseValue === null) {
+    return (
+      <Text style={commonStyles.text}>error loading exercise data</Text>
+    )
+  }
+
+  const chooseVariationDisabled = (): boolean => {
+    if (exerciseValue === null) return true;
+    if (!(exerciseValue in variationOptions)) return true;
+    return variationOptions[exerciseValue].length <= 1
   };
 
   return (
@@ -301,48 +324,59 @@ export default function StatsDistribution() {
         backgroundColor: 'black',
       }}
     >
-      <Text style={commonStyles.text}>Choose leaderboard:</Text>
-      {useDropdown(leaderboardOptions, leaderboardValue, setLeaderboardValue)}
-      {leaderboardValue === 'overall' &&
-        <>
-          <Text style={commonStyles.text}>Choose a metric:</Text>
-          {useDropdown(overallMetricOptions, overallMetricValue, setOverallMetricValue)}
-        </>
-      }
-      {leaderboardValue === 'exercise' &&
-        <>
-          {exerciseValue === null ?
-            <>
-              <Text>error loading exercise data</Text>
-            </>
-          :
-            <>
-              <Text style={commonStyles.text}>Choose an exercise:</Text>
-              {useDropdown(exerciseOptions, exerciseValue, setExerciseValue)}
-              {/* {(variationOptions?.[exerciseValue] ?? []).length > 0 &&
-                <>
-                  <Text style={commonStyles.text}>Choose a variation:</Text>
-                  {useDropdown(variationOptions[exerciseValue], variationValue, setVariationValue)}
-                </>
-              } */}
-              {(variationOptions?.[exerciseValue] ?? []).length > 0 &&
-                <>
-                  <Text style={commonStyles.text}>Choose a variation:</Text>
-                  {useDropdown(variationOptions[exerciseValue], variationValue, setVariationValue)}
-                </>
-              }
-              <Text style={commonStyles.text}>Choose a metric:</Text>
-              {useDropdown(exerciseMetricOptions, exerciseMetricValue, setExerciseMetricValue)}
-            </>
-          }
-        </>
-      }
       <TouchableOpacity
         onPress={() => reload()}
-        style={[commonStyles.thinTextButton, {marginTop: 8}]}
+        style={[commonStyles.thinTextButton, {marginBottom: 4, marginLeft: 14}]}
       >
         <Text style={commonStyles.text}>reload</Text>
       </TouchableOpacity>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          marginBottom: 4,
+          marginLeft: 14,
+          marginRight: 14,
+        }}
+      >
+        <View>
+          <Text style={commonStyles.text}>Choose leaderboard:</Text>
+          {useDropdown(leaderboardOptions, leaderboardValue, setLeaderboardValue)}
+        </View>
+        <View>
+          <Text style={commonStyles.text}>Choose a metric:</Text>
+          {leaderboardValue === 'overall' &&
+            useDropdown(overallMetricOptions, overallMetricValue, setOverallMetricValue)
+          }
+          {leaderboardValue === 'exercise' &&
+            useDropdown(exerciseMetricOptions, exerciseMetricValue, setExerciseMetricValue)
+          }
+        </View>
+      </View>
+      {leaderboardValue === 'exercise' &&
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            marginLeft: 14,
+             marginRight: 14,  
+          }}
+        >
+          <View>
+            <Text style={commonStyles.text}>Choose an exercise:</Text>
+            {useDropdown(exerciseOptions, exerciseValue, updateExerciseValue)}
+          </View>
+          <View>
+            <Text style={commonStyles.text}>Choose a variation:</Text>
+            {useDropdown(
+              variationOptions[exerciseValue ?? ''],
+              variationValue,
+              setVariationValue,
+              chooseVariationDisabled()
+            )}
+          </View>
+        </View>
+      }
       {renderLeaderboard()}
     </View>
   )

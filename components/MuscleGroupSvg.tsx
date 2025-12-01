@@ -2,6 +2,66 @@ import * as React from "react";
 import Svg, { Path } from "react-native-svg";
 import { LinearGradient } from 'expo-linear-gradient';
 import { View, StyleSheet, Text } from "react-native";
+import { useAwaitLoadable } from "@/middleware/helpers";
+import { HeatMapOption, loadableChosenHeatMap } from "@/store/general";
+import LoadingScreen from "@/app/loading";
+import { useMemo } from "react";
+
+export const heatMaps: Record<HeatMapOption, any> = {
+  ironbow: [
+    { pos: 0.0,  color: { r: 0,   g: 0,   b: 20  } },  // Nearly black
+    { pos: 0.2,  color: { r: 0,   g: 0,   b: 180 } },  // Deep blue
+    { pos: 0.4,  color: { r: 180, g: 0,   b: 180 } },  // Purple
+    { pos: 0.6,  color: { r: 255, g: 0,   b: 0   } },  // Red
+    { pos: 0.8,  color: { r: 255, g: 255, b: 0   } },  // Yellow
+    { pos: 1.0,  color: { r: 255, g: 255, b: 255 } },  // White
+  ],
+  inferno: [
+    { pos: 0.0,  color: { r: 0,   g: 0,   b: 4   } },  // Nearly black
+    { pos: 0.25, color: { r: 87,  g: 16,  b: 110 } },  // Deep purple
+    { pos: 0.5,  color: { r: 188, g: 55,  b: 84  } },  // Dark red
+    { pos: 0.75, color: { r: 249, g: 142, b: 9   } },  // Orange
+    { pos: 1.0,  color: { r: 252, g: 255, b: 164 } },  // Light yellow
+  ],
+  viridis: [
+    { pos: 0.0,  color: { r: 68,  g: 1,   b: 84  } },  // Dark purple
+    { pos: 0.25, color: { r: 59,  g: 82,  b: 139 } },  // Blue
+    { pos: 0.5,  color: { r: 33,  g: 145, b: 140 } },  // Teal
+    { pos: 0.75, color: { r: 94,  g: 201, b: 98  } },  // Green
+    { pos: 1.0,  color: { r: 253, g: 231, b: 37  } },  // Yellow
+  ],
+  jet: [
+    { pos: 0.0,  color: { r: 0,   g: 0,   b: 143 } },  // Dark blue
+    { pos: 0.25, color: { r: 0,   g: 159, b: 255 } },  // Cyan
+    { pos: 0.5,  color: { r: 0,   g: 255, b: 0   } },  // Green
+    { pos: 0.75, color: { r: 255, g: 159, b: 0   } },  // Orange
+    { pos: 1.0,  color: { r: 159, g: 0,   b: 0   } },  // Dark red
+  ],
+  hot: [
+    { pos: 0.0,  color: { r: 0,   g: 0,   b: 0   } },  // Black
+    { pos: 0.33, color: { r: 128, g: 0,   b: 0   } },  // Dark red
+    { pos: 0.66, color: { r: 255, g: 128, b: 0   } },  // Orange
+    { pos: 1.0,  color: { r: 255, g: 255, b: 255 } },  // White
+  ],
+  cool: [
+    { pos: 0.0,  color: { r: 0,   g: 255, b: 255 } },  // Cyan
+    { pos: 0.5,  color: { r: 128, g: 128, b: 255 } },  // Light purple
+    { pos: 1.0,  color: { r: 255, g: 0,   b: 255 } },  // Magenta
+  ],
+  plasma: [
+    { pos: 0.0,  color: { r: 13,  g: 8,   b: 135 } },  // Deep blue
+    { pos: 0.25, color: { r: 126, g: 3,   b: 168 } },  // Purple
+    { pos: 0.5,  color: { r: 204, g: 71,  b: 120 } },  // Magenta
+    { pos: 0.75, color: { r: 248, g: 149, b: 64  } },  // Orange
+    { pos: 1.0,  color: { r: 240, g: 249, b: 33  } },  // Yellow
+  ],
+}
+
+export const getColorList = (dataList: any) => {
+  return dataList.map((data: any) => {
+    return `rgb(${data.color.r},${data.color.g},${data.color.b})`
+  })
+};
 
 interface MuscleGroupSvgProps {
   valueMap: Record<string, number>
@@ -10,6 +70,27 @@ interface MuscleGroupSvgProps {
 
 export default function MuscleGroupSvg(props: MuscleGroupSvgProps) {
   const {valueMap, showGroups} = props;
+
+  const { 
+    value: heatmap, 
+    isReady: heatmapIsReady 
+  } = useAwaitLoadable(loadableChosenHeatMap, 'ironbow');
+
+  const colourRange = useMemo(() => {
+    return getColorList(heatMaps[heatmap])
+  }, [heatmap]);
+
+  // const colourRange = useMemo(() => {
+  //   return heatMaps[heatmap].map((data: any) => {
+  //     return `rgb(${data.color.r},${data.color.g},${data.color.b})`
+  //   })
+  // }, [heatmap])
+
+  // if (!heatmapIsReady) {
+  //   return (
+  //     <LoadingScreen delay={250}/>
+  //   )
+  // }
 
   const normalize = (valueMap: Record<string, number>): Record<string, number> => {
     const normalizedMap: Record<string, number> = {};
@@ -31,12 +112,14 @@ export default function MuscleGroupSvg(props: MuscleGroupSvgProps) {
   const numToRgbString = (num: number): string => {
     if (num < 0 || num > 1) return "none";
 
-    const colours = [
-      { pos: 0.0,  color: { r: 0,   g: 0,   b: 255 } },   // Blue
-      { pos: 0.33, color: { r: 75,  g: 0,   b: 130 } },   // Indigo
-      { pos: 0.66, color: { r: 128, g: 0,   b: 128 } },   // Purple
-      { pos: 1.0,  color: { r: 255, g: 0,   b: 0   } }
-    ]
+    // const colours = [
+    //   { pos: 0.0,  color: { r: 0,   g: 0,   b: 255 } },   // Blue
+    //   { pos: 0.33, color: { r: 75,  g: 0,   b: 130 } },   // Indigo
+    //   { pos: 0.66, color: { r: 128, g: 0,   b: 128 } },   // Purple
+    //   { pos: 1.0,  color: { r: 255, g: 0,   b: 0   } },   // red
+    // ]
+
+    const colours = heatMaps[heatmap];
 
     let startColor = colours[0];
     let endColor = colours[1];
@@ -436,12 +519,7 @@ export default function MuscleGroupSvg(props: MuscleGroupSvgProps) {
       <View style={styles.row}>
         <Text style={styles.text}>min</Text>
         <LinearGradient
-          colors={[
-            'rgb(0,0,255)',
-            'rgb(75,0,130)',
-            'rgb(128,0,128)',
-            'rgb(255,0,0)',
-          ]}
+          colors={colourRange}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={{
@@ -450,6 +528,7 @@ export default function MuscleGroupSvg(props: MuscleGroupSvgProps) {
             borderWidth: 1,
             borderColor: '#000',
             borderRadius: 0,
+            marginTop: 2,
             marginLeft: 10,
             marginRight: 10,
           }}

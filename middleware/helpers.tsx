@@ -3,6 +3,9 @@ import * as SecureStore from "expo-secure-store";
 import Constants from 'expo-constants';
 import * as Font from 'expo-font';
 import { MaterialIcons, AntDesign, Ionicons, Feather } from '@expo/vector-icons';
+import { useEffect, useState } from "react";
+import { Atom, useAtomValue } from "jotai";
+import { Loadable } from "jotai/vanilla/utils/loadable";
 
 type FetchWrapperMethods = 'POST' | 'GET';
 type TokenString = 'auth_token' | 'temp_token';
@@ -16,6 +19,9 @@ interface FetchWrapperArgs {
 }
 
 export const fetchWrapper = async ({route, method, params = {}, body, token_str = 'auth_token'}: FetchWrapperArgs) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), parseInt(Constants.expoConfig?.extra?.apiTimeoutMs));
+
   try {
     let url = `${Constants.expoConfig?.extra?.apiUrl}/${route}`;
     url = `${url}?${new URLSearchParams(params).toString()}`;
@@ -27,7 +33,8 @@ export const fetchWrapper = async ({route, method, params = {}, body, token_str 
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json"
       },
-      ...(method === 'POST' && {body: JSON.stringify(body)})         
+      ...(method === 'POST' && {body: JSON.stringify(body)}),
+      signal: controller.signal  
     });
     
     if (!response.ok) {
@@ -46,6 +53,8 @@ export const fetchWrapper = async ({route, method, params = {}, body, token_str 
   } catch (error) {
     console.log(error)
     return null;
+  } finally {
+    clearTimeout(id);
   }
 }
 
@@ -120,3 +129,26 @@ export const loadInitialNecessary = async (runFetchMappings: () => Promise<void>
     runFetchMappings(),
   ])
 };
+
+export function useAwaitLoadable<T>(
+  loadableAtom: Atom<Loadable<Awaited<T>>>,
+  defaultValue: Awaited<T>
+) {
+  const loadableValue = useAtomValue(loadableAtom);
+  const [isReady, setIsReady] = useState(false);
+  const [value, setValue] = useState<Awaited<T>>(defaultValue);
+
+  useEffect(() => {
+    if (loadableValue.state === 'loading') return;
+
+    if (loadableValue.state === 'hasData') {
+      setValue(loadableValue.data);
+      setIsReady(true);
+    } else if (loadableValue.state === 'hasError') {
+      setValue(defaultValue);
+      setIsReady(true);
+    }
+  }, [loadableValue, defaultValue]);
+
+  return { value, isReady };
+}

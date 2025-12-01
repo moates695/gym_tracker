@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, TouchableOpacity, Text, Alert } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Text, Alert, ActivityIndicator } from "react-native";
 import ConfirmationModal from "./ConfirmationModal";
 import { useAtom, useAtomValue } from "jotai";
 import { SetData, showWorkoutStartOptionsAtom, userDataAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
@@ -23,7 +23,8 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
 
   const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
   const [confirmationType, setConfirmationType] = useState<ConfirmationType | null>(null);
-  
+  const [savingWorkout, setSavingWorkout] = useState<boolean>(false);
+
   const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom)
   const [workoutStartTime, setWorkoutStartTime] = useAtom(workoutStartTimeAtom)
   const [, setShowWorkoutStartOptions] = useAtom(showWorkoutStartOptionsAtom)
@@ -42,14 +43,11 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
     handleOptionPress('discard');
   };
 
-  const handleFinishOption = (option: 'save' | 'discard') => {
-    option === 'save' ? saveWorkout() : discardWorkout();
-  };
-
   const handleOptionPress = async (option: 'save' | 'discard') => {
     const confirmed = await openConfirm();
     if (!confirmed) return;
     handleFinishOption(option);
+    setShowConfirmation(false);
   };
 
   const openConfirm = (): Promise<boolean> => {
@@ -59,7 +57,6 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
 
   const handleConfirm = () => {
     resolver?.(true);
-    setShowConfirmation(false);
   };
 
   const handleCancel = () => {
@@ -67,55 +64,70 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
     setShowConfirmation(false);
   };
 
+  const handleFinishOption = (option: 'save' | 'discard') => {
+    option === 'save' ? saveWorkout() : discardWorkout();
+  };
+
   const saveWorkout = async () => {
-    const exerciseData: any = [];
-    for (const exercise of workoutExercises) {
-      const validSets = getValidSets(exercise);
-      if (validSets.length === 0) continue;
+    try {
+      setSavingWorkout(true);
+      const exerciseData: any = [];
+      for (const exercise of workoutExercises) {
+        const validSets = getValidSets(exercise);
+        if (validSets.length === 0) continue;
 
-      const updatedValidSets = validSets.map(({ class: set_class, ...rest}) => ({
-        ...rest,
-        set_class
-      }));
-      
-      if (exercise.is_body_weight) {
-        for (const set_data of updatedValidSets) {
-          set_data.weight = calcBodyWeight(userData, exercise.ratios!, set_data.weight);
+        const updatedValidSets = validSets.map(({ class: set_class, ...rest}) => ({
+          ...rest,
+          set_class
+        }));
+        
+        if (exercise.is_body_weight) {
+          for (const set_data of updatedValidSets) {
+            set_data.weight = calcBodyWeight(userData, exercise.ratios!, set_data.weight);
+          }
         }
+
+        for (const set_data of exercise.set_data) {
+          if (set_data.class !== 'dropset') continue;
+          set_data.num_sets = 1;
+        }
+
+        exerciseData.push({
+          "id": exercise.id,
+          "set_data": updatedValidSets,
+        })
       }
 
-      for (const set_data of exercise.set_data) {
-        if (set_data.class !== 'dropset') continue;
-        set_data.num_sets = 1;
+      const body = {
+        "exercises": exerciseData,
+        "start_time": workoutStartTime,
+        "duration": Date.now() - workoutStartTime!
+      };
+      
+      const data = await fetchWrapper({
+        route: 'workout/save',
+        method: 'POST',
+        body: body
+      });
+      if (data === null || data.status === 'error') {
+        throw new Error('bad response');
       }
 
-      exerciseData.push({
-        "id": exercise.id,
-        "set_data": updatedValidSets,
-      })
-    }
-
-    const body = {
-      "exercises": exerciseData,
-      "start_time": workoutStartTime,
-      "duration": Date.now() - workoutStartTime!
-    };
+      setWorkoutExercises([]);
+      setWorkoutStartTime(null);
+      setShowWorkoutStartOptions('start');
+      onPress();
+      router.replace('/(tabs)/workout'); //? go to recap screen?
     
-    const data = await fetchWrapper({
-      route: 'workout/save',
-      method: 'POST',
-      body: body
-    });
-    if (data === null || data.status === 'error') {
-      Alert.alert("error saving workout");
+    } catch (error) {
+      console.log(error);
+      Alert.alert("error saving workout :(");
       return;
+    } finally {
+      setSavingWorkout(false);
     }
 
-    setWorkoutExercises([]);
-    setWorkoutStartTime(null);
-    setShowWorkoutStartOptions('start');
-    onPress();
-    router.replace('/(tabs)/workout'); //? go to recap screen?
+    
   };
 
   const discardWorkout = () => {
@@ -171,23 +183,41 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
           </>
         :
           <>
-            <Text style={[styles.text, {marginBottom: 5}]}>
-              {modalMessage}
-            </Text>
-            <View style={styles.row}>
-              <TouchableOpacity 
-                style={[styles.button, {borderColor: confirmationType === 'save' ? 'green' : 'red'}]}
-                onPress={handleConfirm}
+            {savingWorkout ?
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
               >
-                <Text style={styles.text}>yeah</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.button, {borderColor: 'grey'}]}
-                onPress={handleCancel}
-              >
-                <Text style={styles.text}>nah</Text>
-              </TouchableOpacity>
-            </View>
+                <ActivityIndicator size="large" />
+                <Text style={[commonStyles.text, {paddingLeft: 12}]}>
+                  saving workout
+                </Text>
+              </View>
+            :
+              <>
+                <Text style={[styles.text, {marginBottom: 5}]}>
+                  {modalMessage}
+                </Text>
+                <View style={styles.row}>
+                  <TouchableOpacity 
+                    style={[styles.button, {borderColor: confirmationType === 'save' ? 'green' : 'red'}]}
+                    onPress={handleConfirm}
+                  >
+                    <Text style={styles.text}>yeah</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.button, {borderColor: 'grey'}]}
+                    onPress={handleCancel}
+                  >
+                    <Text style={styles.text}>nah</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            }
+            
           </>
         }
       </View>

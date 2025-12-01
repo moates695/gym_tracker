@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect, useState } from "react";
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollView, Platform, Alert } from "react-native";
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollView, Platform, Alert, FlatList } from "react-native";
 import { useAtom, useAtomValue } from "jotai";
 import { StatusBar } from 'expo-status-bar';
 
@@ -204,20 +204,18 @@ export default function Workout() {
             {workoutExercises.length === 0 &&
               <Text style={{color:'white'}}>no exercises yet</Text>
             }
-            <ScrollView 
+            <FlatList 
               style={styles.scrollView}
               contentContainerStyle={styles.scrollViewContainer}
-            >
-                {workoutExercises.map((exercise, i) => {
-                  return (
-                    <WorkoutExerciseRow 
-                      key={i}
-                      exercise={exercise} 
-                      exerciseIndex={i}
-                    />
-                  )
-                })}
-            </ScrollView>
+              data={workoutExercises}
+              renderItem={({ item, index }) => (
+                <WorkoutExerciseRow 
+                  exercise={item} 
+                  exerciseIndex={index}
+                />
+              )}
+              showsVerticalScrollIndicator={false}
+            />
             <View style={styles.row}>
               <View style={styles.textContainer}>
                 <TouchableOpacity 

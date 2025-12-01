@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Text, TouchableOpacity, Modal, Switch } from "react-native";
+import { View, StyleSheet, Text, TouchableOpacity, Modal, Switch, Button } from "react-native";
 import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
 import { useAtom, useAtomValue } from "jotai";
@@ -14,6 +14,7 @@ import LineGraph, { LineGraphPoint } from "./LineGraph";
 import { OptionsObject } from "./ChooseExerciseModal";
 import WorkoutOverviewCurrent from "./WorkoutOverviewCurrent";
 import WorkoutOverviewHistorical from "./WorkoutOverviewHistorical";
+import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
 
 interface WorkoutOverviewProps {
   onPress: () => void
@@ -24,6 +25,26 @@ interface DisplayedDataOption {
   label: string
   value: DisplayedDataType
 }
+
+// const Fallback = ({ error, resetErrorBoundary }) => (
+//   <View style={{ padding: 20, backgroundColor: '#fdd', margin: 10 }}>
+//     <Text style={{ color: 'red', fontWeight: 'bold' }}>
+//       Error: {error.message}
+//     </Text>
+//     <Button onPress={resetErrorBoundary} title="Try again" />
+//   </View>
+// );
+
+const Fallback: React.FC<FallbackProps> = ({ error, resetErrorBoundary }) => {
+  return (
+    <View style={{ padding: 20, backgroundColor: '#fdd', margin: 10 }}>
+      <Text style={{ color: 'red', fontWeight: 'bold' }}>
+        Error: {error.message}
+      </Text>
+      <Button onPress={resetErrorBoundary} title="Try again" />
+    </View>
+  );
+};
 
 export default function WorkoutOverview(props: WorkoutOverviewProps) {
   const { onPress } = props;
@@ -54,7 +75,14 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
 
   const displayDataMap: Record<DisplayedDataType, JSX.Element> = {
     'current': <WorkoutOverviewCurrent />,
-    'history': <WorkoutOverviewHistorical />
+    'history': <ErrorBoundary
+                  FallbackComponent={Fallback}
+                  onReset={() => {
+                    console.log('Attempting to reset the component...');
+                  }}
+                >
+                  <WorkoutOverviewHistorical />
+                </ErrorBoundary>
   }
 
   return (
@@ -106,6 +134,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 2,
     maxHeight: '95%',
     width: '100%',
+    paddingBottom: 20,
   },
   dataContainer: {
     minHeight: 300,

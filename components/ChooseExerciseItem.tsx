@@ -1,5 +1,5 @@
 import { fetchWrapper, getExerciseValueMap } from "@/middleware/helpers";
-import { emptyExerciseHistoricalData, emptySetData, ExerciseListItem, exercisesHistoricalDataAtom, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
+import { emptyExerciseHistoricalData, emptySetData, ExerciseListItem, exercisesHistoricalDataAtom, loadingExerciseHistoryAtom, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useAtom } from "jotai";
 import React, { useEffect, useState } from "react"
@@ -9,6 +9,7 @@ import MuscleGroupSvg from "./MuscleGroupSvg";
 import { useDropdown } from "./ExerciseData";
 import { OptionsObject } from "./ChooseExerciseModal";
 import { MaterialIcons } from "@expo/vector-icons";
+import { v4 as uuidv4 } from 'uuid';
 
 interface ChooseExerciseDataProps {
   exercise: ExerciseListItem
@@ -31,6 +32,7 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [workoutExercises, setWorkoutExercisesAtom] = useAtom(workoutExercisesAtom);
   const [, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
+  const [loadingExerciseHistory, setLoadingExerciseHistory] = useAtom(loadingExerciseHistoryAtom);
 
   const [chosenVariation, setChosenVariation] = useState<ExerciseListItem>(exercise);
   
@@ -55,7 +57,9 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
   const handleChooseExercise = () => {
     const newExercise = JSON.parse(JSON.stringify(chosenVariation));
     delete newExercise.frequency;
+    newExercise.workout_exercise_id = uuidv4();
     newExercise.set_data = [{ ...emptySetData }];
+    // newExercise.loadingHistory = false;
     if (variationValue !== baseVariationValue) {
       newExercise.name = exercise.name;
       newExercise.variation_name = chosenVariation.name;
@@ -69,6 +73,10 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
       [newExercise.id]: emptyExerciseHistoricalData
     }))
     fetchExerciseHistoricalData(chosenVariation.id);
+
+    const tempLoading = {...loadingExerciseHistory};
+    tempLoading[newExercise.workout_exercise_id] = false;
+    setLoadingExerciseHistory(tempLoading);
 
     onChoose();
   };

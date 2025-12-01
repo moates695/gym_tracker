@@ -13,6 +13,7 @@ import Constants from 'expo-constants';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 // import DatePicker from 'react-native-date-picker'
 import DateTimePickerModal from "react-native-modal-datetime-picker";
+import validator from 'validator'
 
 export type Gender = "male" | "female" | "other";
 export type GoalStatus = "bulking" | "cutting" | "maintaining";
@@ -48,7 +49,7 @@ interface PedOption {
 }
 
 type SignUpScreen = 'details' | 'stats';
-type UsernameState = null | 'checking' | 'good' | 'error';
+type UniqueStringState = null | 'checking' | 'good' | 'error';
 // todo: add body fat percentage
 
 export default function SignUpScreen() {
@@ -57,14 +58,14 @@ export default function SignUpScreen() {
   const [signUpScreen, setSignUpScreen] = useState<SignUpScreen>('details');
 
   const [formData, setFormData] = useState<FormData>({
-    email: "moates695@gmail.com",
-    username: "username2",
-    password: "Password1!",
-    first_name: "first",
-    last_name: "last",
-    height: "55",
-    weight: "60",
-    gender: "female",
+    email: "",
+    username: "",
+    password: "",
+    first_name: "",
+    last_name: "",
+    height: "",
+    weight: "",
+    gender: "male",
     goal_status: "bulking",
     ped_status: "natural",
     date_of_birth: ""
@@ -79,12 +80,16 @@ export default function SignUpScreen() {
     height: "",
     weight: "",
     gender: "",
-    goal_status: ""
+    goal_status: "",
+    date_of_birth: ""
   });
 
+  const emailTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [emailState, setEmailState] = useState<UniqueStringState>(null);
+
   const usernameTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [usernameState, setUsernameState] = useState<UsernameState>(null);
-  const [isTimeoutActive, setIsTimeoutActive] = useState<boolean>(false);
+  const [usernameState, setUsernameState] = useState<UniqueStringState>(null);
+
   const [submitting, setSubmitting] = useState<boolean>(false);
 
   const genderOptions: GenderOption[] = [
@@ -93,6 +98,7 @@ export default function SignUpScreen() {
     { label: 'other', value: 'other' },
   ]
   const [genderValue, setGenderValue] = useState<Gender>('male');
+  // todo for options, need to have handle func that updates formdata, or useEffect
 
   const phaseOptions: PhaseOption[] = [
     { label: 'bulking', value: 'bulking' },
@@ -112,6 +118,7 @@ export default function SignUpScreen() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const showDatePicker = () => {
+    Keyboard.dismiss();
     setDateOpen(true);
   };
 
@@ -163,12 +170,6 @@ export default function SignUpScreen() {
       case 'username':
         validateUsername(value);
         break;
-      case 'first_name':
-        validateName(value, 'first_name');
-        break;
-      case 'last_name':
-        validateName(value, 'last_name');
-        break;
       case 'height':
         validateHeight(value);
         break;
@@ -176,24 +177,58 @@ export default function SignUpScreen() {
         validateWeight(value);
         break;
     }
-
   };
 
-  // const handleSelectChange = (field: string, value: string): void => {
-  //   setFormData({
-  //     ...formData,
-  //     [field]: value
-  //   })
-  // };
-
   const validateEmail = (email: string) => {
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email.trim() || !emailPattern.test(email)) {
+    // const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    // if (!email.trim() || !emailPattern.test(email)) {
+    if (!email.trim() || !validator.isEmail(email)) {
+      setEmailState(null);
       setInError({
         ...inError,
-        'email': 'invalid email'
+        'email': 'invalid email format'
       })
+      return;
     }
+
+    if (emailTimeoutRef.current) {
+      clearTimeout(emailTimeoutRef.current);
+    }
+    if (email.trim() === '') {
+      setEmailState(null);
+      return
+    }
+    setEmailState('checking');
+    emailTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `${Constants.expoConfig?.extra?.apiUrl}/register/check/email?` + 
+          new URLSearchParams({ email }).toString()
+        );
+        if (!response.ok) throw new Error('response not ok');
+
+        const data = await response.json();
+  
+        if (data.taken === false) {
+          setEmailState('good');
+          return;
+        }
+
+        setInError({
+          ...inError,
+          'email': "email is taken"
+        })
+        setEmailState('error');
+      
+      } catch (error) {
+        console.log(error)
+        setInError({
+          ...inError,
+          'email': "error checking email"
+        })
+        setEmailState('error');
+      }
+    }, 750);
   };
 
   const validatePassword = (password: string) => {
@@ -215,6 +250,7 @@ export default function SignUpScreen() {
     })
   } 
 
+  // todo impose limits on username length?
   const validateUsername = (username: string) => {
     if (usernameTimeoutRef.current) {
       clearTimeout(usernameTimeoutRef.current);
@@ -224,7 +260,6 @@ export default function SignUpScreen() {
       return
     }
     setUsernameState('checking');
-    setIsTimeoutActive(true);
     usernameTimeoutRef.current = setTimeout(async () => {
       try {
         const response = await fetch(
@@ -247,23 +282,14 @@ export default function SignUpScreen() {
         setUsernameState('error');
       
       } catch (error) {
+        console.log(error)
         setInError({
           ...inError,
           'username': "error checking username"
         })
         setUsernameState('error');
-      } finally {
-        setIsTimeoutActive(false);
       }
     }, 750);
-  };
-
-  const validateName = (name: string, field: string) => {
-    // if (name.length > 0 && name.trim().length > 0) return;
-    // setInError({
-    //   ...inError,
-    //   [field]: "name is empty"
-    // })
   };
 
   const validateHeight = (height_str: string) => {
@@ -284,32 +310,31 @@ export default function SignUpScreen() {
     })
   };
 
-  const areFormDataFieldsEmpty = (): boolean => {
-    for (const key in formData) {
-      if (key === 'date_of_birth') continue;
-      if (!isRequiredMap[key as keyof FormData]) continue;
-      if (formData[key as keyof FormData].trim().length !== 0) continue;
-      return true;
+  const isNextButtonDisabled = (): boolean => {
+    const keys = ["email", "password", "username"];
+    for (const key of keys) {
+      if (formData[key as keyof FormData].trim().length === 0) return true;
+      if (inError[key] != "") return true; 
     }
+    if (usernameState !== 'good' || emailState !== 'good') return true;
     return false;
   };
 
-  const isFormInError = (): boolean => {
-    for (const value of Object.values(inError)) {
-      if (value.length === 0) continue;
-      return true;
+  const isSubmitButtonDisabled = (): boolean => {
+    const keys = ["height", "weight"];
+    for (const key of keys) {
+      if (formData[key as keyof FormData].trim().length === 0) return true;
+      if (inError[key] != "") return true; 
     }
+    if (submitting || formData.date_of_birth === "" || isNextButtonDisabled()) return true;
     return false;
   };
 
-  const isButtonDisabled = (): boolean => {
-    return areFormDataFieldsEmpty() || isFormInError() || isTimeoutActive || submitting;
-  };
 
-  // todo: if register fails, navigate to first screen when error occurs (details vs stats)
+
   const handleSubmit = async (): Promise<void> => {
     setSubmitting(true);
-    
+    Keyboard.dismiss();
     try {
       let form_copy: Record<any, any> = { ...formData};
       form_copy.height = parseFloat(formData.height);
@@ -328,7 +353,12 @@ export default function SignUpScreen() {
 
       if (data.status === "success") { 
         await SecureStore.setItemAsync("temp_token", data.temp_token);
-        router.replace("/validate");
+        router.replace({
+          pathname: "/validate",
+          params: {
+            previousScreen: 'sign-up'
+          }
+        });
         return;
       }
 
@@ -337,6 +367,10 @@ export default function SignUpScreen() {
         tempInError[field] = `${field} already in use`
       }
       setInError(tempInError);
+
+      if (data.fields.length > 0) {
+        setSignUpScreen('details');
+      }
 
     } catch (error) {
       console.log(error);
@@ -387,24 +421,21 @@ export default function SignUpScreen() {
       {Platform.OS == 'android' &&
         <StatusBar style="light" backgroundColor="black" translucent={false} />
       }
-      <TouchableWithoutFeedback 
-        onPress={Keyboard.dismiss}
-        accessible={false}
-      >
-        <View style={styles.content}>
-          <Text style={[commonStyles.boldText, {marginRight: 10}]}>
-            Sign Up
-          </Text>
-          <View
-            style={{
-              flex: 1,
-              flexDirection: 'column',
-              justifyContent: 'center',
-            }}
-          >
-            {signUpScreen === 'details' &&
-              <>
-                {(['email', 'password', 'username'] as (keyof FormData)[]).map((key, index) => (
+      <View style={styles.content}>
+        <Text style={[commonStyles.boldText, {marginRight: 10}]}>
+          Sign Up
+        </Text>
+        <View
+          style={{
+            flex: 1,
+            flexDirection: 'column',
+            justifyContent: 'center',
+          }}
+        >
+          {signUpScreen === 'details' &&
+            <>
+              {(['email', 'password', 'username'] as (keyof FormData)[]).map((key, index) => (
+                <React.Fragment key={index}>
                   <View key={index} style={styles.singleItemRow}>
                     <TextInputFeild 
                       field={key} 
@@ -417,187 +448,202 @@ export default function SignUpScreen() {
                       required={isRequiredMap[key]}
                     />
                   </View>
-                ))}
-                <Text 
-                  style={[commonStyles.text, {
-                    marginTop: -28,
-                    marginLeft: 10,
-                    marginBottom: 10,
+                  {key === 'email' &&
+                    <Text 
+                      style={[commonStyles.text, {
+                        marginTop: -28,
+                        marginLeft: 10,
+                        marginBottom: 10,
+                      }]}
+                    >
+                      {emailState === 'checking' && <Text>checking username...</Text>}
+                      {emailState === 'good' && <Text style={{color: '#48ff00ff'}}>valid</Text>}
+                    </Text>
+                  }
+                </React.Fragment>
+              ))}
+              <Text 
+                style={[commonStyles.text, {
+                  marginTop: -28,
+                  marginLeft: 10,
+                  marginBottom: 10,
+                }]}
+              >
+                {usernameState === 'checking' && <Text>checking username...</Text>}
+                {usernameState === 'good' && <Text style={{color: '#48ff00ff'}}>valid</Text>}
+              </Text>
+              {([['first_name', 'last_name']] as (keyof FormData)[][]).map((tuple, tupleIdx) => (
+                <View key={tupleIdx} style={styles.doubleItemRow}>
+                  {tuple.map((item, itemIdx) => (
+                    <View key={itemIdx} style={styles.doubleItem}>
+                      <TextInputFeild 
+                        field={item} 
+                        label={formDataLabels[item]} 
+                        value={formData[item]} 
+                        is_number={false} 
+                        error_message={inError[item]} 
+                        onChangeText={handleTextChange}
+                      />
+                    </View>
+                  ))}
+                </View>
+              ))}
+              <View style={[styles.buttonContainer, {paddingTop: 20}]}>
+                <TouchableOpacity 
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    setSignUpScreen('stats');
+                  }}
+                  style={{
+                    backgroundColor: isNextButtonDisabled() ? "#ccc" : "#0db80d",
+                    padding: 12,
+                    borderRadius: 5,
+                    width: "30%",
+                    alignItems: "center"
+                  }}
+                  disabled={isNextButtonDisabled()}
+                >
+                  <Text style={{ color: "white"}}>next</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity 
+                  onPress={() => router.replace("/sign-in")}
+                >
+                  <Text style={{ color: "white"}}>already have an account?</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          }
+          {signUpScreen === 'stats' &&
+            <>
+              {([['height', 'weight']] as (keyof FormData)[][]).map((tuple, tupleIdx) => (
+                <View key={tupleIdx} style={styles.doubleItemRow}>
+                  {tuple.map((item, itemIdx) => (
+                    <View key={itemIdx} style={styles.doubleItem}>
+                      <TextInputFeild 
+                        field={item} 
+                        label={formDataLabels[item]} 
+                        value={formData[item]} 
+                        is_number={true} 
+                        error_message={inError[item]} 
+                        onChangeText={handleTextChange}
+                        required={isRequiredMap[item as keyof FormData]}
+                      />
+                    </View>
+                  ))}
+                </View>
+              ))}
+              <View
+                style={styles.doubleItemRow}
+              >
+                <View style={styles.doubleItem}>
+                  <Text style={styles.formHeader}>Gender</Text>
+                  <View style={{marginLeft: 10}}>
+                    {useDropdown(genderOptions, genderValue, setGenderValue, undefined, styles.dropDown)}
+                  </View>
+                </View>
+                <View style={styles.doubleItem}>
+                  <Text style={styles.formHeader}>Phase</Text>
+                  <View style={{marginLeft: 10}}>
+                    {useDropdown(phaseOptions, phaseValue, setPhaseValue, undefined, styles.dropDown)}
+                  </View>
+                </View>
+              </View>
+              <View
+                style={[styles.doubleItemRow, {
+                  marginTop: 16,
+                }]}
+              >
+                <View style={styles.doubleItem}>
+                  <Text style={styles.formHeader}>Natty status</Text>
+                  <View style={{marginLeft: 10}}>
+                    {useDropdown(pedOptions, pedValue, setPedValue, undefined, styles.dropDown)}
+                  </View>
+                </View>
+                <View style={styles.doubleItem}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <Text style={styles.formHeader}>Date of birth:</Text>
+                      <Text style={styles.formHeader}>{formatSelectedDate(selectedDate)}</Text>
+                    </View>
+                    <TouchableOpacity 
+                      onPress={showDatePicker}
+                      disabled={submitting}
+                      style={[commonStyles.textButton, 
+                        {
+                          width: 100, 
+                          alignItems: 'center', 
+                          alignSelf: 'center',
+                          marginTop: 4
+                        }
+                      ]}
+                    >
+                      <Text style={{ color: "white"}}>choose date</Text>
+                    </TouchableOpacity>
+                  </View>
+              </View>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  padding: 10,
+                  paddingTop: 20,
+                }}
+              >
+                <TouchableOpacity
+                  onPress={() => setSignUpScreen('details')}
+                  style={[commonStyles.thinTextButton, {
+                    width: 80,
+                    position: 'absolute',
+                    left: 0,
+                    top: 30,
                   }]}
                 >
-                  {usernameState === 'checking' && <Text>checking username...</Text>}
-                  {usernameState === 'good' && <Text style={{color: '#48ff00ff'}}>valid</Text>}
-                </Text>
-                {([['first_name', 'last_name']] as (keyof FormData)[][]).map((tuple, tupleIdx) => (
-                  <View key={tupleIdx} style={styles.doubleItemRow}>
-                    {tuple.map((item, itemIdx) => (
-                      <View key={itemIdx} style={styles.doubleItem}>
-                        <TextInputFeild 
-                          field={item} 
-                          label={formDataLabels[item]} 
-                          value={formData[item]} 
-                          is_number={false} 
-                          error_message={inError[item]} 
-                          onChangeText={handleTextChange}
-                        />
-                      </View>
-                    ))}
-                  </View>
-                ))}
-                <View style={[styles.buttonContainer, {paddingTop: 20}]}>
+                  <Text style={{color: 'white'}}>back</Text>
+                </TouchableOpacity>
                   <TouchableOpacity 
-                    onPress={() => setSignUpScreen('stats')}
+                    onPress={handleSubmit}
                     style={{
-                      // backgroundColor: isButtonDisabled() ? "#ccc" : "#0db80d",
-                      backgroundColor: "#0db80d",
+                      backgroundColor: isSubmitButtonDisabled() ? "#ccc" : "#0db80d",
                       padding: 12,
                       borderRadius: 5,
                       width: "30%",
                       alignItems: "center"
                     }}
-                    // disabled={isButtonDisabled()}
+                    disabled={isSubmitButtonDisabled()}
                   >
-                    <Text style={{ color: "white"}}>next</Text>
+                    <Text style={{ color: "white"}}>
+                      {submitting ? 'submitting' : 'sign up'}
+                    </Text>
                   </TouchableOpacity>
-                </View>
-                <View style={styles.buttonContainer}>
-                  <TouchableOpacity 
-                    onPress={() => router.replace("/sign-in")}
-                    disabled={submitting}
-                  >
-                    <Text style={{ color: "white"}}>already have an account?</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            }
-            {signUpScreen === 'stats' &&
-              <>
-                {([['height', 'weight']] as (keyof FormData)[][]).map((tuple, tupleIdx) => (
-                  <View key={tupleIdx} style={styles.doubleItemRow}>
-                    {tuple.map((item, itemIdx) => (
-                      <View key={itemIdx} style={styles.doubleItem}>
-                        <TextInputFeild 
-                          field={item} 
-                          label={formDataLabels[item]} 
-                          value={formData[item]} 
-                          is_number={true} 
-                          error_message={inError[item]} 
-                          onChangeText={handleTextChange}
-                          required={isRequiredMap[item as keyof FormData]}
-                        />
-                      </View>
-                    ))}
-                  </View>
-                ))}
-                <View
-                  style={styles.doubleItemRow}
+              </View>
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity 
+                  onPress={() => router.replace("/sign-in")}
+                  // disabled={submitting}
                 >
-                  <View style={styles.doubleItem}>
-                    <Text style={styles.formHeader}>Gender</Text>
-                    <View style={{marginLeft: 10}}>
-                      {useDropdown(genderOptions, genderValue, setGenderValue, undefined, styles.dropDown)}
-                    </View>
-                  </View>
-                  <View style={styles.doubleItem}>
-                    <Text style={styles.formHeader}>Phase</Text>
-                    <View style={{marginLeft: 10}}>
-                      {useDropdown(phaseOptions, phaseValue, setPhaseValue, undefined, styles.dropDown)}
-                    </View>
-                  </View>
-                </View>
-                <View
-                  style={[styles.doubleItemRow, {
-                    marginTop: 16,
-                  }]}
-                >
-                  <View style={styles.doubleItem}>
-                    <Text style={styles.formHeader}>Natty status</Text>
-                    <View style={{marginLeft: 10}}>
-                      {useDropdown(pedOptions, pedValue, setPedValue, undefined, styles.dropDown)}
-                    </View>
-                  </View>
-                  <View style={styles.doubleItem}>
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          justifyContent: 'space-between',
-                        }}
-                      >
-                        <Text style={styles.formHeader}>Date of birth:</Text>
-                        <Text style={styles.formHeader}>{formatSelectedDate(selectedDate)}</Text>
-                      </View>
-                      <TouchableOpacity 
-                        onPress={showDatePicker}
-                        disabled={submitting}
-                        style={[commonStyles.textButton, 
-                          {
-                            width: 100, 
-                            alignItems: 'center', 
-                            alignSelf: 'center',
-                            marginTop: 4
-                          }
-                        ]}
-                      >
-                        <Text style={{ color: "white"}}>choose date</Text>
-                      </TouchableOpacity>
-                    </View>
-                </View>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    padding: 10,
-                    paddingTop: 20,
-                  }}
-                >
-                  <TouchableOpacity
-                    onPress={() => setSignUpScreen('details')}
-                    style={[commonStyles.thinTextButton, {
-                      width: 80,
-                      position: 'absolute',
-                      left: 0,
-                      top: 30,
-                    }]}
-                  >
-                    <Text style={{color: 'white'}}>back</Text>
-                  </TouchableOpacity>
-                    <TouchableOpacity 
-                      onPress={handleSubmit}
-                      style={{
-                        backgroundColor: isButtonDisabled() ? "#ccc" : "#0db80d",
-                        padding: 12,
-                        borderRadius: 5,
-                        width: "30%",
-                        alignItems: "center"
-                      }}
-                      disabled={isButtonDisabled()}
-                    >
-                      <Text style={{ color: "white"}}>{submitting ? 'submitting' : 'sign up'}</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.buttonContainer}>
-                  <TouchableOpacity 
-                    onPress={() => router.replace("/sign-in")}
-                    disabled={submitting}
-                  >
-                    <Text style={{ color: "white"}}>already have an account?</Text>
-                  </TouchableOpacity>
-                </View>
-                <DateTimePickerModal
-                  date={selectedDate}
-                  isVisible={dateOpen}
-                  mode="date"
-                  onConfirm={handleConfirmDate}
-                  onCancel={hideDatePicker}
-                  isDarkModeEnabled={true}
-                />
-              </>
-            } 
-          </View>
+                  <Text style={{ color: "white"}}>already have an account?</Text>
+                </TouchableOpacity>
+              </View>
+              <DateTimePickerModal
+                date={selectedDate}
+                isVisible={dateOpen}
+                mode="date"
+                onConfirm={handleConfirmDate}
+                onCancel={hideDatePicker}
+                isDarkModeEnabled={true}
+              />
+            </>
+          } 
         </View>
-      </TouchableWithoutFeedback>
-    </KeyboardAwareScrollView>
+      </View>
+      </KeyboardAwareScrollView>
   );
 }
 

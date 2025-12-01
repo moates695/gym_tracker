@@ -240,7 +240,7 @@ export default function StatsDistribution() {
       }}
     >
       <TouchableOpacity
-        style={[commonStyles.button, {width: 50}]}
+        style={[commonStyles.thinTextButton, {width: 50, marginBottom: 4, marginLeft: 12}]}
         onPress={refreshData}
         disabled={loadingDistributions}
       >
@@ -298,7 +298,10 @@ export default function StatsDistribution() {
               </View>
             </>
           }
-          <DataTable tableData={getTableData()} numRows={(displayOptionValue === 'heatmap' && heatmapDisplayValue === 'target') ? 5 : 10}/>
+          <DataTable 
+            tableData={getTableData()} 
+            numRows={(displayOptionValue === 'heatmap' && heatmapDisplayValue === 'target') ? 5 : 10}
+          />
         </>
       }
     </View>
