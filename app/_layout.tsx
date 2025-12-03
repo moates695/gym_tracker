@@ -5,16 +5,17 @@ import { jwtDecode } from "jwt-decode";
 import React from "react";
 import * as Font from 'expo-font';
 import { MaterialIcons, AntDesign, Ionicons, Feather } from '@expo/vector-icons';
-import { fetchWrapper, loadFonts, useAwaitLoadable } from "@/middleware/helpers";
+import { fetchWrapper, loadFonts, safeErrorMessage, useAwaitLoadable } from "@/middleware/helpers";
 import { useColorScheme, View, Image } from 'react-native';
 import * as SystemUI from "expo-system-ui"
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { distributionStatsAtom, exerciseListAtom, favouriteExerciseStatsAtom, loadableChosenHeatMap, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, SetClass, userDataAtom, workoutExercisesAtom, workoutHistoryStatsAtom, workoutTotalStatsAtom } from "@/store/general";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from 'expo-status-bar';
 import { classImageMap } from "@/components/ExerciseSet";
 import 'react-native-get-random-values';
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 
 export interface DecodedJWT {
   email: string
@@ -41,6 +42,9 @@ export default function RootLayout() {
   const [, setDistributions] = useAtom(distributionStatsAtom);
   const [, setFavouriteStats] = useAtom(favouriteExerciseStatsAtom);
   
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
+
   SystemUI.setBackgroundColorAsync("black");
 
   const checkUserState = async () => {
@@ -50,6 +54,7 @@ export default function RootLayout() {
 
     const auth_token = await SecureStore.getItemAsync("auth_token");
     if (!auth_token) {
+      addErrorLog('auth token not found in secure store', 'warn');
       router.replace("/sign-up");
       return;
     }
@@ -58,6 +63,7 @@ export default function RootLayout() {
       const decoded: DecodedJWT = jwtDecode(auth_token);
       
       if (decoded.exp < Date.now() / 1000) {
+        addErrorLog('auth token is past expiry', 'warn');
         await SecureStore.deleteItemAsync("auth_token");
         router.replace("/sign-in");
         return;
@@ -80,23 +86,6 @@ export default function RootLayout() {
       if (data.account_state == "none") {
         router.replace("/sign-up");
       } else if (data.account_state == "unverified") {
-        // const temp_token = await SecureStore.getItemAsync("temp_token");
-        // if (!temp_token || (jwtDecode(temp_token) as DecodedJWT).exp < Date.now() / 1000 - 120) {
-        //   await SecureStore.deleteItemAsync("temp_token");
-        //   router.replace("/sign-in");
-        //   return;
-        // }
-        // const data2 = await fetchWrapper({
-        //   route: 'register/validate/resend',
-        //   method: 'POST',
-        //   token_str: 'temp_token'
-        // })
-        // if (!data2) {
-        //   await SecureStore.deleteItemAsync("temp_token");
-        //   router.replace("/sign-in");
-        // } else {
-        //   router.replace("/validate");
-        // }
         router.replace({
           pathname: "/validate",
           params: {
@@ -105,11 +94,15 @@ export default function RootLayout() {
         })
       } else if (data.account_state == "good") {
         // todo: group these into a single request (get all startup data at once) ?
-        await Promise.all([
-          loadFonts(),
-          fetchUserData(),
-          fetchMappings(),
-        ])
+        try {
+          await Promise.all([
+            loadFonts(),
+            fetchUserData(),
+            fetchMappings(),
+          ])
+        } catch (error) {
+          throw new Error(`fetching required startup data: ${safeErrorMessage(error)}`);
+        }
         router.replace("/(tabs)");
         try {
           await Promise.all([
@@ -122,14 +115,14 @@ export default function RootLayout() {
             preloadImages()
           ])
         } catch (error) {
-          console.log(error);
+          addCaughtErrorLog(error, 'fetching non-required startup data', 'warn');
         }
       } else {
         throw new Error("response not recognised");
       }
 
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'checking user state');
       router.replace("/sign-up");
     }
   };

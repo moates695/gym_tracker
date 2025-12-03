@@ -81,7 +81,7 @@ export default function MuscleGroupSvg(props: MuscleGroupSvgProps) {
   const { 
     value: heatmap, 
     isReady: heatmapIsReady 
-  } = useAwaitLoadable(loadableChosenHeatMap, 'ironbow');
+  } = useAwaitLoadable(loadableChosenHeatMap, 'bluered');
 
   const colourRange = useMemo(() => {
     return getColorList(heatMaps[heatmap])

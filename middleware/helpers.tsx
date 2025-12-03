@@ -152,3 +152,27 @@ export function useAwaitLoadable<T>(
 
   return { value, isReady };
 }
+
+export const formatLocal = (dt: Date) => {
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  let hours = dt.getHours();
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+
+  return `${pad(dt.getDate())}/` +
+         `${pad(dt.getMonth() + 1)}/` +
+         `${dt.getFullYear()} ` +
+         `${pad(hours)}:` +
+         `${pad(dt.getMinutes())}:` +
+         `${pad(dt.getSeconds())} ${ampm}`;
+}
+
+export const safeErrorMessage = (err: unknown, defaultMsg = "an unknown error occurred"): string => {
+  if (err instanceof Error && err.message != '') return err.message;
+  if (typeof err === "string" && err != '') return err;
+  if (err && typeof err === "object" && "message" in err && err.message != '') {
+    return String(err.message);
+  }
+  return defaultMsg;
+}
