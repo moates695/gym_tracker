@@ -32,8 +32,8 @@ export default function SignInScreen() {
   const fetchMappings = useSetAtom(fetchMappingsAtom);
 
   const [formData, setFormData] = useState<FormData>({
-    email: "moates695@gmail.com",
-    password: "Password1!",
+    email: "",
+    password: "",
   })
 
   const [inError, setInError] = useState<FormData>( {

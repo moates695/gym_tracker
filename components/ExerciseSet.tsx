@@ -85,6 +85,10 @@ export default function ExerciseSet(props: ExerciseSetProps) {
     updateExerciseSetData(tempSetData);
   };
 
+  // useEffect(() => {
+
+  // }, [exercises[exerciseIndex]?.set_data?.[setIndex]]);
+
   const updateExerciseSetData = (set_data: any) => {
     const tempExercises: WorkoutExercise[] = [...exercises];
     tempExercises[exerciseIndex].set_data = set_data;
@@ -119,7 +123,7 @@ export default function ExerciseSet(props: ExerciseSetProps) {
 
   useEffect(() => {
     setDisplayWeight(formatFloatString((set_data.weight ?? '').toString()));
-  }, []);
+  }, [exercises[exerciseIndex]?.set_data?.[setIndex]]);
   
   const formatFloatString = (text: string): string => {
     const parts = text.split('.');
