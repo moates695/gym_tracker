@@ -15,7 +15,8 @@ export default function FrequencyCalendar(props: FrequencyCalendarProps) {
 
   const getRadius = (volume: number) => {
     if (Object.keys(frequencyData).length < 2) {
-      return (maxRadius - minRadius) / 2;
+      // return (maxRadius - minRadius) / 2;
+      return (maxRadius + minRadius) / 2;
     }
     const minVolume = Math.min(...Object.values(frequencyData));
     const maxVolume = Math.max(...Object.values(frequencyData));
@@ -43,7 +44,7 @@ export default function FrequencyCalendar(props: FrequencyCalendarProps) {
         cols.push(
           <Col key={j}>
             <View style={styles.cellContainer}>
-              <Text style={[daysAgo === 0 ? {color: 'red'} : styles.text]}>{dayDate}</Text>
+              <Text style={[daysAgo === 0 ? {color: 'red'} : daysAgo < 0 ? {opacity: 0}: styles.text]}>{dayDate}</Text>
             </View>
           </Col>
         )
