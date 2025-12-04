@@ -30,8 +30,15 @@ export default function LogsPage() {
           marginBottom: 10,
         }}
         data={errorLogs}
-        renderItem={({ item }) => (
-          <View style={{flexDirection: 'row', marginBottom: 4}}>
+        renderItem={({ item, index }) => (
+          <View 
+            style={{
+              flexDirection: 'row', 
+              marginBottom: 4,
+              backgroundColor: index % 2 ? '#000000' : '#222328ff',
+              borderRadius: 5,
+              padding: 5,
+            }}>
             <View style={{width: 155}}>
               <Text style={[
                 commonStyles.text,

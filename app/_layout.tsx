@@ -5,7 +5,7 @@ import { jwtDecode } from "jwt-decode";
 import React from "react";
 import * as Font from 'expo-font';
 import { MaterialIcons, AntDesign, Ionicons, Feather } from '@expo/vector-icons';
-import { fetchWrapper, loadFonts, safeErrorMessage, useAwaitLoadable } from "@/middleware/helpers";
+import { fetchWrapper, loadFonts, SafeError, safeErrorMessage, useAwaitLoadable } from "@/middleware/helpers";
 import { useColorScheme, View, Image } from 'react-native';
 import * as SystemUI from "expo-system-ui"
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
@@ -101,7 +101,7 @@ export default function RootLayout() {
             fetchMappings(),
           ])
         } catch (error) {
-          throw new Error(`fetching required startup data: ${safeErrorMessage(error)}`);
+          throw new SafeError(`fetching required startup data: ${safeErrorMessage(error)}`);
         }
         router.replace("/(tabs)");
         try {
@@ -115,10 +115,10 @@ export default function RootLayout() {
             preloadImages()
           ])
         } catch (error) {
-          addCaughtErrorLog(error, 'fetching non-required startup data', 'warn');
+          addCaughtErrorLog(error, `fetching non-required startup data: ${safeErrorMessage(error)}`, 'warn');
         }
       } else {
-        throw new Error("response not recognised");
+        throw new SafeError("login response state not recognised");
       }
 
     } catch (error) {
@@ -128,22 +128,34 @@ export default function RootLayout() {
   };
 
   const fetchUserData = async () => {
-    const data = await fetchWrapper({
-      route: 'users/data/get',
-      method: 'GET'
-    })
-    if (!data || !data.user_data) throw new Error('error fetching user data');
-    setUserData(data.user_data);
+    try {
+      const data = await fetchWrapper({
+        route: 'users/data/get',
+        method: 'GET'
+      })
+      if (!data || !data.user_data) throw new SafeError('error fetching user data');
+      setUserData(data.user_data);
+    } catch (error) {
+      addCaughtErrorLog(error, 'fetching user data');
+      if (error instanceof SafeError) throw error;
+      throw new SafeError('uncaught fetchUserData error');
+    }
   };
 
   const fetchMappings = async () => {
-    const data = await fetchWrapper({
-      route: 'muscles/get_maps',
-      method: 'GET'
-    })
-    if (!data || !data.group_to_targets || !data.target_to_group) throw new Error('muscle maps bad response');
-    setGroupToTargets(data.group_to_targets);
-    setTargetoGroup(data.target_to_group);
+    try {
+      const data = await fetchWrapper({
+        route: 'muscles/get_maps',
+        method: 'GET'
+      })
+      if (!data || !data.group_to_targets || !data.target_to_group) throw new Error('muscle maps bad response');
+      setGroupToTargets(data.group_to_targets);
+      setTargetoGroup(data.target_to_group);
+    } catch (error) {
+      addCaughtErrorLog(error, 'fetching muscle maps');
+      if (error instanceof SafeError) throw error;
+      throw new SafeError('uncaught fetchMappings error');
+    }
   };
 
   const fetchExerciseList = async () => {
@@ -155,7 +167,9 @@ export default function RootLayout() {
       if (!data || !data.exercises) throw new Error('bad exercise list response');
       setExerciseList(data.exercises)
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'fetching exercise list');
+      if (error instanceof SafeError) throw error;
+      throw new SafeError('uncaught fetchExerciseList error');
     }
   }
 
@@ -168,7 +182,9 @@ export default function RootLayout() {
       if (!data || !data.workouts) throw new Error('bad overview stats response');
       setOverviewHistoricalStats(data.workouts);
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'fetching overview stats');
+      if (error instanceof SafeError) throw error;
+      throw new SafeError('uncaught fetchOverviewStats error');
     }
   };
 
@@ -181,7 +197,9 @@ export default function RootLayout() {
       if (!data || !data.stats) throw new Error('stats history result is empty');
       setWorkoutHistoryStats(data.stats);
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'fetching history stats');
+      if (error instanceof SafeError) throw error;
+      throw new SafeError('uncaught fetchHistoryStats error');
     }
   };
     
@@ -194,7 +212,9 @@ export default function RootLayout() {
       if (!data || !data.totals == null) throw new Error('result is empty');
       setWorkoutTotalStats(data.totals);
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'fetching workout totals');
+      if (error instanceof SafeError) throw error;
+      throw new SafeError('uncaught fetchWorkoutTotalStats error');
     }
   };
 
@@ -207,7 +227,9 @@ export default function RootLayout() {
       if (!data || !data.distributions) throw new Error('distribution stats result is empty');
       setDistributions(data.distributions);
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'fetching distribution stats');
+      if (error instanceof SafeError) throw error;
+      throw new SafeError('uncaught fetchDistributionStats error');
     }
   };
 
@@ -220,7 +242,9 @@ export default function RootLayout() {
       if (data === null || data.favourites == null) throw new Error('result is empty');
       setFavouriteStats(data.favourites);
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'fetching favourite stats');
+      if (error instanceof SafeError) throw error;
+      throw new SafeError('uncaught fetchFavouriteStats error');
     }
   };
 
@@ -239,8 +263,6 @@ export default function RootLayout() {
   useEffect(() => {
     initialSetup();
   }, []);
-
-  
 
   return (
     // <SafeAreaProvider style={{ backgroundColor: 'black' }}>

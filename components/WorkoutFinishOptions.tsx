@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { View, StyleSheet, TouchableOpacity, Text, Alert, ActivityIndicator } from "react-native";
 import ConfirmationModal from "./ConfirmationModal";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { SetData, showWorkoutStartOptionsAtom, userDataAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
 import { useRouter } from "expo-router";
-import { calcBodyWeight, fetchWrapper, getValidSets, isValidSet } from "@/middleware/helpers";
+import { calcBodyWeight, fetchWrapper, getValidSets, isValidSet, SafeError, safeErrorMessage } from "@/middleware/helpers";
 import { commonStyles } from "@/styles/commonStyles";
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 
 interface WorkoutFinishOptionsProps {
   onPress: () => void
@@ -28,6 +29,9 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
   const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom)
   const [workoutStartTime, setWorkoutStartTime] = useAtom(workoutStartTimeAtom)
   const [, setShowWorkoutStartOptions] = useAtom(showWorkoutStartOptionsAtom)
+
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
   const router = useRouter();
   
@@ -110,7 +114,7 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
         body: body
       });
       if (data === null || data.status === 'error') {
-        throw new Error('bad response');
+        throw new SafeError(`bad workout save response: ${data.message}`);
       }
 
       setWorkoutExercises([]);
@@ -120,14 +124,11 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
       router.replace('/(tabs)/workout'); //? go to recap screen?
     
     } catch (error) {
-      console.log(error);
-      Alert.alert("error saving workout :(");
-      return;
+      addCaughtErrorLog(error, 'during save workout');
+      Alert.alert(safeErrorMessage(error, 'error saving workout'));
     } finally {
       setSavingWorkout(false);
     }
-
-    
   };
 
   const discardWorkout = () => {

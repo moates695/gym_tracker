@@ -5,13 +5,14 @@ import * as SecureStore from "expo-secure-store";
 import React from "react";
 import { DecodedJWT } from "./_layout";
 import { jwtDecode } from "jwt-decode";
-import { fetchWrapper, loadInitialNecessary } from "@/middleware/helpers";
+import { fetchWrapper, loadInitialNecessary, SafeError } from "@/middleware/helpers";
 import { commonStyles } from "@/styles/commonStyles";
 import { StatusBar } from "expo-status-bar";
 import { useAtom, useSetAtom } from "jotai";
 import { fetchMappingsAtom, userDataAtom } from "@/store/general";
 import TextInputFeild from "../components/InputField";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 
 // todo resend validate email button on timeout
 // TODO: fix rest of this file and refactor others
@@ -31,6 +32,9 @@ export default function Validate() {
   
   const setUserData = useSetAtom(userDataAtom);
   const fetchMappings = useSetAtom(fetchMappingsAtom);
+
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
   const [code, setCode] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -60,13 +64,13 @@ export default function Validate() {
         }, 
         token_str: 'temp_token'
       })
-      if (!data || !data.status) throw new Error('bad response');
+      if (!data || !data.status) throw new SafeError('bad validate receive response');
 
       if (data.status === 'incorrect') {
         setErrorMessage("code is incorrect")
       } else if (data.status === 'verified') {
         const auth_token = data.auth_token;
-        if (!auth_token) throw new Error("bad auth token");
+        if (!auth_token) throw new SafeError("bad auth token");
         await SecureStore.setItemAsync("auth_token", auth_token);
         setUserData(data.user_data);
         await loadInitialNecessary(fetchMappings);
@@ -76,9 +80,10 @@ export default function Validate() {
       }
 
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'validate receive error');
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   const prevScreenMap: Record<string, string> = {
