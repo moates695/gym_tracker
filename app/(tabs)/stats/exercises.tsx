@@ -53,7 +53,7 @@ export default function StatsExercises() {
         }}
       >
         <TouchableOpacity
-          style={[commonStyles.thinTextButton, {width: 50}]}
+          style={[commonStyles.thinTextButton, {width: 50, marginLeft: 12}]}
           onPress={handleExercisesRefresh}
           disabled={loadingExerciseList}
         >
@@ -61,7 +61,7 @@ export default function StatsExercises() {
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => setShowFilters(!showFilters)}
-          style={[commonStyles.thinTextButton]}
+          style={[commonStyles.thinTextButton, {marginRight: 12}]}
         >
           <Text style={commonStyles.text}>
             {showFilters ? 'hide filters' : 'show filters'}

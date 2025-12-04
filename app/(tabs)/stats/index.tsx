@@ -75,7 +75,9 @@ export default function Stats() {
       )
     } else if (workoutTotalStats === null) {
       return (
-        <Text style={commonStyles.text}>stats haven't loaded</Text> 
+        <View style={{height: 100, justifyContent: 'center', alignItems: 'center'}}>
+          <Text style={commonStyles.text}>stats haven't loaded</Text> 
+        </View>
       )
     } else {
       return (
@@ -84,6 +86,7 @@ export default function Stats() {
             width: '100%',
             height: 120,
             justifyContent: 'center',
+            marginBottom: 20,
           }}
         >
           <DataTable tableData={tableData1} />

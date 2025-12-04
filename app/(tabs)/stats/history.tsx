@@ -40,7 +40,7 @@ export default function StatsDistribution() {
       }}
     >
       <TouchableOpacity
-        style={[commonStyles.thinTextButton, {width: 50}]}
+        style={[commonStyles.thinTextButton, {width: 50, marginLeft: 12}]}
         onPress={() => fetchWorkoutHistoryStats()}
         disabled={loadingHistory}
       >

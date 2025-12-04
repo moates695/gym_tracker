@@ -93,10 +93,12 @@ export default function StatsFavourites() {
 
   return (
     <View 
-      style={{flex: 1}}
+      style={{
+        flex: 1
+      }}
     >
       <TouchableOpacity
-        style={[commonStyles.thinTextButton, {width: 50}]}
+        style={[commonStyles.thinTextButton, {width: 50, marginLeft: 12}]}
         onPress={refreshData}
         disabled={loadingStats}
       >
@@ -123,10 +125,24 @@ export default function StatsFavourites() {
                 flex: 1,
               }}
             >
-              <Text style={commonStyles.text}>Choose a metric:</Text>
-              {useDropdown(metricOptions, metricOptionValue, setMetricOptionValue)}
-              <Text style={commonStyles.text}>Choose a muscle group:</Text>
-              {useDropdown(muscleGroupOptions, muscleGroupValue, setMuscleGroupValue)}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginLeft: 12,
+                  marginRight: 12,
+                }}
+              >
+                <View>
+                  <Text style={commonStyles.text}>Choose a metric:</Text>
+                  {useDropdown(metricOptions, metricOptionValue, setMetricOptionValue)}
+                </View>
+                <View>
+                  <Text style={commonStyles.text}>Choose a muscle group:</Text>
+                  {useDropdown(muscleGroupOptions, muscleGroupValue, setMuscleGroupValue)}
+                </View>
+              </View>
               <View
                 style={{
                   flex: 1,

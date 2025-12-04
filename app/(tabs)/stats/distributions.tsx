@@ -3,14 +3,14 @@ import { OptionsObject } from "@/components/ChooseExerciseModal";
 import DataTable, { TableData } from "@/components/DataTable";
 import { useDropdown } from "@/components/ExerciseData";
 import MuscleGroupSvg from "@/components/MuscleGroupSvg";
-import { fetchWrapper } from "@/middleware/helpers";
+import { fetchWrapper, formatMagnitude } from "@/middleware/helpers";
 import { distributionStatsAtom, DistributionStatsMetric, muscleGroupToTargetsAtom, muscleTargetoGroupAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { RadarChart } from "@salmonco/react-native-radar-chart";
 import { useRouter } from "expo-router";
 import { useAtom, useAtomValue } from "jotai";
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 
 // todo change to: for radar select muscle group, for heatmap select group or target for display
 
@@ -234,6 +234,13 @@ export default function StatsDistribution() {
       }
     }
 
+    for (const row of rows) {
+      for (const [key, value] of Object.entries(row)) {
+        if (typeof value !== 'number') continue;
+        row[key] = formatMagnitude(value);
+      }
+    }
+
     return {
       headers,
       rows
@@ -247,10 +254,12 @@ export default function StatsDistribution() {
       style={{
         flex: 1,
         backgroundColor: 'black',
+        paddingLeft: 12,
+        paddingRight: 12,
       }}
     >
       <TouchableOpacity
-        style={[commonStyles.thinTextButton, {width: 50, marginBottom: 4, marginLeft: 12}]}
+        style={[commonStyles.thinTextButton, {width: 50, marginBottom: 4}]}
         onPress={refreshData}
         disabled={loadingDistributions}
       >
@@ -259,20 +268,23 @@ export default function StatsDistribution() {
       {loadingDistributions ?
         <LoadingScreen />
       :
-        <>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+        >
           <Text style={commonStyles.text}>Choose a metric:</Text>
           {useDropdown(metricOptions, metricOptionValue, setMetricOptionValue)}
-          <Text style={commonStyles.text}>Choose a display:</Text>
+          <Text style={[commonStyles.text, {marginTop: 4}]}>Choose a display:</Text>
           {useDropdown(displayOptions, displayOptionValue, setDisplayOptionValue)}
           {displayOptionValue === 'radar' &&
             <>
-              <Text style={commonStyles.text}>Choose a muscle group:</Text>
+              <Text style={[commonStyles.text, {marginTop: 4}]}>Choose a muscle group:</Text>
               {useDropdown(muscleGroupOptions, muscleGroupValue, setMuscleGroupValue)}
               {muscleGroupValue !== 'chest' ? 
                 <View 
                   style={{
                     width: '100%',
                     alignItems: 'center',
+                    zIndex: 5,
                   }}
                 >
                   {canDisplayRadarData(radarData) ?
@@ -289,7 +301,7 @@ export default function StatsDistribution() {
                       dataFillColor="#ff9430ff"
                       dataFillOpacity={0.8}
                       dataStroke="#ff7f08ff"
-                      labelSize={12}
+                      labelSize={10}
                     />
                   :
                     <View
@@ -305,7 +317,15 @@ export default function StatsDistribution() {
                   }
                 </View>
               :
-                <Text style={commonStyles.text}>chest does not have enough targets to show a radar :(</Text>
+                <View 
+                  style={{
+                    height: 100, 
+                    justifyContent: 'center', 
+                    alignItems: 'center'
+                  }}
+                >
+                  <Text style={commonStyles.text}>chest does not have enough targets to show a radar :(</Text>
+                </View>
               }
             </>
           }
@@ -324,8 +344,9 @@ export default function StatsDistribution() {
           <DataTable 
             tableData={getTableData()} 
             numRows={(displayOptionValue === 'heatmap' && heatmapDisplayValue === 'target') ? 5 : 10}
+            shade={true}
           />
-        </>
+        </ScrollView>
       }
     </View>
   )
