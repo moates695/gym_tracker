@@ -3,10 +3,11 @@ import ChooseExerciseItem from "@/components/ChooseExerciseItem";
 import ExerciseListFilter from "@/components/ExerciseListFilter";
 import ExerciseStatsItem from "@/components/ExerciseStatsItem";
 import { fetchWrapper } from "@/middleware/helpers";
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 import { exerciseListAtom, ExerciseListItem } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useRouter } from "expo-router";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, FlatList } from "react-native";
 
@@ -20,6 +21,9 @@ export default function StatsExercises() {
   const [loadingExerciseList, setLoadingExerciseList] = useState<boolean>(false); 
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
+
   const handleExercisesRefresh = async () => {
     try {
       setLoadingExerciseList(true);
@@ -30,7 +34,7 @@ export default function StatsExercises() {
       if (!data || !data.exercises) throw new Error('bas response');
       setExercisesList(data.exercises);
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'error exercises/list/all')
       setExercisesList([]);
     } finally {
       setLoadingExerciseList(false);

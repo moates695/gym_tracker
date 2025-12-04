@@ -4,11 +4,12 @@ import DataTable, { TableData } from "@/components/DataTable";
 import { useDropdown } from "@/components/ExerciseData";
 import MuscleGroupSvg from "@/components/MuscleGroupSvg";
 import { fetchWrapper, formatMagnitude } from "@/middleware/helpers";
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 import { distributionStatsAtom, DistributionStatsMetric, muscleGroupToTargetsAtom, muscleTargetoGroupAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { RadarChart } from "@salmonco/react-native-radar-chart";
 import { useRouter } from "expo-router";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 
@@ -39,6 +40,9 @@ export default function StatsDistribution() {
   const [, setTargetoGroup] = useAtom(muscleTargetoGroupAtom);
 
   const [loadingDistributions, setLoadingDistributions] = useState<boolean>(false);
+
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
   const muscleGroupOptions: OptionsObject[] = useMemo((): OptionsObject[] => {
     const options = [{ label: 'all groups', value: 'all' }];
@@ -80,9 +84,10 @@ export default function StatsDistribution() {
       if (data === null || data.distributions == null) throw new Error('result is empty');
       setDistributions(data.distributions);
     } catch (error) {
-      console.log(error);
-    }
-    setLoadingDistributions(false);
+      addCaughtErrorLog(error, 'error stats/distributions');
+    } finally {
+      setLoadingDistributions(false);
+    } 
   };
 
   const getMuscleMaps = async () => {
@@ -95,7 +100,7 @@ export default function StatsDistribution() {
       setGroupToTargets(data.group_to_targets);
       setTargetoGroup(data.target_to_group);
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'error muscles/get_maps');
     }
   };
 
@@ -134,7 +139,7 @@ export default function StatsDistribution() {
         }
       }
     } catch (error) {
-      console.log(error)
+      addCaughtErrorLog(error, 'error building radar data');
     }
 
     return data;
@@ -165,7 +170,7 @@ export default function StatsDistribution() {
         }
       }
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'error building value map');
     }
     return map;
   }

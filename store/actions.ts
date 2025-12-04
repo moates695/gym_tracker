@@ -23,29 +23,37 @@ export const addErrorLogAtom = atom(
   null,
   async (get, set, message: string, level: ErrorLevel = 'error') => {
     console.log(message);
-    const tempLogs = await get(errorLogsAtom);
-    const newLength = tempLogs.unshift({
-      date_str: formatLocal(new Date()),
-      message, 
-      level
-    })
-    if (newLength > 100) tempLogs.pop();
-    set(errorLogsAtom, tempLogs);
+    try {
+      const tempLogs = await get(errorLogsAtom);
+      const newLength = tempLogs.unshift({
+        date_str: formatLocal(new Date()),
+        message, 
+        level
+      })
+      if (newLength > 100) tempLogs.pop();
+      set(errorLogsAtom, tempLogs);
+    } catch (error) {
+      console.log(error);
+    }
   }
 )
 
 export const addCaughtErrorLogAtom = atom(
   null,
   async (get, set, err: unknown, default_msg: string, level: ErrorLevel = 'error') => {
-    const message = safeErrorMessage(err, default_msg);
-    console.log(message);
-    const tempLogs = await get(errorLogsAtom);
-    const newLength = tempLogs.unshift({
-      date_str: formatLocal(new Date()),
-      message, 
-      level
-    })
-    if (newLength > 100) tempLogs.pop();
-    set(errorLogsAtom, tempLogs);
+    try {
+      const message = safeErrorMessage(err, default_msg);
+      console.log(message);
+      const tempLogs = await get(errorLogsAtom);
+      const newLength = tempLogs.unshift({
+        date_str: formatLocal(new Date()),
+        message, 
+        level
+      })
+      if (newLength > 100) tempLogs.pop();
+      set(errorLogsAtom, tempLogs);
+    } catch (error) {
+      console.log(error);
+    }
   }
 )
