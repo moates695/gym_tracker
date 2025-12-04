@@ -9,7 +9,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { commonStyles } from "@/styles/commonStyles";
 import { fetchWrapper, getExerciseValueMap, getValidSets, isValidSet } from "@/middleware/helpers"
 import MuscleGroupSvg from "./MuscleGroupSvg";
-import { updateLoadingExerciseHistoryAtom } from "@/store/actions";
+import { addCaughtErrorLogAtom, addErrorLogAtom, updateLoadingExerciseHistoryAtom } from "@/store/actions";
 
 interface WorkoutExerciseProps {
   exercise: WorkoutExercise
@@ -25,6 +25,9 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
   const [editExercises, _] = useAtom(editWorkoutExercisesAtom);  
   const loadingExerciseHistory = useAtomValue(loadingExerciseHistoryAtom);
   const updateLoadingExerciseHistory = useSetAtom(updateLoadingExerciseHistoryAtom)
+
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
   const [numSets, setNumSets] = useState<number>(0);
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
@@ -59,7 +62,7 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
         [exercise.id]: data
       }))
     } catch (error) {
-      console.log('error fetching exercises history')
+      addCaughtErrorLog(error, 'error handleRefreshHistory')
     } finally {
       updateLoadingExerciseHistory(exercise.workout_exercise_id, false);
     }

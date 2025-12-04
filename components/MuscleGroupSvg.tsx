@@ -6,6 +6,8 @@ import { useAwaitLoadable } from "@/middleware/helpers";
 import { HeatMapOption, loadableChosenHeatMap } from "@/store/general";
 import LoadingScreen from "@/app/loading";
 import { useMemo } from "react";
+import { useSetAtom } from "jotai";
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 
 export const heatMaps: Record<HeatMapOption, any> = {
   bluered: [
@@ -81,79 +83,77 @@ export default function MuscleGroupSvg(props: MuscleGroupSvgProps) {
   const { 
     value: heatmap, 
     isReady: heatmapIsReady 
-  } = useAwaitLoadable(loadableChosenHeatMap, 'ironbow');
+  } = useAwaitLoadable(loadableChosenHeatMap, 'bluered');
+
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
   const colourRange = useMemo(() => {
     return getColorList(heatMaps[heatmap])
   }, [heatmap]);
 
-  // const colourRange = useMemo(() => {
-  //   return heatMaps[heatmap].map((data: any) => {
-  //     return `rgb(${data.color.r},${data.color.g},${data.color.b})`
-  //   })
-  // }, [heatmap])
-
-  // if (!heatmapIsReady) {
-  //   return (
-  //     <LoadingScreen delay={250}/>
-  //   )
-  // }
-
   const normalize = (valueMap: Record<string, number>): Record<string, number> => {
-    const normalizedMap: Record<string, number> = {};
-    const values = Object.values(valueMap);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    if (min === max) {
-      return Object.fromEntries(Object.keys(valueMap).map(k => [k, 1]));
-    }
+    try {
+      const normalizedMap: Record<string, number> = {};
+      const values = Object.values(valueMap);
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      if (min === max) {
+        return Object.fromEntries(Object.keys(valueMap).map(k => [k, 1]));
+      }
 
-    for (const [key, value] of Object.entries(valueMap)) {
-      normalizedMap[key] = (value - min) / (max - min || 1)
+      for (const [key, value] of Object.entries(valueMap)) {
+        normalizedMap[key] = (value - min) / (max - min || 1)
+      }
+      return normalizedMap;
+    } catch (error) {
+      addCaughtErrorLog(error, 'error normalize');
+      return {};
     }
-    return normalizedMap;
   }
 
   const normalizedMap = normalize(valueMap);
 
   const numToRgbString = (num: number): string => {
-    if (num < 0 || num > 1) return "none";
+    try {
+      if (num < 0 || num > 1) return "none";
 
-    // const colours = [
-    //   { pos: 0.0,  color: { r: 0,   g: 0,   b: 255 } },   // Blue
-    //   { pos: 0.33, color: { r: 75,  g: 0,   b: 130 } },   // Indigo
-    //   { pos: 0.66, color: { r: 128, g: 0,   b: 128 } },   // Purple
-    //   { pos: 1.0,  color: { r: 255, g: 0,   b: 0   } },   // red
-    // ]
+      const colours = heatMaps[heatmap];
 
-    const colours = heatMaps[heatmap];
+      let startColor = colours[0];
+      let endColor = colours[1];
 
-    let startColor = colours[0];
-    let endColor = colours[1];
-
-    for (let i = 0; i < colours.length - 1; i++) {
-      if (num >= colours[i].pos && num <= colours[i + 1].pos) {
-        startColor = colours[i];
-        endColor = colours[i + 1];
-        break;
+      for (let i = 0; i < colours.length - 1; i++) {
+        if (num >= colours[i].pos && num <= colours[i + 1].pos) {
+          startColor = colours[i];
+          endColor = colours[i + 1];
+          break;
+        }
       }
+      
+      const segmentRange = endColor.pos - startColor.pos;
+      const factor = segmentRange === 0 ? 0 : (num - startColor.pos) / segmentRange;
+      
+      const r = Math.round(startColor.color.r + factor * (endColor.color.r - startColor.color.r));
+      const g = Math.round(startColor.color.g + factor * (endColor.color.g - startColor.color.g));
+      const b = Math.round(startColor.color.b + factor * (endColor.color.b - startColor.color.b));
+    
+      return `rgb(${r}, ${g}, ${b})`;
+    } catch (error) {
+      addCaughtErrorLog(error, 'error normalize');
+      return '';
     }
-    
-    const segmentRange = endColor.pos - startColor.pos;
-    const factor = segmentRange === 0 ? 0 : (num - startColor.pos) / segmentRange;
-    
-    const r = Math.round(startColor.color.r + factor * (endColor.color.r - startColor.color.r));
-    const g = Math.round(startColor.color.g + factor * (endColor.color.g - startColor.color.g));
-    const b = Math.round(startColor.color.b + factor * (endColor.color.b - startColor.color.b));
-  
-    return `rgb(${r}, ${g}, ${b})`;
   };
 
   const getValue = (group: string, target: string): number => {
-    if (showGroups) {
-      return normalizedMap[group] ?? -1;
-    } else {
-      return normalizedMap[`${group}/${target}`] ?? -1;
+    try {
+      if (showGroups) {
+        return normalizedMap[group] ?? -1;
+      } else {
+        return normalizedMap[`${group}/${target}`] ?? -1;
+      }
+    } catch (error) {
+      return 0;
     }
   };
 

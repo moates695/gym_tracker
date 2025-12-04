@@ -8,7 +8,7 @@ import { DecodedJWT } from "./_layout";
 import { jwtDecode } from "jwt-decode";
 import { StatusBar } from "expo-status-bar";
 import { commonStyles } from "@/styles/commonStyles";
-import { fetchWrapper, loadFonts, loadInitialNecessary } from "@/middleware/helpers";
+import { fetchWrapper, loadFonts, loadInitialNecessary, SafeError, safeErrorMessage } from "@/middleware/helpers";
 import Constants from 'expo-constants';
 import { useAtom, useSetAtom } from "jotai";
 import { fetchMappingsAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, userDataAtom } from "@/store/general";
@@ -16,6 +16,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Font from 'expo-font';
 import { MaterialIcons, AntDesign, Ionicons, Feather } from '@expo/vector-icons';
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 
 
 interface FormData {
@@ -30,6 +31,9 @@ export default function SignInScreen() {
 
   const [, setUserData] = useAtom(userDataAtom);
   const fetchMappings = useSetAtom(fetchMappingsAtom);
+
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
   const [formData, setFormData] = useState<FormData>({
     email: "",
@@ -69,7 +73,7 @@ export default function SignInScreen() {
         body: formData,
         token_str: 'temp_token'
       })
-      if (!data) throw new Error(`bad response`);
+      if (!data || !data.status) throw new SafeError(`bad sign in response`);
 
       if (data.status === "none") {
         setInError({
@@ -90,14 +94,15 @@ export default function SignInScreen() {
           }
         });
       } else {
-        throw new Error("Return status not recognised")
+        throw new SafeError("sign in return status not recognised")
       }
 
     } catch (error) {
-      console.log(error)
-      Alert.alert("error during sign in")
+      addCaughtErrorLog(error, 'error during sign in');
+      Alert.alert(safeErrorMessage(error, 'error during sign in'));
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   }
 
   const isButtonDisabled = () => {

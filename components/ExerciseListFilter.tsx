@@ -3,7 +3,8 @@ import { TextInput, View, Text, Switch, StyleSheet } from "react-native";
 import { useDropdown } from "./ExerciseData";
 import { ExerciseListItem, MuscleData, muscleGroupToTargetsAtom, WeightType } from "@/store/general";
 import { OptionsObject } from "./ChooseExerciseModal";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 
 type WeightTypeExtended = WeightType | 'all';
 interface WeightTypeOption {
@@ -27,6 +28,9 @@ export default function ExerciseListFilter(props: ExerciseListFilterProps) {
   const {showFilters, exercisesList, setDisplayedExercises} = props;
 
   const muscleGroupToTargets = useAtomValue(muscleGroupToTargetsAtom);
+
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
   const [searchBar, setSearchBar] = useState<string>('');
   const [customOnly, setCustomOnly] = useState<boolean>(false);
@@ -101,26 +105,32 @@ export default function ExerciseListFilter(props: ExerciseListFilterProps) {
   };
 
   const searchBarFilter = (tempExercises: ExerciseListItem[]): ExerciseListItem[] => {
-    if (searchBar === '') {
-      return tempExercises;
-    }
+    try {
+      if (searchBar === '') {
+        return tempExercises;
+      }
 
-    let parts = [searchBar, ...searchBar.split(' ')];
-    parts = parts.filter(part => 
-      part.trim() !== ''
-    );
-
-    let filtered: ExerciseListItem[] = [];
-    let matchingIds: string[] = [];
-    for (const part of parts) {
-      const temp = tempExercises.filter((exercise: ExerciseListItem) => 
-        exercise.name.toLowerCase().includes(part.toLowerCase()) && !matchingIds.includes(exercise.id)
+      let parts = [searchBar, ...searchBar.split(' ')];
+      parts = parts.filter(part => 
+        part.trim() !== ''
       );
-      filtered = filtered.concat(temp);
-      matchingIds = matchingIds.concat(temp.map((exercise: ExerciseListItem) => exercise.id));
-    }
 
-    return filtered;
+      let filtered: ExerciseListItem[] = [];
+      let matchingIds: string[] = [];
+      for (const part of parts) {
+        const temp = tempExercises.filter((exercise: ExerciseListItem) => 
+          exercise.name.toLowerCase().includes(part.toLowerCase()) && !matchingIds.includes(exercise.id)
+        );
+        filtered = filtered.concat(temp);
+        matchingIds = matchingIds.concat(temp.map((exercise: ExerciseListItem) => exercise.id));
+      }
+
+      return filtered;
+    
+    } catch (error) {
+      addCaughtErrorLog(error, 'error searchBarFilter');
+      return [];
+    }
   };
 
   const muscleFilter = (tempExercises: ExerciseListItem[]): ExerciseListItem[] => {
@@ -131,20 +141,22 @@ export default function ExerciseListFilter(props: ExerciseListFilterProps) {
   };
 
   const muscleDataMatchesFilters = (muscle_data: MuscleData[]): boolean => {
-    const threshold = Number(ratioOptionsValue);
-
-    for (const group_data of muscle_data) {
-      if (group_data.group_name !== muscleGroupValue) continue
-      for (const target_data of group_data.targets) {
-        if (muscleTargetValue !== 'all') {
-          if (target_data.target_name !== muscleTargetValue) continue
-          return target_data.ratio >= threshold
+    try {
+      const threshold = Number(ratioOptionsValue);
+      for (const group_data of muscle_data) {
+        if (group_data.group_name !== muscleGroupValue) continue
+        for (const target_data of group_data.targets) {
+          if (muscleTargetValue !== 'all') {
+            if (target_data.target_name !== muscleTargetValue) continue
+            return target_data.ratio >= threshold
+          }
+          if (target_data.ratio < threshold) continue
+          return true;
         }
-        if (target_data.ratio < threshold) continue
-        return true;
       }
+    } catch (error) {
+      addCaughtErrorLog(error, 'error muscleDataMatchesFilters'); 
     }
-
     return false;
   };
 

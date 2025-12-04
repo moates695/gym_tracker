@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollView, Platform, Alert, FlatList } from "react-native";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { StatusBar } from 'expo-status-bar';
 
 import { exerciseListAtom, workoutExercisesAtom, workoutStartTimeAtom, showWorkoutStartOptionsAtom, editWorkoutExercisesAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, loadableWorkoutExercisesAtom, exercisesHistoricalDataAtom, userDataAtom, loadableUserDataAtom } from "@/store/general";
@@ -10,6 +10,7 @@ import { commonStyles } from "@/styles/commonStyles";
 import { fetchWrapper } from "@/middleware/helpers";
 import WorkoutExerciseRow from "@/components/WorkoutExerciseRow";
 import LoadingScreen from "../loading";
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 
 export default function Workout() {
   const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom);
@@ -30,26 +31,35 @@ export default function Workout() {
   const [chooseNewExercise, setChooseNewExercise] = useState<boolean>(false);
   const [showOverview, setShowOverview] = useState<boolean>(false);
 
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
+
   const getMuscleMaps = async () => {
-    const data = await fetchWrapper({
-      route: 'muscles/get_maps',
-      method: 'GET'
-    });
-    if (data === null) return;
-    setGroupToTargets(data.group_to_targets);
-    setTargetoGroup(data.target_to_group);
+    try {
+      const data = await fetchWrapper({
+        route: 'muscles/get_maps',
+        method: 'GET'
+      });
+      if (data === null) return;
+      setGroupToTargets(data.group_to_targets);
+      setTargetoGroup(data.target_to_group);
+    } catch (error) {
+      addCaughtErrorLog(error, 'error muscles/get_maps');
+    }    
   };
 
   const getOverviewStats = async () => {
-    const data = await fetchWrapper({
-      route: 'workout/overview/stats',
-      method: 'GET'
-    });
-    if (data === null) return;
-    setOverviewHistoricalStats(data.workouts);
+    try {
+      const data = await fetchWrapper({
+        route: 'workout/overview/stats',
+        method: 'GET'
+      });
+      if (data === null) return;
+      setOverviewHistoricalStats(data.workouts);
+    } catch (error) {
+      addCaughtErrorLog(error, 'error workout/overview/stats');
+    }
   };
-
-  // const getPreviousWorkouts = async () => {};
 
   const startNewWorkout = async () => {
     setWorkoutExercises([]);
@@ -101,7 +111,7 @@ export default function Workout() {
         if (data === null) return;
         setExerciseList(data.exercises)
       } catch (error) {
-        console.log(error);
+        addCaughtErrorLog(error, 'error exercises/list/all');
       }
     };
 
@@ -126,7 +136,7 @@ export default function Workout() {
       if (data === null) return;
       setUserData(data.user_data);
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'error users/data/get');
     }
   };
 

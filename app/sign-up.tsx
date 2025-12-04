@@ -14,6 +14,9 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 // import DatePicker from 'react-native-date-picker'
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import validator from 'validator'
+import { useSetAtom } from "jotai";
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
+import { SafeError, safeErrorMessage } from "@/middleware/helpers";
 
 export type Gender = "male" | "female" | "other";
 export type GoalStatus = "bulking" | "cutting" | "maintaining";
@@ -117,6 +120,9 @@ export default function SignUpScreen() {
   const [dateOpen, setDateOpen] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
+
   const showDatePicker = () => {
     Keyboard.dismiss();
     setDateOpen(true);
@@ -136,10 +142,14 @@ export default function SignUpScreen() {
   };
 
   const formatSelectedDate = (date: Date): string => {
-    const dd = String(date.getDate()).padStart(2, '0');
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const yyyy = date.getFullYear();
-    return `${dd}-${mm}-${yyyy}`;
+    try {
+      const dd = String(date.getDate()).padStart(2, '0');
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const yyyy = date.getFullYear();
+      return `${dd}-${mm}-${yyyy}`;
+    } catch (error) {
+      throw new SafeError('formatting date of birth')
+    }
   };
 
   const handleTextChange = (field: string, value: string): void => {
@@ -180,8 +190,6 @@ export default function SignUpScreen() {
   };
 
   const validateEmail = (email: string) => {
-    // const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    // if (!email.trim() || !emailPattern.test(email)) {
     if (!email.trim() || !validator.isEmail(email)) {
       setEmailState(null);
       setInError({
@@ -205,9 +213,8 @@ export default function SignUpScreen() {
           `${Constants.expoConfig?.extra?.apiUrl}/register/check/email?` + 
           new URLSearchParams({ email }).toString()
         );
-        if (!response.ok) throw new Error('response not ok');
-
         const data = await response.json();
+        if (!response.ok) throw new SafeError(`check email response not ok: ${data.message}`);
   
         if (data.taken === false) {
           setEmailState('good');
@@ -221,7 +228,7 @@ export default function SignUpScreen() {
         setEmailState('error');
       
       } catch (error) {
-        console.log(error)
+        addCaughtErrorLog(error, 'checking email for sign up');
         setInError({
           ...inError,
           'email': "error checking email"
@@ -266,10 +273,9 @@ export default function SignUpScreen() {
           `${Constants.expoConfig?.extra?.apiUrl}/register/check/username?` + 
           new URLSearchParams({ username }).toString()
         );
-        if (!response.ok) throw new Error('response not ok');
-
         const data = await response.json();
-  
+        if (!response.ok) throw new SafeError(`check username response not ok: ${data.message}`);
+
         if (data.taken === false) {
           setUsernameState('good');
           return;
@@ -282,7 +288,7 @@ export default function SignUpScreen() {
         setUsernameState('error');
       
       } catch (error) {
-        console.log(error)
+        addCaughtErrorLog(error, 'checking username for sign up');
         setInError({
           ...inError,
           'username': "error checking username"
@@ -347,9 +353,8 @@ export default function SignUpScreen() {
         },
         body: JSON.stringify(form_copy)
       });
-      
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
       const data = await response.json();
+      if (!response.ok) throw new SafeError(`register new response not ok: ${data.message}`);
 
       if (data.status === "success") { 
         await SecureStore.setItemAsync("temp_token", data.temp_token);
@@ -373,8 +378,8 @@ export default function SignUpScreen() {
       }
 
     } catch (error) {
-      console.log(error);
-      Alert.alert("error during registration")
+      addCaughtErrorLog(error, 'error during registration');
+      Alert.alert(safeErrorMessage(error, 'error during registration'))
     } finally {
       setSubmitting(false);
     }
@@ -643,7 +648,7 @@ export default function SignUpScreen() {
           } 
         </View>
       </View>
-      </KeyboardAwareScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

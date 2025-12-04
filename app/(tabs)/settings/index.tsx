@@ -81,6 +81,15 @@ export default function Settings() {
         />
         <Text style={commonStyles.text}>max</Text>
       </View>
+      <View style={{alignItems: 'center'}}>
+        <TouchableOpacity
+          style={[styles.button, {width: 200}]}
+          onPress={() => router.replace('/(tabs)/settings/logs')}
+          // disabled={loadingStats}
+        >
+          <Text style={styles.text}>error logs</Text>
+        </TouchableOpacity>
+      </View>
       <View>
         <Text style={commonStyles.text}>{userData?.username}</Text>
         <Text style={commonStyles.text}>{userData?.email}</Text>

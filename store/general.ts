@@ -7,7 +7,7 @@ import { Point3D } from '@/components/ThreeAxisGraph';
 import { TableData } from '@/components/DataTable';
 import { Gender, GoalStatus, PedStatus } from '@/app/sign-up';
 import { get } from 'lodash';
-import { fetchWrapper } from '@/middleware/helpers';
+import { fetchWrapper, formatLocal } from '@/middleware/helpers';
 
 const storage = createJSONStorage(() => AsyncStorage) as any;
 
@@ -290,5 +290,15 @@ export const setLeaderboardAtom = atom<LeaderboardData | null>(null);
 export const repsLeaderboardAtom = atom<LeaderboardData | null>(null);
 
 export type HeatMapOption = 'bluered' | 'ironbow' | 'inferno' | 'viridis' | 'jet' | 'hot' | 'cool' | 'plasma';
-export const chosenHeatMap = atomWithStorage<HeatMapOption>('bluered', 'bluered', storage, { getOnInit: true });
+export const chosenHeatMap = atomWithStorage<HeatMapOption>('chosenHeatMap', 'bluered', storage, { getOnInit: true });
 export const loadableChosenHeatMap = loadable(chosenHeatMap);
+
+export type ErrorLevel = 'warn' | 'error';
+export interface ErrorLog {
+  date_str: string
+  message: string
+  level: ErrorLevel
+}
+
+export const errorLogsAtom = atomWithStorage<ErrorLog[]>('errorLogs', [], storage, { getOnInit: true });
+export const loadableErrorLogsAtom = loadable(errorLogsAtom);

@@ -4,10 +4,11 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-nati
 import { OptionsObject } from "./ChooseExerciseModal";
 import { MaterialIcons } from "@expo/vector-icons";
 import ExerciseData, { useDropdown } from "./ExerciseData";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { fetchWrapper } from "@/middleware/helpers";
 import LoadingScreen from "@/app/loading";
 import { commonStyles } from "@/styles/commonStyles";
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 
 export interface ExerciseStatsItemProps {
   exercise: ExerciseListItem
@@ -23,6 +24,9 @@ export default function ExerciseStatsItem(props: ExerciseStatsItemProps) {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [chosenVariation, setChosenVariation] = useState<ExerciseListItem>(exercise);
   const [loadingData, setLoadingData] = useState<boolean>(false);
+
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
   const baseVariationValue = 'base';
     const variationOptions: OptionsObject[] = ((): OptionsObject[] => {
@@ -80,7 +84,7 @@ export default function ExerciseStatsItem(props: ExerciseStatsItemProps) {
       }));
 
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'error fetchExerciseHistoricalDataAll');
     } finally {
       setLoadingData(false);
     }
@@ -102,6 +106,7 @@ export default function ExerciseStatsItem(props: ExerciseStatsItemProps) {
     is_custom: chosenVariation.is_custom,
     ratios: chosenVariation.ratios,
     set_data: [],
+    workout_exercise_id: ''
   };
 
   return (

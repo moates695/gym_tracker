@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Text, TouchableOpacity, Modal, Switch, Button } from "react-native";
 import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { exercisesHistoricalDataAtom, loadingPreviousWorkoutStatsAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
 import { fetchWrapper, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
@@ -15,6 +15,7 @@ import { OptionsObject } from "./ChooseExerciseModal";
 import WorkoutOverviewCurrent from "./WorkoutOverviewCurrent";
 import WorkoutOverviewHistorical from "./WorkoutOverviewHistorical";
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 
 interface WorkoutOverviewProps {
   onPress: () => void
@@ -25,15 +26,6 @@ interface DisplayedDataOption {
   label: string
   value: DisplayedDataType
 }
-
-// const Fallback = ({ error, resetErrorBoundary }) => (
-//   <View style={{ padding: 20, backgroundColor: '#fdd', margin: 10 }}>
-//     <Text style={{ color: 'red', fontWeight: 'bold' }}>
-//       Error: {error.message}
-//     </Text>
-//     <Button onPress={resetErrorBoundary} title="Try again" />
-//   </View>
-// );
 
 const Fallback: React.FC<FallbackProps> = ({ error, resetErrorBoundary }) => {
   return (
@@ -52,6 +44,9 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
   const [, setPreviousWorkoutStats] = useAtom(previousWorkoutStatsAtom);
   const [, setLoadingPreviousWorkoutStats] = useAtom(loadingPreviousWorkoutStatsAtom);
 
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
+  
   const displayedDataOptions: DisplayedDataOption[] = [
     { label: 'current workout', value: 'current' },
     { label: 'workout history', value: 'history' },
@@ -68,21 +63,23 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
       if (data === null) return;
       setPreviousWorkoutStats(data.workouts);
     } catch (error) {
-      console.log(error)
+      addCaughtErrorLog(error, 'error getOverviewStats');
     }
     setLoadingPreviousWorkoutStats(false);
   };
 
   const displayDataMap: Record<DisplayedDataType, JSX.Element> = {
     'current': <WorkoutOverviewCurrent />,
-    'history': <ErrorBoundary
-                  FallbackComponent={Fallback}
-                  onReset={() => {
-                    console.log('Attempting to reset the component...');
-                  }}
-                >
-                  <WorkoutOverviewHistorical />
-                </ErrorBoundary>
+    'history': (
+      <ErrorBoundary
+        FallbackComponent={Fallback}
+        onReset={() => {
+          console.log('Attempting to reset the component...');
+        }}
+      >
+        <WorkoutOverviewHistorical />
+      </ErrorBoundary>
+    )
   }
 
   return (

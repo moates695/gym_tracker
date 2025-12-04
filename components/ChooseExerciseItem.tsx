@@ -1,7 +1,7 @@
 import { fetchWrapper, getExerciseValueMap } from "@/middleware/helpers";
 import { emptyExerciseHistoricalData, emptySetData, ExerciseListItem, exercisesHistoricalDataAtom, loadingExerciseHistoryAtom, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import React, { useEffect, useState } from "react"
 import { Text, StyleSheet, View, TouchableOpacity } from "react-native"
 import FrequencyCalendar from "./FrequencyCalendar";
@@ -10,6 +10,7 @@ import { useDropdown } from "./ExerciseData";
 import { OptionsObject } from "./ChooseExerciseModal";
 import { MaterialIcons } from "@expo/vector-icons";
 import { v4 as uuidv4 } from 'uuid';
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 
 interface ChooseExerciseDataProps {
   exercise: ExerciseListItem
@@ -33,6 +34,9 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
   const [workoutExercises, setWorkoutExercisesAtom] = useAtom(workoutExercisesAtom);
   const [, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
   const [loadingExerciseHistory, setLoadingExerciseHistory] = useAtom(loadingExerciseHistoryAtom);
+
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
   const [chosenVariation, setChosenVariation] = useState<ExerciseListItem>(exercise);
   
@@ -93,7 +97,7 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
         [exercise_id]: data
       }))
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'error exercises/history');
     }
   };
 

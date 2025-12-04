@@ -2,10 +2,11 @@ import LoadingScreen from "@/app/loading";
 import { OptionsObject } from "@/components/ChooseExerciseModal";
 import { useDropdown } from "@/components/ExerciseData";
 import { fetchWrapper } from "@/middleware/helpers";
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 import { FavouriteExercisesStats, favouriteExerciseStatsAtom, FavouriteStatsMetric, muscleGroupToTargetsAtom, muscleTargetoGroupAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useRouter } from "expo-router";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, FlatList, StyleSheet } from "react-native";
 
@@ -21,6 +22,9 @@ export default function StatsFavourites() {
   const [groupToTargets, setGroupToTargets] = useAtom(muscleGroupToTargetsAtom);
   const [, setTargetoGroup] = useAtom(muscleTargetoGroupAtom);
   
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
+
   const [loadingStats, setLoadingStats] = useState<boolean>(false);
 
   const metricOptions: MetricOption[] = [
@@ -50,7 +54,7 @@ export default function StatsFavourites() {
       if (data === null || data.favourites == null) throw new Error('result is empty');
       setFavouriteStats(data.favourites);
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'error stats/favourites');
     }
   };
 
@@ -64,7 +68,7 @@ export default function StatsFavourites() {
       setGroupToTargets(data.group_to_targets);
       setTargetoGroup(data.target_to_group);
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'error muscles/get_maps');
     }
   };
 
@@ -83,20 +87,27 @@ export default function StatsFavourites() {
 
   const getFilteredData = (): FavouriteExercisesStats[] => {
     if (favouriteStats === null) return [];
-    return favouriteStats
-            .filter((stats) => { 
-              if (muscleGroupValue === 'all') return true;
-              return stats.groups.includes(muscleGroupValue); 
-            })
-            .sort((a, b) => b[metricOptionValue] - a[metricOptionValue])
+    try {
+      return favouriteStats
+              .filter((stats) => { 
+                if (muscleGroupValue === 'all') return true;
+                return stats.groups.includes(muscleGroupValue); 
+              })
+              .sort((a, b) => b[metricOptionValue] - a[metricOptionValue])
+    } catch (error) {
+      addCaughtErrorLog(error, 'error filtering favourite stats');
+      return [];
+    }        
   };
 
   return (
     <View 
-      style={{flex: 1}}
+      style={{
+        flex: 1
+      }}
     >
       <TouchableOpacity
-        style={[commonStyles.thinTextButton, {width: 50}]}
+        style={[commonStyles.thinTextButton, {width: 50, marginLeft: 12}]}
         onPress={refreshData}
         disabled={loadingStats}
       >
@@ -123,10 +134,24 @@ export default function StatsFavourites() {
                 flex: 1,
               }}
             >
-              <Text style={commonStyles.text}>Choose a metric:</Text>
-              {useDropdown(metricOptions, metricOptionValue, setMetricOptionValue)}
-              <Text style={commonStyles.text}>Choose a muscle group:</Text>
-              {useDropdown(muscleGroupOptions, muscleGroupValue, setMuscleGroupValue)}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginLeft: 12,
+                  marginRight: 12,
+                }}
+              >
+                <View>
+                  <Text style={commonStyles.text}>Choose a metric:</Text>
+                  {useDropdown(metricOptions, metricOptionValue, setMetricOptionValue)}
+                </View>
+                <View>
+                  <Text style={commonStyles.text}>Choose a muscle group:</Text>
+                  {useDropdown(muscleGroupOptions, muscleGroupValue, setMuscleGroupValue)}
+                </View>
+              </View>
               <View
                 style={{
                   flex: 1,

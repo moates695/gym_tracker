@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
 import WorkoutHeader from '@/components/WorkoutHeader';
-import StatsHeader from '@/components/StatsHeader';
+import TabStackHeader from '@/components/TabStackHeader';
 
 export default function TabLayout() {
   return (
@@ -52,7 +52,7 @@ export default function TabLayout() {
         name="stats"
         options={{
           title: 'Stats',
-          headerTitle: () => <StatsHeader />,
+          headerTitle: () => <TabStackHeader tab={'stats'} />,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'stats-chart' : 'stats-chart-outline'} color={color} size={24} />
           ),
@@ -62,6 +62,7 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: 'Settings',
+          headerTitle: () => <TabStackHeader tab={'settings'} />,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'settings' : 'settings-outline'} color={color} size={24}/>
           ),

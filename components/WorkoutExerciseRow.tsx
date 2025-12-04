@@ -4,12 +4,13 @@ import { TouchableOpacity, View, StyleSheet } from "react-native"
 import WorkoutExerciseComponent from "./WorkoutExercise"
 import { editWorkoutExercisesAtom, WorkoutExercise, workoutExercisesAtom } from "@/store/general"
 import Ionicons from "@expo/vector-icons/Ionicons"
-import { useAtom } from "jotai"
+import { useAtom, useSetAtom } from "jotai"
 import ConfirmationModal from "./ConfirmationModal"
 import cloneDeep from 'lodash/cloneDeep';
 import { AntDesign } from "@expo/vector-icons"
 // import { set } from "lodash"
 import LoadingScreen from "@/app/loading"
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions"
 
 interface WorkoutExerciseRowProps {
   exercise: WorkoutExercise
@@ -22,6 +23,9 @@ export default function WorkoutExerciseRow(props: WorkoutExerciseRowProps) {
   
   const [exercises, setExercises] = useAtom(workoutExercisesAtom);
   const [editExercises, _] = useAtom(editWorkoutExercisesAtom);
+
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
   const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false);
   const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
@@ -36,9 +40,13 @@ export default function WorkoutExerciseRow(props: WorkoutExerciseRowProps) {
   }
 
   const handleDeleteExercise = () => {
-    const tempExercises = [...exercises];
-    tempExercises.splice(exerciseIndex, 1);
-    setExercises(tempExercises);
+    try {
+      const tempExercises = [...exercises];
+      tempExercises.splice(exerciseIndex, 1);
+      setExercises(tempExercises);
+    } catch (error) {
+      addCaughtErrorLog(error, 'error handleDeleteExercise');
+    }
   };
 
   const openConfirm = (): Promise<boolean> => {
@@ -63,26 +71,38 @@ export default function WorkoutExerciseRow(props: WorkoutExerciseRowProps) {
   };
 
   const handleCopyExercise = () => {
-    const tempExercises = [...exercises];
-    const copy = cloneDeep(exercises[exerciseIndex]);
-    tempExercises.splice(exerciseIndex, 0, copy);
-    setExercises(tempExercises);
+    try {
+      const tempExercises = [...exercises];
+      const copy = cloneDeep(exercises[exerciseIndex]);
+      tempExercises.splice(exerciseIndex, 0, copy);
+      setExercises(tempExercises);
+    } catch (error) {
+      addCaughtErrorLog(error, 'error handleCopyExercise');
+    }
   };
 
   const handleMoveUp = () => {
-    const tempExercises = [...exercises];
-    const tempExercise = exercises[exerciseIndex];
-    tempExercises[exerciseIndex] = tempExercises[exerciseIndex - 1];
-    tempExercises[exerciseIndex - 1] = tempExercise;
-    setExercises(tempExercises);
+    try {
+      const tempExercises = [...exercises];
+      const tempExercise = exercises[exerciseIndex];
+      tempExercises[exerciseIndex] = tempExercises[exerciseIndex - 1];
+      tempExercises[exerciseIndex - 1] = tempExercise;
+      setExercises(tempExercises);
+    } catch (error) {
+      addCaughtErrorLog(error, 'error handleMoveUp');
+    }
   };
 
   const handleMoveDown = () => {
-    const tempExercises = [...exercises];
-    const tempExercise = exercises[exerciseIndex];
-    tempExercises[exerciseIndex] = tempExercises[exerciseIndex + 1];
-    tempExercises[exerciseIndex + 1] = tempExercise;
-    setExercises(tempExercises);
+    try {
+      const tempExercises = [...exercises];
+      const tempExercise = exercises[exerciseIndex];
+      tempExercises[exerciseIndex] = tempExercises[exerciseIndex + 1];
+      tempExercises[exerciseIndex + 1] = tempExercise;
+      setExercises(tempExercises);
+    } catch (error) {
+      addCaughtErrorLog(error, 'error handleMoveDown');
+    }
   };
 
   return (

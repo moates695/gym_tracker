@@ -3,6 +3,8 @@ import { View, StyleSheet, PanResponder } from 'react-native';
 import { GLView } from 'expo-gl';
 import { Renderer } from 'expo-three';
 import * as THREE from 'three';
+import { useSetAtom } from 'jotai';
+import { addCaughtErrorLogAtom, addErrorLogAtom } from '@/store/actions';
 
 export type Point3D = { x: number; y: number; z: number };
 
@@ -15,33 +17,50 @@ export default function ThreeAxisGraph(props: ThreeAxisGraphProps) {
   
   // const rotationRef = useRef({ x: 0, y: 0 });
   
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
+
   const normMax = 100;
   const rotationPoint = normMax / 2;
   const rotationRef = useRef({ x: rotationPoint, y: rotationPoint });
 
   const getMinMax = (points: Point3D[]) => {
-    const xs = points.map(p => p.x);
-    const ys = points.map(p => p.y);
-    const zs = points.map(p => p.z);
+    try {
+      const xs = points.map(p => p.x);
+      const ys = points.map(p => p.y);
+      const zs = points.map(p => p.z);
 
-    return {
-      x: { min: Math.min(...xs), max: Math.max(...xs) },
-      y: { min: Math.min(...ys), max: Math.max(...ys) },
-      z: { min: Math.min(...zs), max: Math.max(...zs) }
-    };
+      return {
+        x: { min: Math.min(...xs), max: Math.max(...xs) },
+        y: { min: Math.min(...ys), max: Math.max(...ys) },
+        z: { min: Math.min(...zs), max: Math.max(...zs) }
+      };
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getMinMax');
+      return {
+        x: { min: 0, max: 1 },
+        y: { min: 0, max: 1 },
+        z: { min: 0, max: 1 }
+      };
+    }
   };
 
   const normalizePoints = (points: Point3D[]): Point3D[] => {
-    const { x, y, z } = getMinMax(points);
+    try {
+      const { x, y, z } = getMinMax(points);
 
-    const normalize = (val: number, min: number, max: number) =>
-      max === min ? 0 : ((val - min) / (max - min)) * normMax;
+      const normalize = (val: number, min: number, max: number) =>
+        max === min ? 0 : ((val - min) / (max - min)) * normMax;
 
-    return points.map(p => ({
-      x: normalize(p.x, x.min, x.max),
-      y: normalize(p.y, y.min, y.max),
-      z: normalize(p.z, z.min, z.max)
-    }));
+      return points.map(p => ({
+        x: normalize(p.x, x.min, x.max),
+        y: normalize(p.y, y.min, y.max),
+        z: normalize(p.z, z.min, z.max)
+      }));
+    } catch (error) {
+      addCaughtErrorLog(error, 'error normalizePoints');
+      return [];
+    }
   };
 
   const normalizedPoints = normalizePoints(points);

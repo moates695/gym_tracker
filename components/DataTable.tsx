@@ -13,6 +13,7 @@ interface DataTableProps<H extends readonly string[], V> {
   tableData: TableData<H, V>
   capitalise?: boolean
   numRows?: number
+  shade?: boolean
 }
 
 type RowType = Record<string, string | number>;
@@ -21,7 +22,7 @@ type RowType = Record<string, string | number>;
 // todo: for low number of points (say 2), do not need to repear X axis markings
 
 export default function DataTable(props: DataTableProps<string[], string | number>) {
-  const { tableData, capitalise = true, numRows = 10 } = props;
+  const { tableData, capitalise = true, numRows = 10, shade = false } = props;
 
   const [pageIndex, setPageIndex] = useState<number>(0); 
 
@@ -59,38 +60,6 @@ export default function DataTable(props: DataTableProps<string[], string | numbe
         marginBottom: 10,
       }}
     >
-      {/* <View>
-        <Grid 
-          style={{
-            marginBottom: 5, 
-            flexDirection: 'column',
-            flex: 0,
-          }}
-        >
-          <Row style={styles.gridRow}>
-            {tableData.headers.map((header, index) => {
-              return (
-                <Col key={index}>
-                  <Text style={styles.text}>{!capitalise || header === '' ? header : header.charAt(0).toUpperCase() + header.slice(1)}</Text>
-                </Col>
-              )
-            })}
-          </Row>
-          {rows.map((row, rowIndex) => {
-            return (
-              <Row key={rowIndex} style={[styles.gridRow, {flexWrap: 'nowrap', minHeight: 'auto', overflow: 'visible'}]}>
-                {tableData.headers.map((header, colIndex) => {
-                  return (
-                    <Col key={colIndex} style={{flex: 1}}>
-                      <Text style={[styles.text]}>{row[header]}</Text>
-                    </Col>
-                  )
-                })}
-              </Row>
-            )
-          })}
-        </Grid>
-      </View> */}
       <View>
         <Grid 
           style={{
@@ -99,11 +68,11 @@ export default function DataTable(props: DataTableProps<string[], string | numbe
             flex: 0,
           }}
         >
-          <Row style={{flex: 0}}>
+          <Row style={{flex: 0, padding: 4}}>
             {tableData.headers.map((header, index) => {
               return (
                 <Col key={index}>
-                  <Text style={styles.text}>
+                  <Text style={[styles.text, {fontWeight: 700}]}>
                     {!capitalise || header === '' ? header : header.charAt(0).toUpperCase() + header.slice(1)}
                   </Text>
                 </Col>
@@ -112,7 +81,14 @@ export default function DataTable(props: DataTableProps<string[], string | numbe
           </Row>
           {rows.map((row, rowIndex) => {
             return (
-              <Row key={rowIndex} style={{flex: 0}}>
+              <Row 
+                key={rowIndex} 
+                style={{
+                  flex: 0,
+                  backgroundColor: shade ? (rowIndex % 2 ? '#000000': '#222328ff') : 'transparent',
+                  borderRadius: 5,
+                  padding: 4
+                }}>
                 {tableData.headers.map((header, colIndex) => {
                   return (
                     <Col key={colIndex} style={{flex: 1}}>

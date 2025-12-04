@@ -1,10 +1,11 @@
 import LoadingScreen from "@/app/loading";
 import DataTable, { TableData } from "@/components/DataTable";
-import { fetchWrapper } from "@/middleware/helpers";
+import { fetchWrapper, formatMagnitude, formatMinutes } from "@/middleware/helpers";
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 import { workoutTotalStatsAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { Stack, useRouter } from "expo-router";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import React, { Suspense, useEffect, useState } from "react";
 import { SafeAreaView, View, StyleSheet, Text, TouchableOpacity } from "react-native";
 
@@ -13,6 +14,9 @@ export default function Stats() {
 
   const [workoutTotalStats, setWorkoutTotalStats] = useAtom(workoutTotalStatsAtom);
   const [loadingStats, setLoadingStats] = useState<boolean>(false);
+
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
   const fetchWorkoutTotalStats = async () => {
     setLoadingStats(true);
@@ -24,36 +28,35 @@ export default function Stats() {
       if (data === null || data.totals == null) throw new Error('result is empty');
       setWorkoutTotalStats(data.totals);
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'fetching workout totals');
     } finally {
       setLoadingStats(false);
     }
   };
 
-  // useEffect(() => {
-  //   if (workoutTotalStats !== null) return;
-  //   fetchWorkoutTotalStats();
-  // }, []);
+  useEffect(() => {
+    if (workoutTotalStats !== null) return;
+    fetchWorkoutTotalStats();
+  }, []);
 
   const tableData1: TableData<string[], string | number> = {
     headers: ['volume','sets','reps'],
     rows: [
       {
-        'volume': parseFloat((workoutTotalStats?.volume ?? 0).toFixed(2)),
-        'sets': workoutTotalStats?.num_sets ?? 0,
-        'reps': workoutTotalStats?.reps ?? 0,
+        'volume': formatMagnitude(workoutTotalStats?.volume ?? 0),
+        'sets': formatMagnitude(workoutTotalStats?.num_sets ?? 0),
+        'reps': formatMagnitude(workoutTotalStats?.reps ?? 0),
       }
     ]
   }
 
-  // todo: convert duration into string of mins, hours, days etc
   const tableData2: TableData<string[], string | number> = {
     headers: ['duration','workouts','exercises'],
     rows: [
       {
-        'duration': Math.round(workoutTotalStats?.duration ?? 0),
-        'workouts': workoutTotalStats?.num_workouts ?? 0,
-        'exercises': workoutTotalStats?.num_exercises ?? 0,
+        'duration': formatMinutes(Math.round(workoutTotalStats?.duration ?? 0)),
+        'workouts': formatMagnitude(workoutTotalStats?.num_workouts ?? 0),
+        'exercises': formatMagnitude(workoutTotalStats?.num_exercises ?? 0),
       }
     ]
   }
@@ -72,7 +75,9 @@ export default function Stats() {
       )
     } else if (workoutTotalStats === null) {
       return (
-        <Text style={commonStyles.text}>stats haven't loaded</Text> 
+        <View style={{height: 100, justifyContent: 'center', alignItems: 'center'}}>
+          <Text style={commonStyles.text}>stats haven't loaded</Text> 
+        </View>
       )
     } else {
       return (
@@ -81,6 +86,7 @@ export default function Stats() {
             width: '100%',
             height: 120,
             justifyContent: 'center',
+            marginBottom: 20,
           }}
         >
           <DataTable tableData={tableData1} />

@@ -6,12 +6,13 @@ import { fetchWrapper } from "@/middleware/helpers";
 import { LeaderboardData, repsLeaderboardAtom, setLeaderboardAtom, volumeLeaderboardAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useRouter } from "expo-router";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import cloneDeep from "lodash/cloneDeep";
 import { OptionsObject } from "@/components/ChooseExerciseModal";
 import { identity } from "lodash";
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 
 type LeaderboardType = 'overall' | 'exercise'
 interface LeaderboardOption {
@@ -66,6 +67,9 @@ type ExercisesMeta = Record<string, ExerciseMetaValue>;
 
 export default function StatsDistribution() {
   const router = useRouter();
+
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
   const [loadingStats, setLoadingStats] = useState<boolean>(false);
   const [loadingExercisesMeta, setLoadingExercisesMeta] = useState<boolean>(false);
@@ -181,15 +185,8 @@ export default function StatsDistribution() {
       updateVariationOptions(exercisesMeta);
       setVariationValue('base');
 
-      // const variationIds = Object.keys(exercisesMeta[exerciseId].variations); 
-      // if (variationIds.length === 0) {
-      //   setVariationValue('base');
-      // } else if (variationValue === null || !(variationValue in exercisesMeta[exerciseId].variations)) {
-      //   setVariationValue(variationIds[0]);
-      // }
-
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'error stats/exercises-meta')
     } finally {
       setLoadingExercisesMeta(false);
     }
@@ -221,7 +218,7 @@ export default function StatsDistribution() {
       }
 
     } catch (error) {
-      console.log(error)
+      addCaughtErrorLog(error, 'error stats/exercises-meta')
       setLeaderboardData(null);
     } finally {
       setLoadingStats(false);

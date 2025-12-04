@@ -3,10 +3,11 @@ import ChooseExerciseItem from "@/components/ChooseExerciseItem";
 import ExerciseListFilter from "@/components/ExerciseListFilter";
 import ExerciseStatsItem from "@/components/ExerciseStatsItem";
 import { fetchWrapper } from "@/middleware/helpers";
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 import { exerciseListAtom, ExerciseListItem } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useRouter } from "expo-router";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, FlatList } from "react-native";
 
@@ -20,6 +21,9 @@ export default function StatsExercises() {
   const [loadingExerciseList, setLoadingExerciseList] = useState<boolean>(false); 
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
+
   const handleExercisesRefresh = async () => {
     try {
       setLoadingExerciseList(true);
@@ -27,10 +31,10 @@ export default function StatsExercises() {
         route: 'exercises/list/all',
         method: 'GET'
       });
-      if (!data || !data.exercises) throw new Error('bas response');
+      if (!data || !data.exercises) throw new Error('bad response');
       setExercisesList(data.exercises);
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'error exercises/list/all')
       setExercisesList([]);
     } finally {
       setLoadingExerciseList(false);
@@ -53,7 +57,7 @@ export default function StatsExercises() {
         }}
       >
         <TouchableOpacity
-          style={[commonStyles.thinTextButton, {width: 50}]}
+          style={[commonStyles.thinTextButton, {width: 50, marginLeft: 12}]}
           onPress={handleExercisesRefresh}
           disabled={loadingExerciseList}
         >
@@ -61,7 +65,7 @@ export default function StatsExercises() {
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => setShowFilters(!showFilters)}
-          style={[commonStyles.thinTextButton]}
+          style={[commonStyles.thinTextButton, {marginRight: 12}]}
         >
           <Text style={commonStyles.text}>
             {showFilters ? 'hide filters' : 'show filters'}

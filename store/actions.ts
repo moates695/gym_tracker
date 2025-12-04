@@ -5,7 +5,8 @@ import { atom } from 'jotai';
 import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 import { Dispatch, SetStateAction } from "react";
 import _ from "lodash";
-import { loadingExerciseHistoryAtom } from "./general";
+import { ErrorLevel, errorLogsAtom, loadingExerciseHistoryAtom } from "./general";
+import { formatLocal, safeErrorMessage } from "@/middleware/helpers";
 
 export const updateLoadingExerciseHistoryAtom = atom(
   null,
@@ -18,3 +19,41 @@ export const updateLoadingExerciseHistoryAtom = atom(
   }
 )
 
+export const addErrorLogAtom = atom(
+  null,
+  async (get, set, message: string, level: ErrorLevel = 'error') => {
+    console.log(message);
+    try {
+      const tempLogs = await get(errorLogsAtom);
+      const newLength = tempLogs.unshift({
+        date_str: formatLocal(new Date()),
+        message, 
+        level
+      })
+      if (newLength > 100) tempLogs.pop();
+      set(errorLogsAtom, tempLogs);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+)
+
+export const addCaughtErrorLogAtom = atom(
+  null,
+  async (get, set, err: unknown, default_msg: string, level: ErrorLevel = 'error') => {
+    try {
+      const message = safeErrorMessage(err, default_msg);
+      console.log(message);
+      const tempLogs = await get(errorLogsAtom);
+      const newLength = tempLogs.unshift({
+        date_str: formatLocal(new Date()),
+        message, 
+        level
+      })
+      if (newLength > 100) tempLogs.pop();
+      set(errorLogsAtom, tempLogs);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+)
