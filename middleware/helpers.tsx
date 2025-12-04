@@ -211,3 +211,54 @@ export class SafeError extends Error {
     this.name = "SafeError";
   }
 }
+
+export const formatMinutes = (minutes: number): string => {
+  try {
+    const min = 1;
+    const hour = 60 * min;
+    const day = 24 * hour;
+
+    if (minutes < hour) {
+      return String(minutes);
+    }
+
+    const days = Math.floor(minutes / day);
+    const hours = Math.floor((minutes % day) / hour);
+    const mins = minutes % hour;
+
+    const pad = (n: number) => String(n).padStart(2, "0");
+
+    if (day <= 0) {
+      return `${pad(hours)}:${pad(mins)}`;
+    } else {
+      return `${pad(days)}:${pad(hours)}:${pad(mins)}`;
+    }
+
+  } catch (error) {
+    throw new SafeError('converting minutes into string')
+  }
+}
+
+export const formatMagnitude = (n: number): string => {
+  try {
+    const abs = Math.abs(n);
+
+    const units = [
+      { v: 1e12, s: "T" },
+      { v: 1e9,  s: "B" },
+      { v: 1e6,  s: "M" },
+      { v: 1e3,  s: "K" },
+    ];
+
+    for (const u of units) {
+      if (abs >= u.v) {
+        return (n / u.v).toFixed(3).replace(/\.0$/, "") + u.s;
+      }
+    }
+
+    return String(n);
+  
+  } catch (error) {
+    throw new SafeError('converting number into magnitude string');
+  }
+}
