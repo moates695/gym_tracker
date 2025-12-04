@@ -14,6 +14,7 @@ import { OptionsObject } from './ChooseExerciseModal';
 import { timestampToDateStr } from '../middleware/helpers'
 import DataTable, { TableData } from './DataTable';
 import Feather from '@expo/vector-icons/Feather';
+import { addErrorLogAtom, addCaughtErrorLogAtom } from '@/store/actions';
 
 // WORKOUT OVERVIEW DATA
 // list of exercises in the workout
@@ -131,6 +132,9 @@ export default function ExerciseData(props: ExerciseDataProps) {
   const [exercisesHistoricalData, setExercisesHistoricalData] = useAtom(exercisesHistoricalDataAtom);
   const loadableExercisesHistoricalData = useAtomValue(loadableExercisesHistoricalDataAtom);
   const loadingExerciseHistory = useAtomValue(loadingExerciseHistoryAtom);
+
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
   const exerciseHistory: ExerciseHistoryData = exercisesHistoricalData[exercise.id] ?? emptyExerciseHistoricalData;
 
@@ -323,23 +327,6 @@ export default function ExerciseData(props: ExerciseDataProps) {
       }
     </>
   )
-
-  // const get3DGraphPoints = (): Point3D[] => {
-  //   if (exerciseHistory === undefined) return [];
-  //   return [];
-
-  //   // const points: Point3D[] = [];
-  //   // for (const data of exerciseHistory["reps_sets_weight"]) {
-  //   //   points.push({
-  //   //     x: data.num_sets,
-  //   //     y: data.weight,
-  //   //     z: data.reps
-  //   //   })
-  //   // }
-  //   // return points;
-  // };
-
-  // const points3D = get3DGraphPoints();
   
   const repsSetsWeightComponent = (
     <>
@@ -390,49 +377,63 @@ export default function ExerciseData(props: ExerciseDataProps) {
   };
 
   const getCurrentPoints = (): LineGraphPoint[] => {
-    if (dataOptionValue !== 'history') return [];
-    if (historyGraphOptionValue !== 'weight_per_rep') {
-      return getCurrentPointsSets();
-    } else {
-      return getCurrentPointsReps();
+    try {
+      if (dataOptionValue !== 'history') return [];
+      if (historyGraphOptionValue !== 'weight_per_rep') {
+        return getCurrentPointsSets();
+      } else {
+        return getCurrentPointsReps();
+      }
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getCurrentPoints');
+      return [];
     }
   };
 
   const getCurrentPointsSets = (): LineGraphPoint[] => {
     const points: LineGraphPoint[] = [];
-    let setNum = 1;
-    for (const set_data of getValidSets(exercise)) {
-      for (let i = 0; i < set_data.num_sets; i++) {
-        let yValue = set_data.weight!;
-        if (historyGraphOptionValue === 'volume_per_set') {
-          yValue *= set_data.reps!
+    try {
+      let setNum = 1;
+      for (const set_data of getValidSets(exercise)) {
+        for (let i = 0; i < set_data.num_sets; i++) {
+          let yValue = set_data.weight!;
+          if (historyGraphOptionValue === 'volume_per_set') {
+            yValue *= set_data.reps!
+          }
+          points.push({
+            x: setNum,
+            y: yValue,
+          })
+          setNum++;
         }
-        points.push({
-          x: setNum,
-          y: yValue,
-        })
-        setNum++;
       }
+      return points;
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getCurrentPoints');
+      return [];
     }
-    return points;
   };
 
   const getCurrentPointsReps = (): LineGraphPoint[] => {
     const points: LineGraphPoint[] = [];
-    let repNum = 1; 
-    for (const set_data of getValidSets(exercise)) {
-      for (let i = 0; i < set_data.num_sets; i++) {
-        for (let j = 0; j < set_data.reps!; j++) {
-          points.push({
-            x: repNum,
-            y: set_data.weight ?? 0,
-          });
-          repNum++;
+    try {
+      let repNum = 1; 
+      for (const set_data of getValidSets(exercise)) {
+        for (let i = 0; i < set_data.num_sets; i++) {
+          for (let j = 0; j < set_data.reps!; j++) {
+            points.push({
+              x: repNum,
+              y: set_data.weight ?? 0,
+            });
+            repNum++;
+          }
         }
       }
+      return points;
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getCurrentPoints');
+      return [];
     }
-    return points;
-
   }; 
 
   // todo: filter time series points
@@ -457,12 +458,13 @@ export default function ExerciseData(props: ExerciseDataProps) {
       } else if (dataOptionValue === 'history') {
         points = exerciseHistory[dataOptionValue][historyListIndex].graph[historyGraphOptionValue];
       }
-    } catch (error) {
-      console.log(error);
-    }
+    
+      if (filterSeries) {
+        points = filterTimeSeries(points, timeSpanOptionValue);
+      }
 
-    if (filterSeries) {
-      points = filterTimeSeries(points, timeSpanOptionValue);
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getPoints');
     }
 
     return points;
@@ -490,7 +492,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
         tableData = exerciseHistory[dataOptionValue][historyListIndex].table;
       }
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'error getTableData');
     }
 
     return {

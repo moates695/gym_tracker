@@ -3,7 +3,8 @@ import { TextInput, View, Text, Switch, StyleSheet } from "react-native";
 import { useDropdown } from "./ExerciseData";
 import { ExerciseListItem, MuscleData, muscleGroupToTargetsAtom, WeightType } from "@/store/general";
 import { OptionsObject } from "./ChooseExerciseModal";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 
 type WeightTypeExtended = WeightType | 'all';
 interface WeightTypeOption {
@@ -27,6 +28,9 @@ export default function ExerciseListFilter(props: ExerciseListFilterProps) {
   const {showFilters, exercisesList, setDisplayedExercises} = props;
 
   const muscleGroupToTargets = useAtomValue(muscleGroupToTargetsAtom);
+
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
   const [searchBar, setSearchBar] = useState<string>('');
   const [customOnly, setCustomOnly] = useState<boolean>(false);
@@ -131,18 +135,21 @@ export default function ExerciseListFilter(props: ExerciseListFilterProps) {
   };
 
   const muscleDataMatchesFilters = (muscle_data: MuscleData[]): boolean => {
-    const threshold = Number(ratioOptionsValue);
-
-    for (const group_data of muscle_data) {
-      if (group_data.group_name !== muscleGroupValue) continue
-      for (const target_data of group_data.targets) {
-        if (muscleTargetValue !== 'all') {
-          if (target_data.target_name !== muscleTargetValue) continue
-          return target_data.ratio >= threshold
+    try {
+      const threshold = Number(ratioOptionsValue);
+      for (const group_data of muscle_data) {
+        if (group_data.group_name !== muscleGroupValue) continue
+        for (const target_data of group_data.targets) {
+          if (muscleTargetValue !== 'all') {
+            if (target_data.target_name !== muscleTargetValue) continue
+            return target_data.ratio >= threshold
+          }
+          if (target_data.ratio < threshold) continue
+          return true;
         }
-        if (target_data.ratio < threshold) continue
-        return true;
       }
+    } catch (error) {
+      
     }
 
     return false;

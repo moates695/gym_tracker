@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { TouchableOpacity, View, Text, StyleSheet, ScrollView, TextInput, Switch, FlatList } from "react-native";
 
 import { fetchWrapper } from "@/middleware/helpers";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { exerciseListAtom, MuscleData, muscleGroupToTargetsAtom, WorkoutExercise, WeightType, ExerciseListItem } from "@/store/general";
 import ChooseExerciseItem from "./ChooseExerciseItem";
 import { commonStyles } from "@/styles/commonStyles";
@@ -12,6 +12,7 @@ import { Dropdown } from "react-native-element-dropdown";
 import { useDropdown } from "./ExerciseData";
 import ExerciseListFilter from "./ExerciseListFilter";
 import LoadingScreen from "@/app/loading";
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 
 interface ChooseExerciseProps {
   onChoose: () => void
@@ -26,6 +27,9 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
   const { onChoose } = props;
   
   const [exercisesList, setExercisesList] = useAtom(exerciseListAtom);
+
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
   const [displayedExercises, setDisplayedExercises] = useState<ExerciseListItem[]>(exercisesList); 
   const [showFilters, setShowFilters] = useState<boolean>(false);  
@@ -42,6 +46,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
       setExercisesList(data.exercises);
     } catch (error) {
       console.log(error);
+      addCaughtErrorLog(error, 'error exercises/list/all')
       setExercisesList([]);
     } finally {
       setRefreshing(false);
