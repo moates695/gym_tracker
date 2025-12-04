@@ -4,7 +4,7 @@ import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
 import { useAtom, useAtomValue } from "jotai";
 import { muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, userDataAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
-import { calcBodyWeight, calcValidWeight, fetchWrapper, getValidSets } from "@/middleware/helpers";
+import { calcBodyWeight, calcValidWeight, fetchWrapper, formatMagnitude, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
 import { filterTimeSeries, timeSpanToMs, useDropdown } from "./ExerciseData";
 import { TimeSpanOption, TimeSpanOptionObject } from "./ExerciseData";
@@ -73,10 +73,10 @@ export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProp
   const currentTableData: TableData<string[], string | number> = {
     'headers': ['volume', 'reps', 'sets', 'exercises'],
     'rows': [{
-      volume: parseFloat(currentStats.volume.toFixed(2)),
-      reps: currentStats.reps,
-      sets: currentStats.num_sets,
-      exercises: currentStats.num_valid_exercises,
+      volume: formatMagnitude(currentStats.volume),
+      reps: formatMagnitude(currentStats.reps),
+      sets: formatMagnitude(currentStats.num_sets),
+      exercises: formatMagnitude(currentStats.num_valid_exercises),
     }]
    }
 
@@ -160,12 +160,12 @@ export default function WorkoutOverviewCurrent(props: WorkoutOverviewCurrentProp
 
   return (
     <>
-      <View style={styles.dataTableContainer}>
+      <View style={[styles.dataTableContainer, {marginBottom: 8}]}>
         <DataTable tableData={currentTableData}/>
       </View>
       <Text style={styles.text}>Choose a muscle level:</Text>
       {useDropdown(muscleTypeOptions, muscleTypeValue, setMuscleTypeValue)}
-      <Text style={styles.text}>Choose a contribution type:</Text>
+      <Text style={[styles.text, {marginTop: 4}]}>Choose a contribution type:</Text>
       {useDropdown(contributionTypeOptions, contributionTypeValue, setContributionTypeValue)}
       <MuscleGroupSvg
         valueMap={getValueMap()} 

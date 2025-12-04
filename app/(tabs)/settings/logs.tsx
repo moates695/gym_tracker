@@ -5,6 +5,8 @@ import { commonStyles } from "@/styles/commonStyles";
 import React from "react";
 import { FlatList, View, Text } from "react-native";
 
+// todo clear logs button with confirmation
+
 export default function LogsPage() {
   const { 
     value: errorLogs, 

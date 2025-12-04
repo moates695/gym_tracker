@@ -28,7 +28,7 @@ export default function TabStackHeader(props: TabStackHeaderProps) {
       </View>
       {pathname !== `/${tab}` &&
         <TouchableOpacity
-          style={commonStyles.textButton}
+          style={commonStyles.thinTextButton}
           onPress={() => router.replace(`/(tabs)/${tab}`)}
         >
           <Text style={styles.text}>back</Text>

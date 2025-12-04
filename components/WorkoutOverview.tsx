@@ -75,14 +75,16 @@ export default function WorkoutOverview(props: WorkoutOverviewProps) {
 
   const displayDataMap: Record<DisplayedDataType, JSX.Element> = {
     'current': <WorkoutOverviewCurrent />,
-    'history': <ErrorBoundary
-                  FallbackComponent={Fallback}
-                  onReset={() => {
-                    console.log('Attempting to reset the component...');
-                  }}
-                >
-                  <WorkoutOverviewHistorical />
-                </ErrorBoundary>
+    'history': (
+      <ErrorBoundary
+        FallbackComponent={Fallback}
+        onReset={() => {
+          console.log('Attempting to reset the component...');
+        }}
+      >
+        <WorkoutOverviewHistorical />
+      </ErrorBoundary>
+    )
   }
 
   return (
