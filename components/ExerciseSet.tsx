@@ -1,4 +1,4 @@
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { useEffect, useState } from "react";
 import React, { View, StyleSheet, Text, TextInput, TouchableOpacity, Image } from "react-native"
 import { emptySetData, SetClass, SetData, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
@@ -9,6 +9,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { commonStyles } from "@/styles/commonStyles";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useDropdown } from "./ExerciseData";
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 
 interface ExerciseSetProps {
   exercise: WorkoutExercise
@@ -44,6 +45,9 @@ export default function ExerciseSet(props: ExerciseSetProps) {
   const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false);
   const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
   
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
+
   const classOptions: SetClassOption[] = [
     { label: 'warmup', value: 'warmup' },
     { label: 'working', value: 'working' },
@@ -53,72 +57,73 @@ export default function ExerciseSet(props: ExerciseSetProps) {
   const [classOptionValue, setClassOptionValue] = useState<SetClass>(set_data.class);
 
   const handleUpdateInteger = (text: string, key: 'reps' | 'num_sets') => {
-    text = text.replace(/\D/g, '');
-    let num: any = parseInt(text);
-    if (isNaN(num)) num = null;
+    try {
+      text = text.replace(/\D/g, '');
+      let num: any = parseInt(text);
+      if (isNaN(num)) num = null;
 
-    const tempSetData: SetData[] = [...exercise.set_data];
-    tempSetData[setIndex][key] = num;
-    updateExerciseSetData(tempSetData);
+      const tempSetData: SetData[] = [...exercise.set_data];
+      tempSetData[setIndex][key] = num;
+      updateExerciseSetData(tempSetData);
+    } catch (error) {
+      addCaughtErrorLog(error, 'error handleUpdateInteger');
+    }
   }
 
   const handleUpdateWeight = (text: string) => {
-    let cleanedText = '';
-    if (exercise.is_body_weight) {
-      cleanedText = text.replace(/(?!^)-|[^0-9.-]/g, '');
-    } else {
-      cleanedText = text.replace(/[^0-9.]/g, '');
-    }
-    const formattedText = formatFloatString(cleanedText);
+    try {
+      let cleanedText = '';
+      if (exercise.is_body_weight) {
+        cleanedText = text.replace(/(?!^)-|[^0-9.-]/g, '');
+      } else {
+        cleanedText = text.replace(/[^0-9.]/g, '');
+      }
+      const formattedText = formatFloatString(cleanedText);
 
-    setDisplayWeight(formattedText);
+      setDisplayWeight(formattedText);
 
-    let weight = null;
-    if (formattedText !== '' && formattedText !== '.') {
-      weight = parseFloat(formattedText) || 0;
+      let weight = null;
+      if (formattedText !== '' && formattedText !== '.') {
+        weight = parseFloat(formattedText) || 0;
+      }
+      if (!exercise.is_body_weight && weight !== null) {
+        weight = Math.abs(weight);
+      }
+      const tempSetData: SetData[] = [...exercise.set_data];
+      tempSetData[setIndex].weight = weight;
+      updateExerciseSetData(tempSetData);
+
+    } catch (error) {
+      addCaughtErrorLog(error, 'error handleUpdateWeight');
     }
-    if (!exercise.is_body_weight && weight !== null) {
-      weight = Math.abs(weight);
-    }
-    const tempSetData: SetData[] = [...exercise.set_data];
-    tempSetData[setIndex].weight = weight;
-    updateExerciseSetData(tempSetData);
   };
-
-  // useEffect(() => {
-
-  // }, [exercises[exerciseIndex]?.set_data?.[setIndex]]);
 
   const updateExerciseSetData = (set_data: any) => {
-    const tempExercises: WorkoutExercise[] = [...exercises];
-    tempExercises[exerciseIndex].set_data = set_data;
-    setExercises(tempExercises);
+    try {
+      const tempExercises: WorkoutExercise[] = [...exercises];
+      tempExercises[exerciseIndex].set_data = set_data;
+      setExercises(tempExercises);
+    } catch (error) {
+      addCaughtErrorLog(error, 'error updateExerciseSetData');
+    }
   };
 
-  const handleShiftReps = (increase: boolean) => {
-    const tempSetData = [...exercise.set_data];
-    let num = tempSetData[setIndex].reps;
-    if (increase) {
-      num = num !== null ? ++num : 1
-    } else {
-      if (num === 0 || num === null) return;
-      num = --num;
+  const handleShift = (increase: boolean, key: 'reps' | 'num_sets') => {
+    try {
+      const tempSetData = [...exercise.set_data];
+      let num = tempSetData[setIndex][key];
+      if (increase) {
+        num = num !== null ? ++num : 1
+      } else {
+        if (num === 0 || num === null) return;
+        num = --num;
+      }
+      tempSetData[setIndex][key] = num;
+      updateExerciseSetData(tempSetData);
+    
+    } catch (error) {
+      addCaughtErrorLog(error, 'error handleShift')
     }
-    tempSetData[setIndex].reps = num;
-    updateExerciseSetData(tempSetData);
-  }
-
-  const handleShiftSet = (increase: boolean) => {
-    const tempSetData = [...exercise.set_data];
-    let num = tempSetData[setIndex].num_sets;
-    if (increase) {
-      num = num !== null ? ++num : 1
-    } else {
-      if (num === 0 || num === null) return;
-      num = --num;
-    }
-    tempSetData[setIndex].num_sets = num;
-    updateExerciseSetData(tempSetData);
   }
 
   useEffect(() => {
@@ -126,32 +131,45 @@ export default function ExerciseSet(props: ExerciseSetProps) {
   }, [exercises[exerciseIndex]?.set_data?.[setIndex]]);
   
   const formatFloatString = (text: string): string => {
-    const parts = text.split('.');
-    let formattedText = parts[0];
-    if (parts.length > 1) {
-      formattedText += '.' + parts[1].substring(0, 3);
+    try {
+      const parts = text.split('.');
+      let formattedText = parts[0];
+      if (parts.length > 1) {
+        formattedText += '.' + parts[1].substring(0, 3);
+      }
+      return formattedText;
+    } catch (error) {
+      addCaughtErrorLog(error, 'error formatFloatString');
+      return '';
     }
-    return formattedText;
   };
 
   const handleCopySet = () => {
-    const tempSetData = [...exercise.set_data];
-    const tempSet = { ...tempSetData[setIndex] };
-    tempSetData.push(tempSet);
-    updateExerciseSetData(tempSetData);
+    try {
+      const tempSetData = [...exercise.set_data];
+      const tempSet = { ...tempSetData[setIndex] };
+      tempSetData.push(tempSet);
+      updateExerciseSetData(tempSetData);
+    } catch (error) {
+      addCaughtErrorLog(error, 'error handleCopySet');
+    }
   }
 
   const handleDeleteSet = () => {
-    let tempSetData = [...exercise.set_data];
-    setDisplayWeight('');
-    if (tempSetData.length <= 1) {
-      tempSetData = [{ ...emptySetData }]
-      updateExerciseSetData(tempSetData);
-      return;
-    }
+    try {
+      let tempSetData = [...exercise.set_data];
+      setDisplayWeight('');
+      if (tempSetData.length <= 1) {
+        tempSetData = [{ ...emptySetData }]
+        updateExerciseSetData(tempSetData);
+        return;
+      }
 
-    tempSetData.splice(setIndex, 1);
-    updateExerciseSetData(tempSetData);
+      tempSetData.splice(setIndex, 1);
+      updateExerciseSetData(tempSetData);
+    } catch (error) {
+      addCaughtErrorLog(error, 'error handleDeleteSet');
+    }
   }
 
   const openConfirm = (): Promise<boolean> => {
@@ -176,31 +194,39 @@ export default function ExerciseSet(props: ExerciseSetProps) {
   };
 
   const handleMoveUp = () => {
-    const tempSetData = [...exercise.set_data];
-    const tempSet = tempSetData[setIndex];
-    tempSetData[setIndex] = tempSetData[setIndex - 1];
-    tempSetData[setIndex - 1] = tempSet;
-    updateExerciseSetData(tempSetData);
+    try {
+      const tempSetData = [...exercise.set_data];
+      const tempSet = tempSetData[setIndex];
+      tempSetData[setIndex] = tempSetData[setIndex - 1];
+      tempSetData[setIndex - 1] = tempSet;
+      updateExerciseSetData(tempSetData);
+    } catch (error) {
+      addCaughtErrorLog(error, 'error handleMoveUp');
+    }
   };
 
   const handleMoveDown = () => {
-    const tempSetData = [...exercise.set_data];
-    const tempSet = tempSetData[setIndex];
-    tempSetData[setIndex] = tempSetData[setIndex + 1];
-    tempSetData[setIndex + 1] = tempSet;
-    updateExerciseSetData(tempSetData);
+    try {
+      const tempSetData = [...exercise.set_data];
+      const tempSet = tempSetData[setIndex];
+      tempSetData[setIndex] = tempSetData[setIndex + 1];
+      tempSetData[setIndex + 1] = tempSet;
+      updateExerciseSetData(tempSetData);
+    } catch (error) {
+      addCaughtErrorLog(error, 'error handleMoveDown');
+    }
   };
 
   const handleUpdateSetClass = (newClass: SetClass) => {
-    setClassOptionValue(newClass);
-
-    const tempSetData = [...exercise.set_data];
-    const tempSet = tempSetData[setIndex];
-    tempSet.class = newClass
-    // if (newClass === 'dropset') {
-    //   tempSet.num_sets = 1;
-    // }
-    updateExerciseSetData(tempSetData);
+    try {
+      setClassOptionValue(newClass);
+      const tempSetData = [...exercise.set_data];
+      const tempSet = tempSetData[setIndex];
+      tempSet.class = newClass
+      updateExerciseSetData(tempSetData);
+    } catch (error) {
+      addCaughtErrorLog(error, 'error handleUpdateSetClass');
+    }
   };
 
   useEffect(() => {
@@ -208,17 +234,19 @@ export default function ExerciseSet(props: ExerciseSetProps) {
   }, [set_data])
 
   const cycleSetClass = () => {
-    const order: SetClass[] = ['warmup','working','dropset','cooldown']
-    let index = order.indexOf(set_data.class);
-    if (index === -1) return;
-    index++;
-    if (index >= order.length) {
-      index = 0;
+    try {
+      const order: SetClass[] = ['warmup','working','dropset','cooldown']
+      let index = order.indexOf(set_data.class);
+      if (index === -1) return;
+      index++;
+      if (index >= order.length) {
+        index = 0;
+      }
+      handleUpdateSetClass(order[index]);
+    } catch (error) {
+      addCaughtErrorLog(error, 'error cycleSetClass');
     }
-    handleUpdateSetClass(order[index]);
   };
-
-
 
   return (
     <>
@@ -298,7 +326,7 @@ export default function ExerciseSet(props: ExerciseSetProps) {
                 resizeMode="contain"
               />
             </TouchableOpacity>
-            <View 
+            <View
               style={{
                 flex: 1,
                 flexDirection: 'row',
@@ -308,9 +336,9 @@ export default function ExerciseSet(props: ExerciseSetProps) {
               <ShiftTextInput
                 onChangeText={(text) => handleUpdateInteger(text, 'reps')}
                 value={(set_data.reps ?? '').toString()}
-                shiftPress={(increase: boolean) => handleShiftReps(increase)}
+                shiftPress={(increase: boolean) => handleShift(increase, 'reps')}
               />
-              <TextInput 
+              <TextInput
                 style={styles.textInput}
                 keyboardType="number-pad"
                 onChangeText={(text) => handleUpdateWeight(text)}
@@ -320,7 +348,7 @@ export default function ExerciseSet(props: ExerciseSetProps) {
                 <ShiftTextInput
                   onChangeText={(text) => handleUpdateInteger(text, 'num_sets')}
                   value={(set_data.num_sets ?? '').toString()}
-                  shiftPress={(increase: boolean) => handleShiftSet(increase)}
+                  shiftPress={(increase: boolean) => handleShift(increase, 'num_sets')}
                 />
               :
                 <View style={{width: '30%', justifyContent: 'center', alignItems: 'center'}}>

@@ -4,11 +4,12 @@ import { commonStyles } from "@/styles/commonStyles";
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import {RadarChart} from '@salmonco/react-native-radar-chart';
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import DataTable from "./DataTable";
 import { OptionsObject } from "./ChooseExerciseModal";
 import { useDropdown } from "./ExerciseData";
 import MuscleGroupSvg from "./MuscleGroupSvg";
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 
 interface HistoryStatsItemProps {
   stats: WorkoutHistoryStats
@@ -39,6 +40,9 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
 
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
+
   const displayOptions: DisplayOption[] = [
     { label: 'heatmap', value: 'heatmap' },
     { label: 'radar chart', value: 'radar' },
@@ -60,14 +64,19 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
   const [muscleOptionValue, setMuscleOptionValue] = useState<MuscleOptionValue>('target');
 
   const getFriendlyDuration = (duration_secs: number): string => {
-    const seconds = duration_secs % 60;
-    const minutes = Math.floor(duration_secs / 60) % 60;
-    const hours = Math.floor(duration_secs / 60 / 60);
+    try {
+      const seconds = duration_secs % 60;
+      const minutes = Math.floor(duration_secs / 60) % 60;
+      const hours = Math.floor(duration_secs / 60 / 60);
 
-    if (hours === 0) {
-      return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+      if (hours === 0) {
+        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+      }
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getFriendlyDuration');
+      return 'error';
     }
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
   }
 
   const getTableData = () => {
@@ -110,7 +119,7 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
         }
       }
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'error getValueMap');
     }
     return map;
   };

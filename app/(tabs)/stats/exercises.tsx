@@ -31,7 +31,7 @@ export default function StatsExercises() {
         route: 'exercises/list/all',
         method: 'GET'
       });
-      if (!data || !data.exercises) throw new Error('bas response');
+      if (!data || !data.exercises) throw new Error('bad response');
       setExercisesList(data.exercises);
     } catch (error) {
       addCaughtErrorLog(error, 'error exercises/list/all')

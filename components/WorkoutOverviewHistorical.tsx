@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Text, TouchableOpacity, Modal, Switch } from "react-native";
 import { commonStyles } from "@/styles/commonStyles";
 import WorkoutFinishOptions from "./WorkoutFinishOptions";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { loadablePreviousWorkoutStatsAtom, loadingPreviousWorkoutStatsAtom, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, userDataAtom, WorkoutExercise, workoutExercisesAtom, workoutStartTimeAtom } from "@/store/general";
 import { calcBodyWeight, calcValidWeight, fetchWrapper, getValidSets } from "@/middleware/helpers";
 import MuscleGroupSvg from "./MuscleGroupSvg";
@@ -13,6 +13,7 @@ import DataTable from "./DataTable";
 import LineGraph, { LineGraphPoint } from "./LineGraph";
 import { OptionsObject } from "./ChooseExerciseModal";
 import LoadingScreen from "@/app/loading";
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 
 interface WorkoutOverviewHistoricalProps {}
 
@@ -42,6 +43,9 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
   const workoutStartTime = useAtomValue(workoutStartTimeAtom);
   const loadingPreviousWorkoutStats = useAtomValue(loadingPreviousWorkoutStatsAtom);
   const userData = useAtomValue(userDataAtom);
+
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom)
 
   const historyComparisonOptions: HistoryComparisonOption[] = [
     { label: 'workout totals', value: 'workout' },
@@ -95,16 +99,19 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
   const [workoutDuration, setWorkoutDuration] = useState<number>(0);
 
   useEffect(() => {
-    if (workoutStartTime === null) return;
+    try {
+      if (workoutStartTime === null) return;
 
-    const updateDuration = () => {
-      setWorkoutDuration(Math.floor((Date.now() - workoutStartTime) / 1000));
-    };
+      const updateDuration = () => {
+        setWorkoutDuration(Math.floor((Date.now() - workoutStartTime) / 1000));
+      };
 
-    updateDuration();
-    const interval = setInterval(updateDuration, 5000);
-    return () => clearInterval(interval);
-
+      updateDuration();
+      const interval = setInterval(updateDuration, 5000);
+      return () => clearInterval(interval);
+    } catch (error) {
+      addCaughtErrorLog(error, 'error updating workout duration in overview');
+    }
   }, [workoutStartTime])
 
   const handleChooseMuscleGroup = (value: string) => {
@@ -129,63 +136,76 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
       }
       return filterTimeSeries(points, timeSpanOptionValue);
     } catch (error) {
-      console.log(`getHistoryPoints error: ${error}`)
+      addCaughtErrorLog(error, 'error getHistoryPoints');
       return [];
     }
   };
 
   const getHistoryWorkoutPoints = (): LineGraphPoint[] => {
     const points: LineGraphPoint[] = [];
-    for (const workout of overviewHistoricalStats) {
-      let yValue = null;
-      switch (totalsContributionValue) {
-        case 'volume':
-          yValue = workout.totals.volume;
-          break;
-        case 'reps':
-          yValue = workout.totals.reps;
-          break;
-        case 'num_sets':
-          yValue = workout.totals.num_sets;
-          break;
-        case 'duration':
-          yValue = workout.duration;
-          break;
-        case 'num_exercises':
-          yValue = workout.num_exercises;
-          break;
+    try {
+      for (const workout of overviewHistoricalStats) {
+        let yValue = null;
+        switch (totalsContributionValue) {
+          case 'volume':
+            yValue = workout.totals.volume;
+            break;
+          case 'reps':
+            yValue = workout.totals.reps;
+            break;
+          case 'num_sets':
+            yValue = workout.totals.num_sets;
+            break;
+          case 'duration':
+            yValue = workout.duration;
+            break;
+          case 'num_exercises':
+            yValue = workout.num_exercises;
+            break;
+        }
+        points.push({
+          x: Math.floor(workout.started_at),
+          y: yValue
+        })
       }
-      points.push({
-        x: Math.floor(workout.started_at),
-        y: yValue
-      })
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getHistoryWorkoutPoints');
+      return [];
     }
     return points;
   };
 
   const getHistoryMuscleGroupPoints = (): LineGraphPoint[] => {
     const points: LineGraphPoint[] = [];
-    for (const stats of overviewHistoricalStats) {
-      if (!(muscleGroupValue in stats.muscles)) continue; 
-      points.push({
-        x: Math.floor(stats.started_at),
-        y: Object.values(stats.muscles[muscleGroupValue]).reduce((acc, val) => acc + val[contributionTypeValue], 0)
-      })
+    try {
+      for (const stats of overviewHistoricalStats) {
+        if (!(muscleGroupValue in stats.muscles)) continue; 
+        points.push({
+          x: Math.floor(stats.started_at),
+          y: Object.values(stats.muscles[muscleGroupValue]).reduce((acc, val) => acc + val[contributionTypeValue], 0)
+        })
+      }
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getHistoryMuscleGroupPoints');
     }
     return points;
   };
 
   const getHistoryMuscleTargetPoints = (): LineGraphPoint[] => {
     const points: LineGraphPoint[] = [];
-    for (const stats of overviewHistoricalStats) {
-      if (!(muscleGroupValue in stats.muscles)) continue; 
-      for (const [targetName, targetStats] of Object.entries(stats.muscles[muscleGroupValue])) {
-        if (targetName != muscleTargetValue) continue;
-        points.push({
-          x: Math.floor(stats.started_at),
-          y: targetStats[contributionTypeValue]
-        })
+    try {
+      for (const stats of overviewHistoricalStats) {
+        if (!(muscleGroupValue in stats.muscles)) continue; 
+        for (const [targetName, targetStats] of Object.entries(stats.muscles[muscleGroupValue])) {
+          if (targetName != muscleTargetValue) continue;
+          points.push({
+            x: Math.floor(stats.started_at),
+            y: targetStats[contributionTypeValue]
+          })
+        }
       }
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getHistoryMuscleTargetPoints');
     }
     return points;
   };
@@ -197,72 +217,83 @@ export default function WorkoutOverviewHistorical(props: WorkoutOverviewHistoric
       }
       return getBarValueMuscle();
     } catch (error) {
-      console.log(error);
+      addCaughtErrorLog(error, 'error getBarValue');
       return 0;
     }
   };
 
   const getBarValueWorkout = (): number => {
-    if (totalsContributionValue === 'duration') {
-      return workoutDuration;
-    }
+    try {
+      if (totalsContributionValue === 'duration') {
+        return workoutDuration;
+      }
 
-    let numValidExercises = 0
-    let value = 0
-    for (const exercise of exercises) {
-      const validSets = getValidSets(exercise);
-      if (validSets.length > 0) numValidExercises++; 
+      let numValidExercises = 0
+      let value = 0
+      for (const exercise of exercises) {
+        const validSets = getValidSets(exercise);
+        if (validSets.length > 0) numValidExercises++; 
 
-      for (const set_data of validSets) {
-        if (totalsContributionValue === 'volume') {
-          const weight = calcValidWeight(exercise, userData, set_data);
-          value += set_data.reps * weight * set_data.num_sets;
-        } else if (totalsContributionValue === 'reps') {
-          value += set_data.reps * set_data.num_sets;
-        } else {
-          value += set_data.num_sets;
+        for (const set_data of validSets) {
+          if (totalsContributionValue === 'volume') {
+            const weight = calcValidWeight(exercise, userData, set_data);
+            value += set_data.reps * weight * set_data.num_sets;
+          } else if (totalsContributionValue === 'reps') {
+            value += set_data.reps * set_data.num_sets;
+          } else {
+            value += set_data.num_sets;
+          }
         }
       }
-    }
 
-    if (totalsContributionValue === 'num_exercises') {
-      return numValidExercises;
+      if (totalsContributionValue === 'num_exercises') {
+        return numValidExercises;
+      }
+      return value;
+
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getBarValueWorkout');
+      return 0;
     }
-    return value;
   };
 
   const getBarValueMuscle = (): number => {
-    let value = 0;
-    for (const exercise of exercises) {
-      const valid_sets = getValidSets(exercise);
-      if (valid_sets.length === 0) continue;
+    try {
+      let value = 0;
+      for (const exercise of exercises) {
+        const valid_sets = getValidSets(exercise);
+        if (valid_sets.length === 0) continue;
 
-      let maxRatio = -1;
-      for (const muscle_data of exercise.muscle_data) {
-        if (muscle_data.group_name !== muscleGroupValue) continue;
-        for (const target_data of muscle_data.targets) {
-          // if (historyComparisonValue === 'muscle_target' && target_data.target_name != muscleTargetValue) continue;
-          if (muscleTargetValue !== 'all' && target_data.target_name != muscleTargetValue) continue;
-          if (target_data.ratio <= maxRatio) continue;
-          maxRatio = target_data.ratio;
+        let maxRatio = -1;
+        for (const muscle_data of exercise.muscle_data) {
+          if (muscle_data.group_name !== muscleGroupValue) continue;
+          for (const target_data of muscle_data.targets) {
+            // if (historyComparisonValue === 'muscle_target' && target_data.target_name != muscleTargetValue) continue;
+            if (muscleTargetValue !== 'all' && target_data.target_name != muscleTargetValue) continue;
+            if (target_data.ratio <= maxRatio) continue;
+            maxRatio = target_data.ratio;
+          }
+        }
+
+        if (maxRatio === -1) continue;
+
+        for (const set_data of getValidSets(exercise)) {
+          if (contributionTypeValue === 'volume') {
+            const weight = calcValidWeight(exercise, userData, set_data);
+            value += set_data.reps * weight * set_data.num_sets * (maxRatio / 10);
+          } else if (contributionTypeValue === 'reps') {
+            value += set_data.reps * set_data.num_sets;
+          } else {
+            value += set_data.num_sets;
+          }
         }
       }
 
-      if (maxRatio === -1) continue;
-
-      for (const set_data of getValidSets(exercise)) {
-        if (contributionTypeValue === 'volume') {
-          const weight = calcValidWeight(exercise, userData, set_data);
-          value += set_data.reps * weight * set_data.num_sets * (maxRatio / 10);
-        } else if (contributionTypeValue === 'reps') {
-          value += set_data.reps * set_data.num_sets;
-        } else {
-          value += set_data.num_sets;
-        }
-      }
+      return value;
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getBarValueMuscle');
+      return 0;
     }
-
-    return value;
   };
 
   if (loadableOverviewHistoricalStats.state === 'loading' || loadingPreviousWorkoutStats) {

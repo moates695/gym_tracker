@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { Text, StyleSheet, View, TouchableOpacity, Modal } from 'react-native'
 import { workoutStartTimeAtom, showWorkoutStartOptionsAtom} from '@/store/general'
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { commonStyles } from '@/styles/commonStyles';
 import WorkoutFinishOptions from './WorkoutFinishOptions';
+import { addCaughtErrorLogAtom, addErrorLogAtom } from '@/store/actions';
 
 export default function WorkoutHeader() {
   const workoutStartTime = useAtomValue(workoutStartTimeAtom);
@@ -11,16 +12,22 @@ export default function WorkoutHeader() {
   const [timeString, setTimeString] = useState<string>('');
   const [showFinishOptions, setShowFinishOptions] = useState<boolean>(false);
 
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
   useEffect(() => {
     if (workoutStartTime === null) return;
 
     const updateTime = () => {
-      const timeDelta = Math.floor((Date.now() - workoutStartTime) / 1000);
-      const hours = String(Math.floor(timeDelta / 3600)).padStart(2, '0');
-      const minutes = String(Math.floor((timeDelta % (3600)) / 60)).padStart(2, '0');
-      const seconds = String(Math.floor(timeDelta % 60)).padStart(2, '0');
-      setTimeString(`${hours}:${minutes}:${seconds}`)
+      try {
+        const timeDelta = Math.floor((Date.now() - workoutStartTime) / 1000);
+        const hours = String(Math.floor(timeDelta / 3600)).padStart(2, '0');
+        const minutes = String(Math.floor((timeDelta % (3600)) / 60)).padStart(2, '0');
+        const seconds = String(Math.floor(timeDelta % 60)).padStart(2, '0');
+        setTimeString(`${hours}:${minutes}:${seconds}`)
+      } catch (error) {
+        addCaughtErrorLog(error, 'error updateTime');
+      }
     };
 
     updateTime();

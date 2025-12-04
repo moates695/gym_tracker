@@ -105,26 +105,32 @@ export default function ExerciseListFilter(props: ExerciseListFilterProps) {
   };
 
   const searchBarFilter = (tempExercises: ExerciseListItem[]): ExerciseListItem[] => {
-    if (searchBar === '') {
-      return tempExercises;
-    }
+    try {
+      if (searchBar === '') {
+        return tempExercises;
+      }
 
-    let parts = [searchBar, ...searchBar.split(' ')];
-    parts = parts.filter(part => 
-      part.trim() !== ''
-    );
-
-    let filtered: ExerciseListItem[] = [];
-    let matchingIds: string[] = [];
-    for (const part of parts) {
-      const temp = tempExercises.filter((exercise: ExerciseListItem) => 
-        exercise.name.toLowerCase().includes(part.toLowerCase()) && !matchingIds.includes(exercise.id)
+      let parts = [searchBar, ...searchBar.split(' ')];
+      parts = parts.filter(part => 
+        part.trim() !== ''
       );
-      filtered = filtered.concat(temp);
-      matchingIds = matchingIds.concat(temp.map((exercise: ExerciseListItem) => exercise.id));
-    }
 
-    return filtered;
+      let filtered: ExerciseListItem[] = [];
+      let matchingIds: string[] = [];
+      for (const part of parts) {
+        const temp = tempExercises.filter((exercise: ExerciseListItem) => 
+          exercise.name.toLowerCase().includes(part.toLowerCase()) && !matchingIds.includes(exercise.id)
+        );
+        filtered = filtered.concat(temp);
+        matchingIds = matchingIds.concat(temp.map((exercise: ExerciseListItem) => exercise.id));
+      }
+
+      return filtered;
+    
+    } catch (error) {
+      addCaughtErrorLog(error, 'error searchBarFilter');
+      return [];
+    }
   };
 
   const muscleFilter = (tempExercises: ExerciseListItem[]): ExerciseListItem[] => {
@@ -149,9 +155,8 @@ export default function ExerciseListFilter(props: ExerciseListFilterProps) {
         }
       }
     } catch (error) {
-      
+      addCaughtErrorLog(error, 'error muscleDataMatchesFilters'); 
     }
-
     return false;
   };
 

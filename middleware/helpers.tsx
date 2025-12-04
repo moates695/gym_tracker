@@ -196,11 +196,11 @@ export const formatLocal = (dt: Date) => {
 }
 
 export const safeErrorMessage = (err: unknown, defaultMsg = "an unknown error occurred"): string => {
-  if (err instanceof SafeError && err.message != '') return err.message;
-  if (err instanceof Error && err.message != '') return err.message;
-  if (typeof err === "string" && err != '') return err;
+  if (err instanceof SafeError && err.message != '') return `${defaultMsg}: ${err.message}`;
+  if (err instanceof Error && err.message != '') return `${defaultMsg}: ${err.message}`;
+  if (typeof err === "string" && err != '') return `${defaultMsg}: ${err}`;
   if (err && typeof err === "object" && "message" in err && err.message != '') {
-    return String(err.message);
+    return `${defaultMsg}: ${String(err.message)}`;
   }
   return defaultMsg;
 }

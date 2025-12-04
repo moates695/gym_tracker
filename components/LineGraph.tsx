@@ -1,3 +1,5 @@
+import { addCaughtErrorLogAtom, addErrorLogAtom } from '@/store/actions';
+import { useSetAtom } from 'jotai';
 import * as React from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import Svg, { Line, Circle, Text as SvgText, G, Path } from 'react-native-svg';
@@ -26,6 +28,9 @@ export default function LineGraph(props: LineGraphProps) {
     currentPoints = []
   } = props;
 
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
+
   if (points.length === 0) {
     return (
       <View style={styles.container}>
@@ -38,71 +43,88 @@ export default function LineGraph(props: LineGraphProps) {
   const height = 250;
   const padding = 50;
   
-  // Calculate min/max values
-  let xMin = Math.min(...points.map(p => p.x));
-  let xMax = Math.max(...points.map(p => p.x));
-  if (currentPoints.length !== 0) {
-    const currXMax = Math.max(...currentPoints.map(p => p.x));
-    if (currXMax > xMax) xMax = currXMax;
-  }
-  if (xMin === xMax) {
-    xMin = xMin - 100
-    xMax = xMax + 100
-  }
-  // const yMin = Math.min(...points.map(p => p.y));
-  const yMin = 0;
-  let yMax = Math.max(...points.map(p => p.y));
-  if (barValue !== null && barValue > yMax) {
-    yMax = barValue;
-  } else if (currentPoints.length !== 0) {
-    const currYMax = Math.max(...currentPoints.map(p => p.y));
-    if (currYMax > yMax) yMax = currYMax;
-  }
-  if (yMin == yMax) {
-    yMax = 100;
+  let xMin = 0;
+  let xMax = 0;
+  let yMin = 0;
+  let yMax = 0;
+  try {
+    xMin = Math.min(...points.map(p => p.x));
+    let xMax = Math.max(...points.map(p => p.x));
+    if (currentPoints.length !== 0) {
+      const currXMax = Math.max(...currentPoints.map(p => p.x));
+      if (currXMax > xMax) xMax = currXMax;
+    }
+    if (xMin === xMax) {
+      xMin = xMin - 100
+      xMax = xMax + 100
+    }
+
+    const yMin = 0;
+    let yMax = Math.max(...points.map(p => p.y));
+    if (barValue !== null && barValue > yMax) {
+      yMax = barValue;
+    } else if (currentPoints.length !== 0) {
+      const currYMax = Math.max(...currentPoints.map(p => p.y));
+      if (currYMax > yMax) yMax = currYMax;
+    }
+    if (yMin == yMax) {
+      yMax = 100;
+    }
+  } catch (error) {
+    addCaughtErrorLog(error, 'error computing graph min max');
+    return (
+      <View style={styles.container}>
+        <Text style={styles.text}>error on compute</Text>
+      </View>
+    )
   }
 
-  // Position calculation functions
-  const getXPosition = (x: number) => {
-    return padding + ((x - xMin) / (xMax - xMin)) * (width - 2 * padding);
+  const getXPosition = (x: number): number => {
+    try {
+      return padding + ((x - xMin) / (xMax - xMin)) * (width - 2 * padding);
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getXPosition');
+      return 0;
+    }
   };
   
-  const getYPosition = (y: number) => {
-    return height - padding - ((y - yMin) / (yMax - yMin)) * (height - 2 * padding);
+  const getYPosition = (y: number): number => {
+    try {
+      return height - padding - ((y - yMin) / (yMax - yMin)) * (height - 2 * padding);
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getYPosition');
+      return 0;
+    }
   };
 
-  // Generate path for line
   const getPath = (points: LineGraphPoint[]): string => {
-    return points.map((point, index) => {
-      const x = getXPosition(point.x);
-      const y = getYPosition(point.y);
-      return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
-    }).join(' ')
+    try {
+      return points.map((point, index) => {
+        const x = getXPosition(point.x);
+        const y = getYPosition(point.y);
+        return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
+      }).join(' ')
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getPath');
+      return '';
+    }
   };
-
-  // Format date for labels
-  // const formatDate = (timestamp: string | number | Date) => {
-  //   const date = new Date(timestamp);
-  //   return `${date.getMonth() + 1}/${date.getDate()}`;
-  // };
-
-  // const formatXLabel = (x: number) => {
-  //   if (scale_type === "value") {
-  //     return x.toPrecision(0)
-  //   }
-  //   const date = new Date(x);
-  //   return `${date.getMonth() + 1}/${date.getDate()}`;
-  // };
 
   const getBarPoints = (): string => {
-    if (barValue == null) return '';
-    const x1 = getXPosition(xMin);
-    const x2 = getXPosition(xMax);
-    const y = getYPosition(barValue < yMax ? barValue : yMax);
-    console.log(x1)
-    console.log(x2)
-    console.log(y)
-    return `M ${x1} ${y} L ${x2} ${y}`;
+    try {
+      if (barValue == null) return '';
+      const x1 = getXPosition(xMin);
+      const x2 = getXPosition(xMax);
+      const y = getYPosition(barValue < yMax ? barValue : yMax);
+      console.log(x1)
+      console.log(x2)
+      console.log(y)
+      return `M ${x1} ${y} L ${x2} ${y}`;
+
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getPath');
+      return '';
+    }
   };
 
   const circleRadius = 3;
@@ -114,12 +136,12 @@ export default function LineGraph(props: LineGraphProps) {
         if (dist >= circleRadius) continue;
         return circleRadius + 2;
       }
-    } catch (error) {}
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getBackgroundCircleRadius');
+    }
     return circleRadius;
   };
 
-  // todo if current point exists in points => make it bigger to surround it
-  // todo if line between 2 points is the same, make current line bigger on background?
   return (
     <View style={styles.container}>
       <View style={styles.chartContainer}>
