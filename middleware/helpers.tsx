@@ -104,6 +104,9 @@ export const getExerciseValueMap = (exercise: WorkoutExercise | ExerciseListItem
 
 // todo: what to do if userData is null, and below function too (it shouldn't be)
 export const calcBodyWeight = (userData: UserData | null, ratios: BodyWeightRatios, additional: number | null): number => {
+  console.log(userData);
+  console.log(ratios);
+  console.log(additional);
   try {
     if (!userData) {
       console.log('user data is null');

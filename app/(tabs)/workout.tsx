@@ -214,10 +214,11 @@ export default function Workout() {
             {workoutExercises.length === 0 &&
               <Text style={{color:'white'}}>no exercises yet</Text>
             }
-            <FlatList 
+            <FlatList
               style={styles.scrollView}
               contentContainerStyle={styles.scrollViewContainer}
               data={workoutExercises}
+              keyExtractor={(item) => item.workout_exercise_id}
               renderItem={({ item, index }) => (
                 <WorkoutExerciseRow 
                   exercise={item} 

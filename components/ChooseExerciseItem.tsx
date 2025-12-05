@@ -71,7 +71,7 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
     const tempExercises = [...workoutExercises];
     tempExercises.push(newExercise);
     setWorkoutExercisesAtom(tempExercises);
-
+    console.log(newExercise);
     setExercisesHistoricalData(prev => ({
       ...prev,
       [newExercise.id]: emptyExerciseHistoricalData
