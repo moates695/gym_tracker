@@ -1,3 +1,4 @@
+import { SafeError } from '@/middleware/helpers';
 import { addCaughtErrorLogAtom, addErrorLogAtom } from '@/store/actions';
 import { useSetAtom } from 'jotai';
 import * as React from 'react';
@@ -31,6 +32,7 @@ export default function LineGraph(props: LineGraphProps) {
   const addErrorLog = useSetAtom(addErrorLogAtom);
   const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
+  console.log(points);
   if (points.length === 0) {
     return (
       <View style={styles.container}>
@@ -49,7 +51,7 @@ export default function LineGraph(props: LineGraphProps) {
   let yMax = 0;
   try {
     xMin = Math.min(...points.map(p => p.x));
-    let xMax = Math.max(...points.map(p => p.x));
+    xMax = Math.max(...points.map(p => p.x));
     if (currentPoints.length !== 0) {
       const currXMax = Math.max(...currentPoints.map(p => p.x));
       if (currXMax > xMax) xMax = currXMax;
@@ -59,15 +61,15 @@ export default function LineGraph(props: LineGraphProps) {
       xMax = xMax + 100
     }
 
-    const yMin = 0;
-    let yMax = Math.max(...points.map(p => p.y));
+    yMin = 0;
+    yMax = Math.max(...points.map(p => p.y));
     if (barValue !== null && barValue > yMax) {
       yMax = barValue;
     } else if (currentPoints.length !== 0) {
       const currYMax = Math.max(...currentPoints.map(p => p.y));
       if (currYMax > yMax) yMax = currYMax;
     }
-    if (yMin == yMax) {
+    if (yMin === yMax) {
       yMax = 100;
     }
   } catch (error) {
@@ -81,7 +83,9 @@ export default function LineGraph(props: LineGraphProps) {
 
   const getXPosition = (x: number): number => {
     try {
-      return padding + ((x - xMin) / (xMax - xMin)) * (width - 2 * padding);
+      const pos = padding + ((x - xMin) / (xMax - xMin)) * (width - 2 * padding);
+      if (!Number.isFinite(pos)) throw new SafeError('number is not finite');
+      return pos;
     } catch (error) {
       addCaughtErrorLog(error, 'error getXPosition');
       return 0;
@@ -90,7 +94,9 @@ export default function LineGraph(props: LineGraphProps) {
   
   const getYPosition = (y: number): number => {
     try {
-      return height - padding - ((y - yMin) / (yMax - yMin)) * (height - 2 * padding);
+      const pos = height - padding - ((y - yMin) / (yMax - yMin)) * (height - 2 * padding);
+      if (!Number.isFinite(pos)) throw new SafeError('number is not finite');
+      return pos;
     } catch (error) {
       addCaughtErrorLog(error, 'error getYPosition');
       return 0;
@@ -116,9 +122,6 @@ export default function LineGraph(props: LineGraphProps) {
       const x1 = getXPosition(xMin);
       const x2 = getXPosition(xMax);
       const y = getYPosition(barValue < yMax ? barValue : yMax);
-      console.log(x1)
-      console.log(x2)
-      console.log(y)
       return `M ${x1} ${y} L ${x2} ${y}`;
 
     } catch (error) {

@@ -1,6 +1,6 @@
 import { useAtom, useSetAtom } from "jotai";
 import { useEffect, useState } from "react";
-import React, { View, StyleSheet, Text, TextInput, TouchableOpacity, Image } from "react-native"
+import React, { View, StyleSheet, Text, TextInput, TouchableOpacity, Image, Keyboard } from "react-native"
 import { emptySetData, SetClass, SetData, WorkoutExercise, workoutExercisesAtom } from "@/store/general";
 import ConfirmationModal from "./ConfirmationModal";
 import ShiftTextInput from "./ShiftTextInput";
@@ -145,6 +145,7 @@ export default function ExerciseSet(props: ExerciseSetProps) {
   };
 
   const handleCopySet = () => {
+    Keyboard.dismiss();
     try {
       const tempSetData = [...exercise.set_data];
       const tempSet = { ...tempSetData[setIndex] };
@@ -252,7 +253,7 @@ export default function ExerciseSet(props: ExerciseSetProps) {
     <>
       <>
         {openOptions ?
-          <View style={styles.row}>
+          <View style={[styles.row, {paddingTop: 8, paddingBottom: 8}]}>
             <View style={styles.valueRow}>
               <Text style={styles.text}>{set_data.reps ?? 0}</Text>
               <Text style={styles.text}>{displayWeight !== '' ? displayWeight : '0.0'}</Text>
@@ -352,12 +353,6 @@ export default function ExerciseSet(props: ExerciseSetProps) {
                 />
               :
                 <View style={{width: '30%', justifyContent: 'center', alignItems: 'center'}}>
-                  {/* <TextInput 
-                    style={[styles.textInput, {width: '100%'}]}
-                    keyboardType="number-pad"
-                    value={'1'}
-                    editable={false}
-                  /> */}
                   <Text style={commonStyles.text}>1</Text>
                 </View>
               }

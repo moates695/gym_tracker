@@ -1,8 +1,8 @@
 import LoadingScreen from "@/app/loading";
 import DataTable, { TableData } from "@/components/DataTable";
-import { fetchWrapper, formatMagnitude, formatMinutes } from "@/middleware/helpers";
+import { fetchWrapper, formatMagnitude, formatMinutes, pad, timeSplit } from "@/middleware/helpers";
 import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
-import { workoutTotalStatsAtom } from "@/store/general";
+import { WorkoutTotalStats, workoutTotalStatsAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { Stack, useRouter } from "expo-router";
 import { useAtom, useSetAtom } from "jotai";
@@ -35,7 +35,7 @@ export default function Stats() {
   };
 
   useEffect(() => {
-    if (workoutTotalStats !== null) return;
+    // if (workoutTotalStats !== null) return;
     fetchWorkoutTotalStats();
   }, []);
 
@@ -50,11 +50,25 @@ export default function Stats() {
     ]
   }
 
+  const getDuration = (minutes: number): string => {
+    try {
+      const {
+        days,
+        hours,
+        mins
+      } = timeSplit(minutes);
+      return `${days}d ${hours}h ${mins}m`
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getDuration');
+      return '00:00:00'
+    }
+  };
+
   const tableData2: TableData<string[], string | number> = {
     headers: ['duration','workouts','exercises'],
     rows: [
       {
-        'duration': formatMinutes(Math.round(workoutTotalStats?.duration ?? 0)),
+        'duration': getDuration(Math.round(workoutTotalStats?.duration ?? 0)),
         'workouts': formatMagnitude(workoutTotalStats?.num_workouts ?? 0),
         'exercises': formatMagnitude(workoutTotalStats?.num_exercises ?? 0),
       }

@@ -215,27 +215,38 @@ export class SafeError extends Error {
   }
 }
 
-export const formatMinutes = (minutes: number): string => {
+export const timeSplit = (minutes: number)  => {
   try {
     const min = 1;
     const hour = 60 * min;
     const day = 24 * hour;
 
-    if (minutes < hour) {
-      return String(minutes);
-    }
-
     const days = Math.floor(minutes / day);
     const hours = Math.floor((minutes % day) / hour);
     const mins = minutes % hour;
 
-    const pad = (n: number) => String(n).padStart(2, "0");
-
-    if (day <= 0) {
-      return `${pad(hours)}:${pad(mins)}`;
-    } else {
-      return `${pad(days)}:${pad(hours)}:${pad(mins)}`;
+    return {
+      days,
+      hours,
+      mins,
     }
+
+  } catch (error) {
+    throw new SafeError('converting minutes into string')
+  }
+};
+
+export const pad = (n: number) => String(n).padStart(2, "0");
+
+export const formatMinutes = (minutes: number): string => {
+  try {
+    const {
+      days,
+      hours,
+      mins
+    } = timeSplit(minutes);
+
+    return `${pad(days)}:${pad(hours)}:${pad(mins)}`;
 
   } catch (error) {
     throw new SafeError('converting minutes into string')

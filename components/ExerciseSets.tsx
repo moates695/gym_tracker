@@ -1,6 +1,6 @@
 import { useAtom } from "jotai";
 import { Fragment, useEffect, useState } from "react";
-import React, { View, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native"
+import React, { View, StyleSheet, Text, TextInput, TouchableOpacity, Keyboard } from "react-native"
 import { SetData, WorkoutExercise, workoutExercisesAtom, emptySetData, SetClass} from "@/store/general";
 import ConfirmationModal from "./ConfirmationModal";
 import ShiftTextInput from "./ShiftTextInput";
@@ -31,6 +31,7 @@ export default function ExerciseSets(props: ExerciseSetsProps) {
   };
 
   const handleNewSet = (setClass: SetClass) => {
+    Keyboard.dismiss();
     const tempSets = [...exercise.set_data];
     const tempSet = {...emptySetData};
     tempSet.class = setClass;

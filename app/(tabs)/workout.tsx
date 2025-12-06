@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect, useState } from "react";
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollView, Platform, Alert, FlatList } from "react-native";
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollView, Platform, Alert, FlatList, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { StatusBar } from 'expo-status-bar';
 
@@ -11,6 +11,7 @@ import { fetchWrapper } from "@/middleware/helpers";
 import WorkoutExerciseRow from "@/components/WorkoutExerciseRow";
 import LoadingScreen from "../loading";
 import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 export default function Workout() {
   const [workoutExercises, setWorkoutExercises] = useAtom(workoutExercisesAtom);
@@ -226,6 +227,7 @@ export default function Workout() {
                 />
               )}
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
             />
             <View style={styles.row}>
               <View style={styles.textContainer}>
@@ -292,7 +294,7 @@ const styles = StyleSheet.create({
   scrollViewContainer: {
     alignItems: 'center',
     justifyContent: 'flex-start',
-    paddingBottom: 100
+    paddingBottom: 500
   },
   workoutContainer: {
     height: '100%',

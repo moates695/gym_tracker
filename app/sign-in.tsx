@@ -179,7 +179,6 @@ export default function SignInScreen() {
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>
-    {/* </KeyboardAvoidingView> */}
     </KeyboardAwareScrollView>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { TouchableOpacity, View } from "react-native"
+import { Keyboard, TouchableOpacity, View } from "react-native"
 import { Text, StyleSheet } from "react-native"
 import ExerciseSets from "./ExerciseSets";
 import React from 'react-native'
@@ -48,7 +48,13 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
     setNumSets(getValidSets(exercise).reduce(reducer, 0));
   }, [exercise.set_data]);
 
+  const handlePressNameBar = () => {
+    Keyboard.dismiss();
+    setIsExpanded(!isExpanded);
+  };
+
   const handleRefreshHistory = async () => {
+    Keyboard.dismiss();
     try {
       updateLoadingExerciseHistory(exercise.workout_exercise_id, true);
 
@@ -69,6 +75,7 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
   }
 
   const handleDataExpanded = (option: DataOption) => {
+    Keyboard.dismiss();
     if (editExercises) return;
     if (option === dataOption) {
       setDataOption('none');
@@ -86,7 +93,7 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
   return (
     <View style={styles.box}>
       <TouchableOpacity style={styles.row}
-        onPress={() => setIsExpanded(!isExpanded)}
+        onPress={handlePressNameBar}
         disabled={editExercises}
       >
         <View style={{flexDirection: 'row', alignItems: 'baseline'}}>
