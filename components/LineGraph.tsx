@@ -1,4 +1,4 @@
-import { SafeError } from '@/middleware/helpers';
+import { formatMagnitude, SafeError } from '@/middleware/helpers';
 import { addCaughtErrorLogAtom, addErrorLogAtom } from '@/store/actions';
 import { useSetAtom } from 'jotai';
 import * as React from 'react';
@@ -41,9 +41,10 @@ export default function LineGraph(props: LineGraphProps) {
     )
   }
 
-  const width = Dimensions.get('window').width - 40;
+  const width = Dimensions.get('window').width - 20;
   const height = 250;
-  const padding = 50;
+  const padding = 40;
+  const paddingX = 60;
   
   let xMin = 0;
   let xMax = 0;
@@ -83,7 +84,7 @@ export default function LineGraph(props: LineGraphProps) {
 
   const getXPosition = (x: number): number => {
     try {
-      const pos = padding + ((x - xMin) / (xMax - xMin)) * (width - 2 * padding);
+      const pos = paddingX + ((x - xMin) / (xMax - xMin)) * (width - 2 * paddingX);
       if (!Number.isFinite(pos)) throw new SafeError('number is not finite');
       return pos;
     } catch (error) {
@@ -153,9 +154,9 @@ export default function LineGraph(props: LineGraphProps) {
           {[0, 0.25, 0.5, 0.75, 1].map((ratio, index) => (
             <G key={`grid-${index}`}>
               <Line
-                x1={padding}
+                x1={paddingX}
                 y1={padding + ratio * (height - 2 * padding)}
-                x2={width - padding}
+                x2={width - paddingX}
                 y2={padding + ratio * (height - 2 * padding)}
                 stroke="#999"
                 strokeWidth="1"
@@ -169,13 +170,13 @@ export default function LineGraph(props: LineGraphProps) {
             return (
               <SvgText
                 key={`y-label-${index}`}
-                x={padding - 10}
+                x={paddingX - 10}
                 y={padding + ratio * (height - 2 * padding) + 5}
-                fontSize="12"
+                fontSize="10"
                 fill="#999"
                 textAnchor="end"
               >
-                {value.toFixed(1)}
+                {formatMagnitude(value, 3)}
               </SvgText>
             );
           })}
@@ -284,6 +285,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     minHeight: 100,
+    overflow: 'visible',
+    marginBottom: 10,
   },
   title: {
     fontSize: 20,
@@ -297,6 +300,7 @@ const styles = StyleSheet.create({
     marginLeft: 20,
     borderRadius: 0,
     padding: 0,
+    overflow: 'visible',
     // zIndex: 10,
     // elevation: 3,
     width: '100%',

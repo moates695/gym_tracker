@@ -253,7 +253,7 @@ export const formatMinutes = (minutes: number): string => {
   }
 }
 
-export const formatMagnitude = (n: number): string => {
+export const formatMagnitude = (n: number, fix: number = 3): string => {
   try {
     const abs = Math.abs(n);
 
@@ -266,7 +266,7 @@ export const formatMagnitude = (n: number): string => {
 
     for (const u of units) {
       if (abs >= u.v) {
-        return (n / u.v).toFixed(3).replace(/\.0$/, "") + u.s;
+        return (n / u.v).toFixed(fix).replace(/\.0$/, "") + u.s;
       }
     }
 
