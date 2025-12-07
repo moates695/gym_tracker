@@ -32,7 +32,6 @@ export default function LineGraph(props: LineGraphProps) {
   const addErrorLog = useSetAtom(addErrorLogAtom);
   const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
-  console.log(points);
   if (points.length === 0) {
     return (
       <View style={styles.container}>
@@ -146,6 +145,72 @@ export default function LineGraph(props: LineGraphProps) {
     return circleRadius;
   };
 
+  const getXAxisValueIncrements = (): number[] => {
+    const base = [0, 0.2, 0.4, 0.6, 0.8, 1];
+    try {
+      let diff = xMax - xMin;
+      if (points.length === 1) {
+        return [0.5];
+      } else if (diff >= 5) {
+        return base;
+      }
+      if (scale_type === "time" && diff === 1) {
+        return [0.5];
+      }
+      return buildRatios(diff);
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getXAxisValueIncrements');
+      return base;
+    }
+  };
+
+  const getXAxisTimeIncrements = (): number[] => {
+    const base = [0, 0.33, 0.67, 1];
+    try {
+      for (let i = base.length; i > 1; i--) {
+        const ratios = buildRatios(i - 1);
+        const values = [];
+        for (const ratio of ratios) {
+          values.push(getDateStr(ratio));
+        }
+        if (new Set(values).size === values.length) {
+          return ratios;
+        }
+      }
+      return [0.5];
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getXAxisValueIncrements');
+      return base;
+    }
+  };
+
+  const buildRatios = (diff: number): number[] => {
+    try {
+      if (diff <= 0) throw Error('diff <= 0');
+      const increment = 1 / diff;
+      const ratios: number[] = [0];
+      for (let i = 1; i <= diff; i++) {
+        ratios.push(increment * i);
+      }
+      return ratios;
+    } catch (error) {
+      throw new SafeError(`error in buildRatios: ${error}`);
+    }
+  };
+
+  const getDateStr = (ratio: number): string => {
+    try {
+      const value = xMax - ratio * (xMax - xMin);
+      const dd = String(new Date(value).getDate()).padStart(2,'0');
+      const mm = String(new Date(value).getMonth() + 1).padStart(2,'0');
+      const yy = String(new Date(value).getFullYear()).slice(-2);
+      return `${dd}/${mm}/${yy}`;
+    } catch (error) {
+      addCaughtErrorLog(error, 'error getDateStr');
+      return 'error'
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.chartContainer}>
@@ -183,14 +248,15 @@ export default function LineGraph(props: LineGraphProps) {
           
           {/* X-axis labels */}
           {scale_type === 'value' && 
-            [0, 0.2, 0.4, 0.6, 0.8, 1].map((ratio, index) => {
+            // [0, 0.2, 0.4, 0.6, 0.8, 1].map((ratio, index) => {
+            getXAxisValueIncrements().map((ratio, index) => {
               const value = xMax - ratio * (xMax - xMin);
               return (
                 <SvgText
                   key={`x-label-${index}`}
                   x={getXPosition(value) + padding / 2 - 15}
                   y={height - 10}
-                  fontSize="12"
+                  fontSize="10"
                   fill="#999"
                   textAnchor="end"
                 >
@@ -200,22 +266,22 @@ export default function LineGraph(props: LineGraphProps) {
             })
           }
           {scale_type === 'time' &&
-            [0, 0.33, 0.67, 1].map((ratio, index) => {
+            getXAxisTimeIncrements().map((ratio, index) => {
               const value = xMax - ratio * (xMax - xMin);
               // const dd = String(new Date(value).getDate()).padStart(2,'0');
-              const mm = String(new Date(value).getMonth() + 1).padStart(2,'0');
-              const yy = String(new Date(value).getFullYear()).slice(-2);
-              const dateStr = `${mm}/${yy}`;
+              // const mm = String(new Date(value).getMonth() + 1).padStart(2,'0');
+              // const yy = String(new Date(value).getFullYear()).slice(-2);
+              // const dateStr = `${dd}/${mm}/${yy}`;
               return (
                 <SvgText
                   key={`x-label-${index}`}
-                  x={getXPosition(value) + padding / 2}
+                  x={getXPosition(value) + padding / 2 + 4}
                   y={height - 10}
-                  fontSize="12"
+                  fontSize="10"
                   fill="#999"
                   textAnchor="end"
                 >
-                  {dateStr}
+                  {getDateStr(ratio)}
                 </SvgText>
               );
             })
