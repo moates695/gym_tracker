@@ -1,3 +1,4 @@
+import { formatMagnitude } from "@/middleware/helpers";
 import { LeaderboardData, LeaderboardListItem, userDataAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useAtom, useAtomValue } from "jotai";
@@ -131,7 +132,7 @@ export function Leaderboard(props: LeaderboardProps) {
                     alignItems: 'flex-end',
                   }}
                 >
-                  <Text style={commonStyles.text}>{item.value}</Text>
+                  <Text style={commonStyles.text}>{formatMagnitude(item.value)}</Text>
                 </View>
               </View>
             </React.Fragment>

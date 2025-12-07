@@ -35,7 +35,7 @@ export default function Stats() {
   };
 
   useEffect(() => {
-    // if (workoutTotalStats !== null) return;
+    if (workoutTotalStats !== null) return;
     fetchWorkoutTotalStats();
   }, []);
 

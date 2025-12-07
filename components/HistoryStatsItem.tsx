@@ -1,4 +1,4 @@
-import { timestampToDateStr } from "@/middleware/helpers";
+import { formatMagnitude, timestampToDateStr } from "@/middleware/helpers";
 import { muscleGroupToTargetsAtom, WorkoutHistoryStats } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import React, { useState } from "react";
@@ -84,10 +84,10 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
       "headers": ["volume", "exercises", "sets", "reps"],
       "rows": [
         {
-          "volume": stats.workout_stats.volume,
+          "volume": formatMagnitude(stats.workout_stats.volume),
           "exercises": stats.workout_stats.num_exercises,
           "sets": stats.workout_stats.num_sets,
-          "reps": stats.workout_stats.reps,
+          "reps": formatMagnitude(stats.workout_stats.reps),
         }
       ]
     }
@@ -212,9 +212,12 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
                         padding: 5,
                         margin: 2,
                         width: '90%',
+                        marginTop: 10,
                       }}
                     >
-                      <Text style={commonStyles.text}>{exerciseStats.exercise_name}</Text>
+                      <Text style={[commonStyles.text, {marginBottom: 2}]}>
+                        {exerciseStats.exercise_name}
+                      </Text>
                       {exerciseStats.variation_name !== null &&
                         <Text style={commonStyles.text}>{exerciseStats.variation_name}</Text>
                       }
@@ -223,6 +226,7 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
                           flexDirection: 'row',
                           justifyContent: 'space-around',
                           width: '100%',
+                          marginBottom: 2,
                         }}
                       >
                         <Text style={[commonStyles.text, {width: '25%', textAlign: 'center'}]}>
@@ -246,13 +250,16 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
                               flexDirection: 'row',
                               justifyContent: 'space-around',
                               width: '100%',
+                              marginBottom: 2,
+                              backgroundColor: j % 2 === 0 ? '#000000': '#222328ff',
+                              borderRadius: 5,
                             }}
                           >
                             <Text style={[commonStyles.text, {width: '25%', textAlign: 'center'}]}>
                               {setData.reps}
                             </Text>
                             <Text style={[commonStyles.text, {width: '25%', textAlign: 'center'}]}>
-                              {setData.weight}
+                              {formatMagnitude(setData.weight ?? 0)}
                             </Text>
                             <Text style={[commonStyles.text, {width: '25%', textAlign: 'center'}]}>
                               {setData.num_sets}

@@ -1,7 +1,7 @@
 import LoadingScreen from "@/app/loading";
 import { OptionsObject } from "@/components/ChooseExerciseModal";
 import { useDropdown } from "@/components/ExerciseData";
-import { fetchWrapper } from "@/middleware/helpers";
+import { fetchWrapper, formatMagnitude } from "@/middleware/helpers";
 import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 import { FavouriteExercisesStats, favouriteExerciseStatsAtom, FavouriteStatsMetric, muscleGroupToTargetsAtom, muscleTargetoGroupAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
@@ -179,17 +179,17 @@ export default function StatsFavourites() {
                         borderRadius: 5,
                       }}
                     >
-                      <View>
+                      <View style={{flexDirection: 'row', alignItems: 'center'}}>
                         <Text style={commonStyles.text}>
                           {item.exercise_name}
                         </Text>
                         {item.variation_name && 
-                          <Text style={commonStyles.text}>
+                          <Text style={[commonStyles.text, {marginLeft: 4, fontSize: 12}]}>
                             ({item.variation_name})
                           </Text>
                         }
                       </View>
-                      <Text style={commonStyles.text}>{item[metricOptionValue]}</Text>
+                      <Text style={commonStyles.text}>{formatMagnitude(item[metricOptionValue])}</Text>
                     </View>
                   )}
                   showsVerticalScrollIndicator={false}
