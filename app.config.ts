@@ -11,12 +11,12 @@ export default ({ config }: any) => {
     expo: {
       name: "Gym Junkie",
       slug: "gym-junkie",
-      version: "0.0.1",
+      version: "0.0.3",
       orientation: "portrait",
       icon: "./assets/images/android_icon.png",
       userInterfaceStyle: "automatic",
       android: {
-        versionCode: 1,
+        versionCode: 3,
         icon: "./assets/images/android_icon.png",
         compileSdkVersion: 34,
         targetSdkVersion: 34,
