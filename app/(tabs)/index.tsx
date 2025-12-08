@@ -12,7 +12,10 @@ import { Text, View, StyleSheet, SafeAreaView, TouchableOpacity } from "react-na
 export default function Home() {
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={{color: "white"}}>Home</Text>
+      <View>
+        <Text style={{color: "white"}}>Home</Text>
+        <Text style={{color: "white"}}>coming soon...</Text>
+      </View>
       <StatusBar style='dark' />
     </SafeAreaView >
   );

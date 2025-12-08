@@ -97,6 +97,7 @@ export default function ChooseExercise(props: ChooseExerciseProps) {
                 <ChooseExerciseItem exercise={item} onChoose={onChoose} />
               )}
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
             />
             <TouchableOpacity 
               onPress={onChoose}

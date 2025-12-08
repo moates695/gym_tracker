@@ -3,7 +3,7 @@ import { emptyExerciseHistoricalData, emptySetData, ExerciseListItem, exercisesH
 import { commonStyles } from "@/styles/commonStyles";
 import { useAtom, useSetAtom } from "jotai";
 import React, { useEffect, useState } from "react"
-import { Text, StyleSheet, View, TouchableOpacity } from "react-native"
+import { Text, StyleSheet, View, TouchableOpacity, Keyboard } from "react-native"
 import FrequencyCalendar from "./FrequencyCalendar";
 import MuscleGroupSvg from "./MuscleGroupSvg";
 import { useDropdown } from "./ExerciseData";
@@ -58,7 +58,13 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
   })();
   const [variationValue, setVariationValue] = useState<string>(baseVariationValue);
 
+  const handlePressName = () => {
+    Keyboard.dismiss();
+    setIsExpanded(!isExpanded);
+  };
+
   const handleChooseExercise = () => {
+    Keyboard.dismiss();
     const newExercise = JSON.parse(JSON.stringify(chosenVariation));
     delete newExercise.frequency;
     newExercise.workout_exercise_id = uuidv4();
@@ -130,12 +136,12 @@ export default function ChooseExerciseItem(props: ChooseExerciseDataProps) {
     <View style={styles.box}>
       <View style={styles.row}>
         <TouchableOpacity
-          onPress={() => setIsExpanded(!isExpanded)}
+          onPress={handlePressName}
         >
-          <View 
+          <View
             style={{
-              flexDirection: 'row', 
-              alignItems: 'center', 
+              flexDirection: 'row',
+              alignItems: 'center',
             }}
           >
             <Text style={[styles.text]}>{exercise.name}</Text>

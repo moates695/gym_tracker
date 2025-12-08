@@ -90,27 +90,49 @@ export default function workoutExercise(props: WorkoutExerciseProps) {
     setIsExpanded(false);
   }, [editExercises])
 
+  const [parentWidth, setParentWidth] = useState(0);
+  const [setTextWidth, setSetTextWidth] = useState(0);
+
   return (
-    <View style={styles.box}>
+    <View 
+      style={styles.box} 
+      onLayout={e => setParentWidth(e.nativeEvent.layout.width)}
+    >
       <TouchableOpacity style={styles.row}
         onPress={handlePressNameBar}
         disabled={editExercises}
       >
-        <View style={{flexDirection: 'row', alignItems: 'baseline'}}>
+        <View 
+          style={{
+            flexDirection: 'row', 
+            alignItems: 'baseline',
+            // backgroundColor: 'purple',
+            flex: 1,
+            maxWidth: parentWidth - setTextWidth - 40
+          }}
+        >
           <Text 
             style={[styles.text, {fontWeight: 500}]}
+            numberOfLines={1}
           >
             {exercise.name}
           </Text>
           {exercise.variation_name !== undefined &&
             <Text 
-              style={[styles.text, {paddingLeft: 4, fontSize: 12, fontStyle: 'italic' }]}
+              style={[styles.text, {paddingLeft: 4, flexShrink: 1, fontSize: 12}]}
+              ellipsizeMode="tail"
+              numberOfLines={1}
             >
               ({exercise.variation_name})
             </Text>
           }
         </View>
-        <Text style={styles.text}>{numSets} sets</Text>
+        <Text 
+          style={styles.text}
+          onLayout={e => setSetTextWidth(e.nativeEvent.layout.width)}
+        >
+          {numSets} sets
+        </Text>
       </TouchableOpacity>
       {isExpanded &&
         <View>

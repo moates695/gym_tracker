@@ -8,7 +8,10 @@ export default function Plan() {
       {Platform.OS == 'android' &&
         <StatusBar style="light" backgroundColor="black" translucent={false} />
       }
-
+      <View>
+        <Text style={{color: "white"}}>Plan</Text>
+        <Text style={{color: "white"}}>coming soon...</Text>
+      </View>
     </SafeAreaView>
   )
 }
