@@ -2,7 +2,7 @@ import LoadingScreen from "@/app/loading";
 import { useDropdown } from "@/components/ExerciseData";
 import { Leaderboard } from "@/components/Leaderboard";
 import RankChart from "@/components/RankChart";
-import { fetchWrapper } from "@/middleware/helpers";
+import { fetchWrapper, SafeError } from "@/middleware/helpers";
 import { LeaderboardData, repsLeaderboardAtom, setLeaderboardAtom, volumeLeaderboardAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useRouter } from "expo-router";
@@ -26,7 +26,7 @@ interface OverallLeaderboardOption {
   value: OverallLeaderboardType
 }
 
-type ExerciseLeaderboardType = 'volume' | 'sets' | 'reps'
+type ExerciseLeaderboardType = 'volume' | 'sets' | 'reps' | 'n_rep_max'
 interface ExerciseLeaderboardOption {
   label: string
   value: ExerciseLeaderboardType
@@ -77,7 +77,7 @@ export default function StatsDistribution() {
 
   const leaderboardOptions: LeaderboardOption[] = [
     { label: 'overall stats', value: 'overall' },
-    { label: 'per exercise', value: 'exercise' },
+    { label: 'stats per exercise', value: 'exercise' },
   ]
   const [leaderboardValue, setLeaderboardValue] = useState<LeaderboardType>('overall');
 
@@ -92,6 +92,7 @@ export default function StatsDistribution() {
   const [overallMetricValue, setOverallMetricValue] = useState<OverallLeaderboardType>('volume');
 
   const [exercisesMeta, setExercisesMeta] = useState<ExercisesMeta>({});
+  // const [exerciseReps, setExerciseReps] = useState<Record<string, number[]>>({});
 
   const exerciseOptions = useMemo<OptionsObject[]>(() => {
     return Object.entries(exercisesMeta).map(([id, value]) => ({
@@ -107,9 +108,24 @@ export default function StatsDistribution() {
     setExerciseValue(value);
   };
 
-  const [variationOptions, setVariationOptions] = useState<Record<string, OptionsObject[]>>({});
+  // const [variationOptions, setVariationOptions] = useState<Record<string, OptionsObject[]>>({});
 
-  const updateVariationOptions = (exercisesMeta: ExercisesMeta) => {
+  // const updateVariationOptions = (exercisesMeta: ExercisesMeta) => {
+  //   const optionsMap: Record<string, OptionsObject[]> = {};
+  //   for (const [exerciseId, exerciseMeta] of Object.entries(exercisesMeta)) {
+  //     optionsMap[exerciseId] = Object.entries(exerciseMeta.variations).map(([id, name]) => ({
+  //       label: name,
+  //       value: id
+  //     }));
+  //     optionsMap[exerciseId].unshift({
+  //       label: 'base',
+  //       value: 'base'
+  //     })
+  //   }
+  //   setVariationOptions(optionsMap);
+  // };
+  
+  const variationOptions = useMemo<Record<string, OptionsObject[]>>(() => {
     const optionsMap: Record<string, OptionsObject[]> = {};
     for (const [exerciseId, exerciseMeta] of Object.entries(exercisesMeta)) {
       optionsMap[exerciseId] = Object.entries(exerciseMeta.variations).map(([id, name]) => ({
@@ -121,15 +137,30 @@ export default function StatsDistribution() {
         value: 'base'
       })
     }
-    setVariationOptions(optionsMap);
+    return optionsMap;
+  }, [exercisesMeta]);
+
+  const [variationValue, setVariationValue] = useState<string>('base');
+
+  const [exerciseRepOptions, setExerciseRepOptions] = useState<Record<string, OptionsObject[]>>({});
+  const updateExerciseRepOptions = (recordReps: Record<string, number[]>) => {
+    const optionsMap: Record<string, OptionsObject[]> = {};
+    for (const [exerciseId, repList] of Object.entries(recordReps)) {
+      optionsMap[exerciseId] = repList.map((rep) => ({
+        label: rep.toString(),
+        value: rep.toString()
+      }))
+    }
+    setExerciseRepOptions(optionsMap);
   };
   
-  const [variationValue, setVariationValue] = useState<string>('base');
+  const [exerciseRepValue, setExerciseRepValue] = useState<string | null>(null);
 
   const exerciseMetricOptions: ExerciseLeaderboardOption[] = [
     { label: 'volume', value: 'volume' },
     { label: 'sets', value: 'sets' },
     { label: 'reps', value: 'reps' },
+    { label: 'n rep max', value: 'n_rep_max' },
   ]
   const [exerciseMetricValue, setExerciseMetricValue] = useState<ExerciseLeaderboardType>('volume');
 
@@ -139,11 +170,10 @@ export default function StatsDistribution() {
     if (leaderboardValue === 'overall') {
       return `overall:${overallMetricValue}`;
     } else if (leaderboardValue === 'exercise') {
-      if (variationValue === 'base') {
-        return `exercise:${exerciseValue}:${exerciseMetricValue}`
-      } else {
-        return `exercise:${exerciseValue}:${variationValue}:${exerciseMetricValue}`
+      if (exerciseMetricValue === 'n_rep_max') {
+        return `exercise:${getExerciseId()}:${exerciseRepValue}:${exerciseMetricValue}`
       }
+      return `exercise:${getExerciseId()}:${exerciseMetricValue}`
     }
     throw new Error("unknown leaderboard type");
   }; 
@@ -169,6 +199,7 @@ export default function StatsDistribution() {
       
       const exercisesMeta = data.exercises;
       setExercisesMeta(exercisesMeta);
+      updateExerciseRepOptions(data.exercise_record_reps);
 
       if (Object.keys(exercisesMeta).length === 0) {
         setExerciseValue(null);
@@ -182,7 +213,7 @@ export default function StatsDistribution() {
         setExerciseValue(exerciseId);
       }
 
-      updateVariationOptions(exercisesMeta);
+      // updateVariationOptions(exercisesMeta);
       setVariationValue('base');
 
     } catch (error) {
@@ -218,7 +249,7 @@ export default function StatsDistribution() {
       }
 
     } catch (error) {
-      addCaughtErrorLog(error, 'error stats/exercises-meta')
+      addCaughtErrorLog(error, 'error fetchLeaderboard')
       setLeaderboardData(null);
     } finally {
       setLoadingStats(false);
@@ -230,11 +261,11 @@ export default function StatsDistribution() {
       case 'overall':
         return `stats/leaderboard/${leaderboardValue}/${overallMetricValue}`;
       case 'exercise':
-        if (variationValue === 'base') {
-          return `stats/leaderboard/${leaderboardValue}/${exerciseValue}/${exerciseMetricValue}`;
-        } else {
-          return `stats/leaderboard/${leaderboardValue}/${variationValue}/${exerciseMetricValue}`;
+        if (exerciseMetricValue !== 'n_rep_max') {
+          return `stats/leaderboard/${leaderboardValue}/${getExerciseId()}/${exerciseMetricValue}`;
         }
+        if (exerciseRepValue === null) throw new SafeError('exercise rep value is null');
+        return `stats/leaderboard/record/${getExerciseId()}/${exerciseRepValue}`;
     }
   };
 
@@ -249,7 +280,7 @@ export default function StatsDistribution() {
       return;
     }
     fetchLeaderboard();
-  }, [leaderboardValue, overallMetricValue, exerciseValue, variationValue, exerciseMetricValue])
+  }, [leaderboardValue, overallMetricValue, exerciseValue, variationValue, exerciseMetricValue, exerciseRepValue])
 
   const getPercentile = (rank: number | null, maxRank: number | null): number | null => {
     if (rank === null || !maxRank) return null;
@@ -260,6 +291,10 @@ export default function StatsDistribution() {
     return loadingStats || loadingExercisesMeta;
   }
 
+  const getExerciseId = (): string | null => {
+    return variationValue === 'base' ? exerciseValue : variationValue
+  };
+
   const renderLeaderboard = (): JSX.Element => {
     if (isLoading()) {
       return <LoadingScreen />;
@@ -268,6 +303,8 @@ export default function StatsDistribution() {
         <View
           style={{
             flex: 1,
+            height: 200,
+            width: '100%',
             justifyContent: 'center',
             alignItems: 'center'
           }}
@@ -282,7 +319,19 @@ export default function StatsDistribution() {
       <>
         <Leaderboard data={leaderboardData} />
         <View style={{height: 180}}>
-          <RankChart data={leaderboardData.rank_data}/>
+          {leaderboardData.rank_data.length > 1 ?
+            <RankChart data={leaderboardData.rank_data}/>
+          :
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Text style={commonStyles.text}>not enough data to graph</Text>
+            </View>
+          }
         </View>
         {leaderboardData.user_rank === null ?
           <Text 
@@ -297,7 +346,6 @@ export default function StatsDistribution() {
             Rank: {leaderboardData.user_rank}/{leaderboardData.max_rank} | Percentile: {getPercentile(leaderboardData.user_rank, leaderboardData.max_rank)}
           </Text>
         }
-        
       </>
     )
   };
@@ -313,6 +361,19 @@ export default function StatsDistribution() {
     if (!(exerciseValue in variationOptions)) return true;
     return variationOptions[exerciseValue].length <= 1
   };
+
+  useEffect(() => {
+    const tempReps = (exerciseRepOptions[getExerciseId() ?? ''] ?? []).map((obj) => {
+      return obj.value;
+    });
+    if (tempReps.length === 0) return;
+    if (exerciseRepValue === null) {
+      setExerciseRepValue(tempReps[0]);
+      return;
+    }
+    if (tempReps.includes(exerciseRepValue)) return;
+    setExerciseRepValue(tempReps[0]);
+  }, [exerciseMetricValue, exerciseValue, variationValue]);
 
   return (
     <View 
@@ -356,7 +417,8 @@ export default function StatsDistribution() {
             flexDirection: 'row',
             justifyContent: 'space-between',
             marginLeft: 14,
-             marginRight: 14,  
+            marginRight: 14,  
+            marginBottom: 4,
           }}
         >
           <View>
@@ -372,6 +434,21 @@ export default function StatsDistribution() {
               chooseVariationDisabled()
             )}
           </View>
+        </View>
+      }
+      {(leaderboardValue === 'exercise' && exerciseMetricValue === 'n_rep_max') &&
+        <View
+          style={{
+            marginLeft: 14,
+          }}
+        >
+          <Text style={commonStyles.text}>Choose a rep number:</Text>
+          {useDropdown(
+            exerciseRepOptions[getExerciseId() ?? ''] ?? [],
+            exerciseRepValue,
+            setExerciseRepValue,
+            // chooseVariationDisabled()
+          )}
         </View>
       }
       {renderLeaderboard()}
