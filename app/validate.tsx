@@ -74,7 +74,7 @@ export default function Validate() {
         await SecureStore.setItemAsync("auth_token", auth_token);
         setUserData(data.user_data);
         await loadInitialNecessary(fetchMappings);
-        router.replace('/(tabs)');
+        router.replace('/(tabs)/home');
       } else {
         throw new Error('unknown status');
       }

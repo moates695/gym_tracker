@@ -302,3 +302,11 @@ export interface ErrorLog {
 
 export const errorLogsAtom = atomWithStorage<ErrorLog[]>('errorLogs', [], storage, { getOnInit: true });
 export const loadableErrorLogsAtom = loadable(errorLogsAtom);
+
+export interface FriendsListItem {
+  id: string
+  username: string
+}
+
+export const friendsListAtom = atomWithStorage<FriendsListItem[]>('friendsList', [], storage, { getOnInit: true });
+export const loadableFriendsListAtom = loadable(friendsListAtom);
