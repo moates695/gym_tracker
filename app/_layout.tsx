@@ -103,7 +103,7 @@ export default function RootLayout() {
         } catch (error) {
           throw new SafeError(`fetching required startup data: ${safeErrorMessage(error)}`);
         }
-        router.replace("/(tabs)");
+        router.replace("/(tabs)/home");
         try {
           await Promise.all([
             fetchExerciseList(),
