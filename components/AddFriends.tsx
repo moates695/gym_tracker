@@ -6,14 +6,13 @@ import { useSetAtom } from "jotai";
 import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 import { fetchWrapper, SafeError } from "@/middleware/helpers";
 import LoadingScreen from "@/app/loading";
+import AddFriendsListItem from "./AddFriendsListItem";
 
-interface AddFriendsProps {
-  onPress: () => void
-}
+// todo: show if friend
+// todo: show if request sent
+// todo: allow to cancel request
 
-export default function AddFriends(props: AddFriendsProps) {
-  const { onPress } = props;
-
+export default function AddFriends() {
   const addErrorLog = useSetAtom(addErrorLogAtom);
   const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
@@ -25,12 +24,15 @@ export default function AddFriends(props: AddFriendsProps) {
 
   const updateSearchText = (text: string) => {
     setSearchText(text);
-    if (text.trim().length === 0) return;
+    if (text.trim().length === 0) {
+      setSearchResults([]);
+      return;
+    }
     if (searchTimeoutId) {
       clearTimeout(searchTimeoutId);
     }
     setSearchTimeoutId(setTimeout(() => {
-      search();
+      search(text);
     }, 350));
   };
 
@@ -40,16 +42,18 @@ export default function AddFriends(props: AddFriendsProps) {
     };
   }, [searchTimeoutId]);
 
-  const search = async () => {
-    if (searchText.trim().length === 0) return;
+  const search = async (username: string) => {
+    if (username.trim().length === 0) {
+      setSearchResults([]);
+      return;
+    }
     setSearching(true);
-    if (beforeInitSearch) setBeforeInitSearch(false);
     try {
       const data = await fetchWrapper({
         route: 'users/search',
         method: 'GET',
         params: {
-          "username": searchText
+          username
         }
       })
       if (!data) throw new SafeError(`bad username search response`);
@@ -59,159 +63,121 @@ export default function AddFriends(props: AddFriendsProps) {
     } catch (error) {
       addCaughtErrorLog(error, 'error during username search');
     } finally {
+      if (beforeInitSearch) setBeforeInitSearch(false);
       setSearching(false);
     }
   };
 
   const listComponent = (): JSX.Element => {
-    // if () {
-
-    // }
-    return <></>
+    if (beforeInitSearch) {
+      return <View style={{height: 12}}/>
+    } else if (searchResults === null) {
+      return (
+        <Text 
+          style={[commonStyles.text, {
+            margin: 12,
+            paddingTop: 5,
+            paddingBottom: 5,
+            color: 'red'
+          }]}
+        >
+          could not load user data
+        </Text>
+      )
+    } else if (searchResults.length === 0) {
+      return (
+        <Text
+          style={[commonStyles.text, {
+            margin: 12,
+            paddingTop: 5,
+            paddingBottom: 5,
+            color: 'orange',
+          }]}
+        >
+          search returned no username matches
+        </Text>
+      )
+    }
+    return (
+      <FlatList 
+        style={{
+          marginTop: (searchResults ?? []).length > 0 ? 20: 0,
+          // marginTop: 20,
+          marginBottom: 20,
+          marginLeft: 10,
+          marginRight: 10,
+        }}
+        data={searchResults ?? []}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item, index }) => (
+          <AddFriendsListItem 
+            id={item.id}
+            username={item.username}
+            is_friend={item.is_friend}
+            index={index}
+          />
+        )}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      />
+    )
   };
 
   return (
-    <View style={styles.modalBackground}>
-      <View style={styles.modalContainer}>
-        {(searchResults === null && !beforeInitSearch) &&
-          <View>
-            <Text 
-              style={[commonStyles.text, {
-                marginLeft: 12, 
-                marginTop: 4, 
-                color: 'red'
-              }]}
-            >
-              could not load user data
-            </Text>
-          </View>
-        }
-        {searchResults !== null && searchResults.length === 0 &&
-          <View>
-            <Text
-              style={[commonStyles.text, {
-                marginLeft: 12, 
-                marginTop: 4, 
-                color: 'red'
-              }]}
-            >
-              search returned no username matches
-            </Text>
-          </View>
-        }
-        <FlatList 
+    <View 
+      style={{
+        minHeight: 'auto',
+        borderColor: '#ccc',
+        borderTopWidth: 1,
+        marginBottom: 20
+      }}
+    >
+      {listComponent()}        
+      <View>
+        <Text style={[commonStyles.text, {marginLeft: 12, marginBottom: 4}]}>
+          search for a username:
+        </Text>
+        <View 
           style={{
-            marginTop: 10,
-            marginBottom: 10,
-            width: '100%',
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginHorizontal: 10
           }}
-          data={searchResults ?? []}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item, index }) => (
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: 4,
-                borderRadius: 8,
-                padding: 10,
-                backgroundColor: index % 2 ? '#000000': '#222328ff'
-              }}
-            >
-              <Text style={commonStyles.text}>
-                {item.username}
-              </Text>
-              {item.is_friend ?
-                <TouchableOpacity 
-                  style={commonStyles.textButton}
-                >
-                  <Text style={commonStyles.text}>friend</Text>
-                </TouchableOpacity>
-              :
-                <TouchableOpacity 
-                  style={commonStyles.textButton}
-                >
-                  <Text style={commonStyles.text}>add</Text>
-                </TouchableOpacity>
-              }
-              
-            </View>
-          )}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        />
-        <View>
-          <Text style={[commonStyles.text, {marginLeft: 12, marginBottom: 4}]}>
-            Search for a username:
-          </Text>
-          <View 
+        >
+          <TextInput
+            value={searchText}
+            onChangeText={updateSearchText}
+            style={[styles.input]}
+            returnKeyType="done"
+          />
+          <TouchableOpacity 
             style={{
-              flexDirection: 'row',
+              height: 50,
+              width: 50,
+              borderWidth: 1,
+              borderColor: '#ccc',
+              borderRadius: 8,
               justifyContent: 'center',
               alignItems: 'center',
-              marginHorizontal: 10
+              marginLeft: 10,
             }}
+            onPress={() => search(searchText)}
+            disabled={searching || searchText.trim().length === 0}
           >
-            <TextInput
-              value={searchText}
-              onChangeText={updateSearchText}
-              // style={[styles.input, {borderColor: error_message === '' ? "#ccc": "red"}]}
-              style={[styles.input]}
-              returnKeyType="done"
-            />
-            <TouchableOpacity 
-              style={{
-                // padding: 12,
-                height: 50,
-                width: 50,
-                borderWidth: 1,
-                borderColor: '#ccc',
-                borderRadius: 8,
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginLeft: 10,
-              }}
-              onPress={search}
-              disabled={searching || searchText.trim().length === 0}
-            >
-              {searching ?
-                <ActivityIndicator size="small"/>
-              :
-                <Ionicons name="search" size={24} color="#ccc" />
-              }
-              </TouchableOpacity>
-          </View>
+            {searching ?
+              <ActivityIndicator size="small"/>
+            :
+              <Ionicons name="search" size={24} color="#ccc" />
+            }
+            </TouchableOpacity>
         </View>
-        <TouchableOpacity 
-          style={[commonStyles.thinTextButton, {width: 50, alignSelf: 'center', marginTop: 20}]}
-          onPress={onPress}
-        >
-          <Text style={commonStyles.text}>hide</Text>
-        </TouchableOpacity>
       </View>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  modalBackground: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    justifyContent: 'flex-end',
-    width: '100%',
-  },
-  modalContainer: {
-    backgroundColor: 'black',
-    padding: 15,
-    // alignItems: 'center',
-    elevation: 5,
-    borderColor: 'red',
-    borderTopWidth: 2,
-    maxHeight: '90%',
-    width: '100%',
-    paddingBottom: 20,
-  },
   input: {
     flex: 1,
     height: 50,

@@ -3,37 +3,27 @@ import { friendsListAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useAtom } from "jotai";
 import React, { useState } from "react";
-import { TouchableOpacity, View, Text, Modal } from "react-native";
+import { TouchableOpacity, View, Text, Modal, KeyboardAvoidingView, Platform } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 export default function Friends() {
   const [friendsList, setFriendsList] = useAtom(friendsListAtom);
   
-  const [showAddFriends, setShowAddFriends] = useState<boolean>(false)
-
   return (
-    <View 
+    <KeyboardAvoidingView 
       style={{
         flex: 1,
         backgroundColor: 'black',
       }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={110}
     >
-      <TouchableOpacity
-        style={[commonStyles.thinTextButton, {
-          width: 50, 
-          marginBottom: 4,
-          marginLeft: 12,
-        }]}
-        onPress={() => {setShowAddFriends(!showAddFriends)}}
-        // disabled={}
-      >
-        <Text style={commonStyles.text}>search</Text>
-      </TouchableOpacity>
       {friendsList.length === 0 ?
         <View
           style={{
             flex: 1,
             justifyContent: 'center',
-            alignItems: 'center'
+            alignItems: 'center',
           }}
         >
           <Text style={commonStyles.text}>you haven't added any friends yet</Text>
@@ -41,14 +31,7 @@ export default function Friends() {
       :
         <></>
       }
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={showAddFriends}
-        onRequestClose={() => setShowAddFriends(false)}
-      >
-        <AddFriends onPress={() => setShowAddFriends(false)}/>
-      </Modal>
-    </View>
+      <AddFriends />
+    </KeyboardAvoidingView>
   )
 }
