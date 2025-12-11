@@ -211,16 +211,24 @@ export default function HistoryStatsItem(props: HistoryStatsItemProps) {
                         borderRadius: 5,
                         padding: 5,
                         margin: 2,
-                        width: '90%',
+                        width: '100%',
                         marginTop: 10,
                       }}
                     >
-                      <Text style={[commonStyles.text, {marginBottom: 2}]}>
-                        {exerciseStats.exercise_name}
-                      </Text>
-                      {exerciseStats.variation_name !== null &&
-                        <Text style={commonStyles.text}>{exerciseStats.variation_name}</Text>
-                      }
+                      <View
+                        style={{
+                          flexDirection: 'row'
+                        }}
+                      >
+                        <Text style={[commonStyles.text, {marginBottom: 2}]}>
+                          {exerciseStats.exercise_name}
+                        </Text>
+                        {exerciseStats.variation_name !== null &&
+                          <Text style={[commonStyles.text, {marginLeft: 4}]}>
+                            ({exerciseStats.variation_name})
+                          </Text>
+                        }
+                      </View>
                       <View
                         style={{
                           flexDirection: 'row',
