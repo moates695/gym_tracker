@@ -17,16 +17,13 @@ export default function Home() {
   return (
     <Suspense fallback={<View style={{ flex: 1, backgroundColor: 'black' }} />}>
       <SafeAreaView style={styles.container}>
-        <View style={{padding: 20}}>
-          <Text style={{color: "white"}}>Home</Text>
-          <Text style={{color: "white"}}>coming soon...</Text>
-        </View>
         <TouchableOpacity
           style={[styles.button, {width: 200}]}
           onPress={() => router.replace('/(tabs)/home/friends')}
         >
           <Text style={commonStyles.text}>friends</Text>
         </TouchableOpacity>
+        <Text style={{color: "white", marginTop: 20}}>more coming soon...</Text>
         <StatusBar style='dark' />
       </SafeAreaView >
     </Suspense>

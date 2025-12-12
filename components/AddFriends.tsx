@@ -8,10 +8,6 @@ import { fetchWrapper, SafeError } from "@/middleware/helpers";
 import LoadingScreen from "@/app/loading";
 import AddFriendsListItem from "./AddFriendsListItem";
 
-// todo: show if friend
-// todo: show if request sent
-// todo: allow to cancel request
-
 export type UserSearchResultRelation = 'none' | 'requested' | 'friend';
 
 export interface UserSearchResultItem {
@@ -86,7 +82,7 @@ export default function AddFriends() {
     setSearchResults(tempList);
   };
 
-  const listComponent = (): JSX.Element => {
+  const listComponent = ((): JSX.Element => {
     if (beforeInitSearch) {
       return <View style={{height: 12}}/>
     } else if (searchResults === null) {
@@ -125,7 +121,7 @@ export default function AddFriends() {
           marginRight: 10,
         }}
         data={searchResults ?? []}
-        keyExtractor={(item) => item.id}
+        // keyExtractor={(item) => item.id}
         renderItem={({ item, index }) => (
           <AddFriendsListItem 
             id={item.id}
@@ -139,18 +135,18 @@ export default function AddFriends() {
         keyboardShouldPersistTaps="handled"
       />
     )
-  };
+  })();
 
   return (
     <View 
       style={{
         minHeight: 'auto',
-        borderColor: '#ccc',
+        borderColor: 'gray',
         borderTopWidth: 1,
         marginBottom: 20
       }}
     >
-      {listComponent()}        
+      {listComponent}        
       <View>
         <Text style={[commonStyles.text, {marginLeft: 12, marginBottom: 4}]}>
           search for a username:

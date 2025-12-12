@@ -108,19 +108,6 @@ export default function AddFriendsListItem(props: AddFriendsListItemProps) {
           <Text style={commonStyles.text}>cancel</Text>
         </TouchableOpacity>
       }
-      {props.relation === "friend" &&
-        <View
-          style={{
-            height: 24,
-            justifyContent: 'center',
-            marginRight: 8,
-          }}
-        >
-          <Text style={[commonStyles.text, {color: 'green'}]}>
-            friend
-          </Text>
-        </View>
-      }
     </View>
   )
 }

@@ -309,4 +309,7 @@ export interface FriendsListItem {
 }
 
 export const friendsListAtom = atomWithStorage<FriendsListItem[]>('friendsList', [], storage, { getOnInit: true });
-export const loadableFriendsListAtom = loadable(friendsListAtom);
+// export const loadableFriendsListAtom = loadable(friendsListAtom);
+
+export const inboundFriendRequestsAtom = atomWithStorage<FriendsListItem[]>('inboundFriendRequests', [], storage, { getOnInit: true });
+export const outboundFriendRequestsAtom = atomWithStorage<FriendsListItem[]>('outboundFriendRequests', [], storage, { getOnInit: true });
