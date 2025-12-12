@@ -9,8 +9,10 @@ import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
 interface FriendRequestInboundItemProps {
   id: string
   username: string
+  request_state: string
   index: number
   removeRequest: (id: string) => void
+  updateRequestState: (id: string, new_state: string) => void
 }
 
 export default function FriendRequestInboundItem(props: FriendRequestInboundItemProps) {
@@ -32,23 +34,47 @@ export default function FriendRequestInboundItem(props: FriendRequestInboundItem
           "requestor_id": props.id
         }
       })
-      if (!data) throw new SafeError(`bad username search response`);
-      
-      if (data.status !== 'accepted') {
+      if (!data || !data.status) throw new SafeError(`bad acceptRequest response`);
+
+      if (data.status === "no-request") {
+        props.removeRequest(props.id);
+        throw new SafeError('no friend request found');
+      } else if (data.status !== 'accepted') {
         throw new SafeError(`bad users/request/accept status '${data.status}'`);
       }
 
-      props.removeRequest(props.id);
+
 
     } catch (error) {
-      addCaughtErrorLog(error, 'error during username search');
+      addCaughtErrorLog(error, 'error during acceptRequest');
     } finally {
       setSendingAccept(false);
     }
   };
 
-  const cancelRequest = async () => {
-    
+  const denyRequest = async () => {
+    setSendingDeny(true);
+    try {
+      const data = await fetchWrapper({
+        route: 'users/request/deny',
+        method: 'POST',
+        body: {
+          "requestor_id": props.id
+        }
+      })
+      if (!data || !data.status) throw new SafeError(`bad denyRequest response`);
+
+      if (data.status !== 'denied') {
+        throw new SafeError(`bad users/request/deny status '${data.status}'`);
+      } else {
+        // props.removeRequest(props.id);
+      }
+
+    } catch (error) {
+      addCaughtErrorLog(error, 'error during denyRequest');
+    } finally {
+      setSendingDeny(false);
+    }
   };
 
   return (
@@ -71,28 +97,45 @@ export default function FriendRequestInboundItem(props: FriendRequestInboundItem
           flexDirection: 'row'
         }}
       >
-        <TouchableOpacity 
-          style={[commonStyles.textButton, {
-            marginRight: 8,
-            borderColor: 'green',
-            borderWidth: 2,
-          }]}
-          onPress={acceptRequest}
-          disabled={sendingAccept}
-        >
-          <Text style={commonStyles.text}>accept</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[commonStyles.textButton, {
-            borderColor: 'red',
-            borderWidth: 2,
-          }
-          ]}
-          onPress={acceptRequest}
-          disabled={false}
-        >
-          <Text style={commonStyles.text}>deny</Text>
-        </TouchableOpacity>
+        {props.request_state === 'requested' &&
+          <>
+            <TouchableOpacity 
+              style={[commonStyles.textButton, {
+                marginRight: 8,
+                borderColor: 'green',
+                borderWidth: 2,
+              }]}
+              onPress={acceptRequest}
+              disabled={sendingAccept}
+            >
+              <Text style={commonStyles.text}>accept</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[commonStyles.textButton, {
+                borderColor: 'red',
+                borderWidth: 2,
+              }]}
+              onPress={denyRequest}
+              disabled={sendingDeny}
+            >
+              <Text style={commonStyles.text}>deny</Text>
+            </TouchableOpacity>
+          </>
+        }
+        {props.request_state === 'accepted' &&
+          <>
+            <Text style={[commonStyles.text, {color: 'green'}]}>
+              accepted
+            </Text>
+          </>
+        }
+        {props.request_state === 'denied' &&
+          <>
+            <Text style={[commonStyles.text, {color: 'red'}]}>
+              denied
+            </Text>
+          </>
+        }
       </View>
     </View>
   )

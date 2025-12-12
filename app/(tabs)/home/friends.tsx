@@ -51,7 +51,15 @@ export default function Friends() {
       )
     } else if (friendsList.length === 0) {
       return (
-        <Text style={commonStyles.text}>you haven't added any friends yet</Text>
+        <View 
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
+        >
+          <Text style={commonStyles.text}>you haven't added any friends yet</Text>
+        </View>
       )
     }
     return (

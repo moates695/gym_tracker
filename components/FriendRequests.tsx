@@ -27,8 +27,6 @@ export default function FriendRequests(props: FriendRequestsProps) {
     return requestType === 'inbound' ? inboundRequests : outboundRequests;
   }, [requestType, inboundRequests, outboundRequests]);
 
-
-
   const refreshRequests = async () => {
     setReloading(true);
     try {
@@ -38,8 +36,8 @@ export default function FriendRequests(props: FriendRequestsProps) {
       })
       if (!data) throw new SafeError(`bad username search response`);
 
-      setInboundRequests(data.inbound);
-      setOutboundRequests(data.outbound);
+      setInboundRequests(data.inbound ?? []);
+      setOutboundRequests(data.outbound ?? []);
 
     } catch (error) {
       addCaughtErrorLog(error, 'error during username search');
@@ -62,7 +60,18 @@ export default function FriendRequests(props: FriendRequestsProps) {
     }
   };
 
-  // const requests = requestType === 'inbound' ? inboundRequests : outboundRequests;
+  const updateRequestState = (id: string, new_state: string) => {
+    const tempList = structuredClone(requests);
+    for (const item of tempList) {
+      if (item.id !== id) continue;
+      item.request_state = new_state;
+    }
+    if (requestType === 'inbound') {
+      setInboundRequests(tempList);
+    } else {
+      setOutboundRequests(tempList);
+    }
+  };
 
   const requestsComponent = ((): JSX.Element => {
     if (reloading) {
@@ -88,8 +97,10 @@ export default function FriendRequests(props: FriendRequestsProps) {
               <FriendRequestInboundItem 
                 id={item.id}
                 username={item.username}
+                request_state={item.request_state}
                 index={index}
                 removeRequest={removeRequest}
+                updateRequestState={updateRequestState}
               />
             }
             {requestType === 'outbound' && 
@@ -193,7 +204,7 @@ const styles = StyleSheet.create({
     borderColor: 'red',
     borderTopWidth: 2,
     maxHeight: '95%',
-    minHeight: '30%',
+    minHeight: '40%',
     width: '100%',
     paddingBottom: 20,
   },

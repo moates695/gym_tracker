@@ -8,7 +8,7 @@ import { fetchWrapper, SafeError } from "@/middleware/helpers";
 import LoadingScreen from "@/app/loading";
 import AddFriendsListItem from "./AddFriendsListItem";
 
-export type UserSearchResultRelation = 'none' | 'requested' | 'friend';
+export type UserSearchResultRelation = 'none' | 'requested' | 'inbound';
 
 export interface UserSearchResultItem {
   id: string
@@ -82,6 +82,13 @@ export default function AddFriends() {
     setSearchResults(tempList);
   };
 
+  const removeItem = (id: string) => {
+    if (!searchResults) return;
+    let tempList = structuredClone(searchResults);
+    tempList = tempList.filter(item => item.id != id);
+    setSearchResults(tempList);
+  };
+
   const listComponent = ((): JSX.Element => {
     if (beforeInitSearch) {
       return <View style={{height: 12}}/>
@@ -129,6 +136,7 @@ export default function AddFriends() {
             relation={item.relation}
             index={index}
             updateRelation={updateRelation}
+            removeItem={removeItem}
           />
         )}
         showsVerticalScrollIndicator={false}
