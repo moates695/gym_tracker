@@ -4,7 +4,9 @@ import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 import { commonStyles } from "@/styles/commonStyles";
 import { useSetAtom } from "jotai";
 import React, { useEffect, useMemo, useState } from "react";
-import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Text, FlatList } from "react-native";
+import FriendRequestInboundItem from "./FriendRequestInboundItem";
+import FriendRequestOutboundItem from "./FriendRequestOutboundItem";
 
 type RequestType = 'inbound' | 'outbound';
 
@@ -23,7 +25,9 @@ export default function FriendRequests(props: FriendRequestsProps) {
 
   const requests = useMemo(() => {
     return requestType === 'inbound' ? inboundRequests : outboundRequests;
-  }, [requestType]);
+  }, [requestType, inboundRequests, outboundRequests]);
+
+
 
   const refreshRequests = async () => {
     setReloading(true);
@@ -39,7 +43,6 @@ export default function FriendRequests(props: FriendRequestsProps) {
 
     } catch (error) {
       addCaughtErrorLog(error, 'error during username search');
-
     } finally {
       setReloading(false);
     }
@@ -48,6 +51,16 @@ export default function FriendRequests(props: FriendRequestsProps) {
   useEffect(() => {
     refreshRequests();
   }, []);
+
+  const removeRequest = (id: string) => {
+    let tempList = structuredClone(requests);
+    tempList = tempList.filter(item => item.id != id);
+    if (requestType === 'inbound') {
+      setInboundRequests(tempList);
+    } else {
+      setOutboundRequests(tempList);
+    }
+  };
 
   // const requests = requestType === 'inbound' ? inboundRequests : outboundRequests;
 
@@ -62,7 +75,31 @@ export default function FriendRequests(props: FriendRequestsProps) {
       )
     }
     return (
-      <></>
+      <FlatList 
+        style={{
+        }}
+        contentContainerStyle={{
+          marginTop: 12
+        }}
+        data={requests ?? []}
+        renderItem={({ item, index }) => (
+          <>
+            {requestType === 'inbound' && 
+              <FriendRequestInboundItem 
+                id={item.id}
+                username={item.username}
+                index={index}
+                removeRequest={removeRequest}
+              />
+            }
+            {requestType === 'outbound' && 
+              <FriendRequestOutboundItem />
+            }
+          </>
+        )}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      />
     )
   })();
 
