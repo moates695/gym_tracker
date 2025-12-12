@@ -56,7 +56,7 @@ export const fetchWrapper = async ({route, method, params = {}, body, token_str 
     
   } catch (error) {
     console.log(error);
-    if (error instanceof SafeError) throw new SafeError(`error saving workout: ${error.message}`);
+    if (error instanceof SafeError) throw new SafeError(error.message);
     throw new SafeError(`uncaught fetchWrapper error: ${safeErrorMessage(error, '')}`);
   } finally {
     clearTimeout(id);

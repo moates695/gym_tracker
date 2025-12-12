@@ -12,6 +12,14 @@ import AddFriendsListItem from "./AddFriendsListItem";
 // todo: show if request sent
 // todo: allow to cancel request
 
+export type UserSearchResultRelation = 'none' | 'requested' | 'friend';
+
+export interface UserSearchResultItem {
+  id: string
+  username: string
+  relation: UserSearchResultRelation
+}
+
 export default function AddFriends() {
   const addErrorLog = useSetAtom(addErrorLogAtom);
   const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
@@ -19,7 +27,7 @@ export default function AddFriends() {
   const [searchText, setSearchText] = useState<string>('');
   const [searching, setSearching] = useState<boolean>(false);
   const [searchTimeoutId, setSearchTimeoutId] = useState<ReturnType<typeof setTimeout> | null>(null);
-  const [searchResults, setSearchResults] = useState<any[] | null>(null);
+  const [searchResults, setSearchResults] = useState<UserSearchResultItem[] | null>(null);
   const [beforeInitSearch, setBeforeInitSearch] = useState<boolean>(true);
 
   const updateSearchText = (text: string) => {
@@ -68,6 +76,16 @@ export default function AddFriends() {
     }
   };
 
+  const updateRelation = (id: string, relation: UserSearchResultRelation) => {
+    if (!searchResults) return;
+    const tempList = structuredClone(searchResults);
+    for (const item of tempList) {
+      if (item.id != id) continue;
+      item.relation = relation;
+    }
+    setSearchResults(tempList);
+  };
+
   const listComponent = (): JSX.Element => {
     if (beforeInitSearch) {
       return <View style={{height: 12}}/>
@@ -102,7 +120,6 @@ export default function AddFriends() {
       <FlatList 
         style={{
           marginTop: (searchResults ?? []).length > 0 ? 20: 0,
-          // marginTop: 20,
           marginBottom: 20,
           marginLeft: 10,
           marginRight: 10,
@@ -113,8 +130,9 @@ export default function AddFriends() {
           <AddFriendsListItem 
             id={item.id}
             username={item.username}
-            is_friend={item.is_friend}
+            relation={item.relation}
             index={index}
+            updateRelation={updateRelation}
           />
         )}
         showsVerticalScrollIndicator={false}

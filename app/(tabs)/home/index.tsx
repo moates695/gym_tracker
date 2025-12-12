@@ -25,7 +25,7 @@ export default function Home() {
           style={[styles.button, {width: 200}]}
           onPress={() => router.replace('/(tabs)/home/friends')}
         >
-          <Text style={commonStyles.text}>Friends</Text>
+          <Text style={commonStyles.text}>friends</Text>
         </TouchableOpacity>
         <StatusBar style='dark' />
       </SafeAreaView >

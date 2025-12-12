@@ -118,31 +118,31 @@ export default function Stats() {
           style={[styles.button, {width: 200}]}
           onPress={() => router.replace('/(tabs)/stats/distributions')}
         >
-          <Text style={styles.text}>Muscle Distributions</Text>
+          <Text style={styles.text}>muscle distributions</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, {width: 200}]}
           onPress={() => router.replace('/(tabs)/stats/leaderboards')}
         >
-          <Text style={styles.text}>Leaderboards</Text>
+          <Text style={styles.text}>leaderboards</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, {width: 200}]}
           onPress={() => router.replace('/(tabs)/stats/favourites')}
         >
-          <Text style={styles.text}>Favourite Exercises</Text>
+          <Text style={styles.text}>favourite exercises</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, {width: 200}]}
           onPress={() => router.replace('/(tabs)/stats/history')}
         >
-          <Text style={styles.text}>Workout History</Text>
+          <Text style={styles.text}>workout history</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, {width: 200}]}
           onPress={() => router.replace('/(tabs)/stats/exercises')}
         >
-          <Text style={styles.text}>Exercise History</Text>
+          <Text style={styles.text}>exercise history</Text>
         </TouchableOpacity>
         <View style={{alignItems: 'center'}}>
           <TouchableOpacity
