@@ -36,14 +36,22 @@ export default function FriendRequestInboundItem(props: FriendRequestInboundItem
       })
       if (!data || !data.status) throw new SafeError(`bad acceptRequest response`);
 
-      if (data.status === "no-request") {
+      if (data.status === "accepted") {
+        props.updateRequestState(props.id, 'accepted');
+        const tempList = structuredClone(friendsList);
+        tempList.unshift({
+          id: props.id,
+          username: props.username
+        });
+        setFriendsList(tempList);
+      } else if (data.status === "existing") {
+        props.updateRequestState(props.id, 'accepted');
+      } else if (data.status === "no-request") {
         props.removeRequest(props.id);
         throw new SafeError('no friend request found');
       } else if (data.status !== 'accepted') {
         throw new SafeError(`bad users/request/accept status '${data.status}'`);
       }
-
-
 
     } catch (error) {
       addCaughtErrorLog(error, 'error during acceptRequest');
@@ -64,10 +72,10 @@ export default function FriendRequestInboundItem(props: FriendRequestInboundItem
       })
       if (!data || !data.status) throw new SafeError(`bad denyRequest response`);
 
-      if (data.status !== 'denied') {
-        throw new SafeError(`bad users/request/deny status '${data.status}'`);
+      if (data.status === 'denied') {
+        props.updateRequestState(props.id, 'denied');
       } else {
-        // props.removeRequest(props.id);
+        throw new SafeError(`bad users/request/deny status '${data.status}'`);
       }
 
     } catch (error) {
@@ -124,14 +132,14 @@ export default function FriendRequestInboundItem(props: FriendRequestInboundItem
         }
         {props.request_state === 'accepted' &&
           <>
-            <Text style={[commonStyles.text, {color: 'green'}]}>
+            <Text style={[commonStyles.text, {color: 'green', marginVertical: 2}]}>
               accepted
             </Text>
           </>
         }
         {props.request_state === 'denied' &&
           <>
-            <Text style={[commonStyles.text, {color: 'red'}]}>
+            <Text style={[commonStyles.text, {color: 'red', marginVertical: 2}]}>
               denied
             </Text>
           </>

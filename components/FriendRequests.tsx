@@ -2,11 +2,12 @@ import LoadingScreen from "@/app/loading";
 import { fetchWrapper, SafeError } from "@/middleware/helpers";
 import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 import { commonStyles } from "@/styles/commonStyles";
-import { useSetAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import React, { useEffect, useMemo, useState } from "react";
 import { View, StyleSheet, TouchableOpacity, Text, FlatList } from "react-native";
 import FriendRequestInboundItem from "./FriendRequestInboundItem";
 import FriendRequestOutboundItem from "./FriendRequestOutboundItem";
+import { friendsListAtom } from "@/store/general";
 
 type RequestType = 'inbound' | 'outbound';
 
@@ -14,10 +15,12 @@ interface FriendRequestsProps {
   onPress: () => void
 }
 
+// todo: refactor inbound and outbound components together
+
 export default function FriendRequests(props: FriendRequestsProps) {
   const addErrorLog = useSetAtom(addErrorLogAtom);
   const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
-  
+    
   const [requestType, setRequestType] = useState<RequestType>('inbound');
   const [inboundRequests, setInboundRequests] = useState<any[]>([]);
   const [outboundRequests, setOutboundRequests] = useState<any[]>([]);
@@ -104,7 +107,14 @@ export default function FriendRequests(props: FriendRequestsProps) {
               />
             }
             {requestType === 'outbound' && 
-              <FriendRequestOutboundItem />
+              <FriendRequestOutboundItem 
+                id={item.id}
+                username={item.username}
+                request_state={item.request_state}
+                index={index}
+                removeRequest={removeRequest}
+                updateRequestState={updateRequestState}
+              />
             }
           </>
         )}

@@ -174,14 +174,14 @@ export default function Friends() {
       >
         <FriendRequests onPress={() => setShowRequests(false)}/>
       </Modal>
-      <Modal
+      {/* <Modal
         animationType="slide"
         transparent={true}
         visible={showManage}
         onRequestClose={() => setShowManage(false)}
       >
         <ManageFriends onPress={() => setShowManage(false)}/>
-      </Modal>
+      </Modal> */ }
     </KeyboardAvoidingView>
   )
 }
