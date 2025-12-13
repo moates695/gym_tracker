@@ -7,23 +7,23 @@ import React, { useEffect, useMemo, useState } from "react";
 import { View, StyleSheet, TouchableOpacity, Text, FlatList } from "react-native";
 import FriendRequestInboundItem from "./FriendRequestInboundItem";
 import FriendRequestOutboundItem from "./FriendRequestOutboundItem";
-import { friendsListAtom } from "@/store/general";
+import { friendsListAtom, inboundFriendRequestsAtom, outboundFriendRequestsAtom } from "@/store/general";
+import FriendRequestItem from "./FriendRequestItem";
 
-type RequestType = 'inbound' | 'outbound';
+export type FriendRequestType = 'inbound' | 'outbound';
 
 interface FriendRequestsProps {
   onPress: () => void
 }
 
-// todo: refactor inbound and outbound components together
-
 export default function FriendRequests(props: FriendRequestsProps) {
   const addErrorLog = useSetAtom(addErrorLogAtom);
   const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
-    
-  const [requestType, setRequestType] = useState<RequestType>('inbound');
-  const [inboundRequests, setInboundRequests] = useState<any[]>([]);
-  const [outboundRequests, setOutboundRequests] = useState<any[]>([]);
+
+  const [inboundRequests, setInboundRequests] = useAtom(inboundFriendRequestsAtom);
+  const [outboundRequests, setOutboundRequests] = useAtom(outboundFriendRequestsAtom);
+
+  const [requestType, setRequestType] = useState<FriendRequestType>('inbound');
   const [reloading, setReloading] = useState<boolean>(false);
 
   const requests = useMemo(() => {
@@ -53,29 +53,6 @@ export default function FriendRequests(props: FriendRequestsProps) {
     refreshRequests();
   }, []);
 
-  const removeRequest = (id: string) => {
-    let tempList = structuredClone(requests);
-    tempList = tempList.filter(item => item.id != id);
-    if (requestType === 'inbound') {
-      setInboundRequests(tempList);
-    } else {
-      setOutboundRequests(tempList);
-    }
-  };
-
-  const updateRequestState = (id: string, new_state: string) => {
-    const tempList = structuredClone(requests);
-    for (const item of tempList) {
-      if (item.id !== id) continue;
-      item.request_state = new_state;
-    }
-    if (requestType === 'inbound') {
-      setInboundRequests(tempList);
-    } else {
-      setOutboundRequests(tempList);
-    }
-  };
-
   const requestsComponent = ((): JSX.Element => {
     if (reloading) {
       return <LoadingScreen />
@@ -95,28 +72,11 @@ export default function FriendRequests(props: FriendRequestsProps) {
         }}
         data={requests ?? []}
         renderItem={({ item, index }) => (
-          <>
-            {requestType === 'inbound' && 
-              <FriendRequestInboundItem 
-                id={item.id}
-                username={item.username}
-                request_state={item.request_state}
-                index={index}
-                removeRequest={removeRequest}
-                updateRequestState={updateRequestState}
-              />
-            }
-            {requestType === 'outbound' && 
-              <FriendRequestOutboundItem 
-                id={item.id}
-                username={item.username}
-                request_state={item.request_state}
-                index={index}
-                removeRequest={removeRequest}
-                updateRequestState={updateRequestState}
-              />
-            }
-          </>
+          <FriendRequestItem 
+            request={item}
+            index={index}
+            requestType={requestType}
+          />
         )}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"

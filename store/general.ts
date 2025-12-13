@@ -311,5 +311,13 @@ export interface FriendsListItem {
 export const friendsListAtom = atomWithStorage<FriendsListItem[]>('friendsList', [], storage, { getOnInit: true });
 // export const loadableFriendsListAtom = loadable(friendsListAtom);
 
-export const inboundFriendRequestsAtom = atomWithStorage<FriendsListItem[]>('inboundFriendRequests', [], storage, { getOnInit: true });
-export const outboundFriendRequestsAtom = atomWithStorage<FriendsListItem[]>('outboundFriendRequests', [], storage, { getOnInit: true });
+export type FriendRequestState = 'requested' | 'accepted' | 'denied';
+
+export interface FriendRequest {
+  id: string,
+  username: string
+  request_state: FriendRequestState
+}
+
+export const inboundFriendRequestsAtom = atomWithStorage<FriendRequest[]>('inboundFriendRequests', [], storage, { getOnInit: true });
+export const outboundFriendRequestsAtom = atomWithStorage<FriendRequest[]>('outboundFriendRequests', [], storage, { getOnInit: true });
