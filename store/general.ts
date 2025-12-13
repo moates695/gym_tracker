@@ -302,3 +302,23 @@ export interface ErrorLog {
 
 export const errorLogsAtom = atomWithStorage<ErrorLog[]>('errorLogs', [], storage, { getOnInit: true });
 export const loadableErrorLogsAtom = loadable(errorLogsAtom);
+
+export interface FriendsListItem {
+  user_id: string
+  username: string
+}
+
+export const friendsListAtom = atomWithStorage<FriendsListItem[]>('friendsList', [], storage, { getOnInit: true });
+// export const loadableFriendsListAtom = loadable(friendsListAtom);
+export const blockedListAtom = atomWithStorage<FriendsListItem[]>('friendsList', [], storage, { getOnInit: true });
+
+export type FriendRequestState = 'requested' | 'accepted' | 'denied';
+
+export interface FriendRequest {
+  id: string, // todo change here and backend to user_id
+  username: string
+  request_state: FriendRequestState
+}
+
+export const inboundFriendRequestsAtom = atomWithStorage<FriendRequest[]>('inboundFriendRequests', [], storage, { getOnInit: true });
+export const outboundFriendRequestsAtom = atomWithStorage<FriendRequest[]>('outboundFriendRequests', [], storage, { getOnInit: true });
