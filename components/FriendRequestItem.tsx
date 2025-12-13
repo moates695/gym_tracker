@@ -41,7 +41,7 @@ export default function FriendRequestItem(props: FriendRequestItemProps) {
         updateRequestState('accepted');
         const tempList = structuredClone(friendsList);
         tempList.unshift({
-          id: request.id,
+          user_id: request.id,
           username: request.username
         });
         setFriendsList(tempList);

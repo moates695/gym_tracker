@@ -1,40 +1,76 @@
 import AddFriends from "@/components/AddFriends";
 import { fetchWrapper, SafeError } from "@/middleware/helpers";
 import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
-import { friendsListAtom } from "@/store/general";
+import { blockedListAtom, friendsListAtom, FriendsListItem } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useAtom, useSetAtom } from "jotai";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { TouchableOpacity, View, Text, Modal, KeyboardAvoidingView, Platform, FlatList } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import Feather from '@expo/vector-icons/Feather';
 import LoadingScreen from "@/app/loading";
 import FriendRequests from "@/components/FriendRequests";
 import ManageFriends from "@/components/ManageFriends";
+import FriendItemButtons from "@/components/FriendItemButtons";
+import BlockedItemButtons from "@/components/BlockedItemButtons";
+
+interface UserListItem extends FriendsListItem {
+  type: 'friend' | 'blocked'
+}
 
 export default function Friends() {
   const addErrorLog = useSetAtom(addErrorLogAtom);
   const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
   
   const [friendsList, setFriendsList] = useAtom(friendsListAtom);
+  const [blockedList, setBlockedList] = useAtom(blockedListAtom);
+
   const [reloading, setReloading] = useState<boolean>(false);
 
   const [showRequests, setShowRequests] = useState<boolean>(false);
   const [showManage, setShowManage] = useState<boolean>(false);
 
+  const userList: UserListItem[] = useMemo(() => {
+    const tempFriends: UserListItem[] = friendsList.map((item) => {
+      return {
+        ...item,
+        type: 'friend'
+      }
+    });
+
+    if (!showManage) return tempFriends;
+
+    const tempBlocked: UserListItem[] = blockedList.map((item) => {
+      return {
+        ...item,
+        type: 'blocked'
+      }
+    });
+    
+    return tempFriends.concat(tempBlocked);
+  }, [showManage, friendsList, blockedList]);
+
   const refreshFriendsList = async () => {
     setReloading(true);
     try {
-      const data = await fetchWrapper({
+      const data1 = await fetchWrapper({
         route: 'users/friends/all',
         method: 'GET',
       })
-      if (!data) throw new SafeError(`bad friends/all response`);
+      if (!data1) throw new SafeError(`bad users/friends/all response`);
 
-      setFriendsList(data.friends ?? []);
+      setFriendsList(data1.friends ?? []);
+
+      const data2 = await fetchWrapper({
+        route: 'users/blocked/all',
+        method: 'GET',
+      })
+      if (!data2) throw new SafeError(`bad users/blocked/all response`);
+
+      setBlockedList(data2.blocked ?? []);
 
     } catch (error) {
-      addCaughtErrorLog(error, 'error during username search');
+      addCaughtErrorLog(error, 'error during refreshFriendsList search');
     } finally {
       setReloading(false);
     }
@@ -49,7 +85,7 @@ export default function Friends() {
       return (
         <LoadingScreen />
       )
-    } else if (friendsList.length === 0) {
+    } else if (userList.length === 0) {
       return (
         <View 
           style={{
@@ -68,11 +104,9 @@ export default function Friends() {
           width: '100%',
           marginBottom: 12,
         }}
-        data={friendsList}
-        // keyExtractor={(item) => item.id}
+        data={userList}
         renderItem={({ item, index }) => (
           <View
-            // key={item.id}
             style={{
               flexDirection: 'row',
               justifyContent: 'space-between',
@@ -80,24 +114,33 @@ export default function Friends() {
               borderRadius: 8,
               padding: 10,
               backgroundColor: index % 2 ? '#000000': '#222328ff',
-              marginLeft: 10,
-              marginRight: 10,
+              minHeight: 48
             }}
           >
-            <Text style={commonStyles.text}>
+            <Text 
+              style={[commonStyles.text, 
+                {color: item.type === 'friend' ? 'white' : 'red'
+              }]}
+            >
               {item.username}
             </Text>
-            <TouchableOpacity
-              style={{}}
-              onPress={() => {}}
-            >
-              <Feather name="arrow-right" size={24} color="#ccc" />
-            </TouchableOpacity>
+            {item.type === 'friend' ?
+              <FriendItemButtons 
+                userId={item.user_id}
+                username={item.username}
+                showManage={showManage}
+              />
+            :
+              <BlockedItemButtons 
+                userId={item.user_id}
+                username={item.username}
+              />
+            }
           </View>
         )}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-      />
+      />        
     )
   })();
 
@@ -174,14 +217,6 @@ export default function Friends() {
       >
         <FriendRequests onPress={() => setShowRequests(false)}/>
       </Modal>
-      {/* <Modal
-        animationType="slide"
-        transparent={true}
-        visible={showManage}
-        onRequestClose={() => setShowManage(false)}
-      >
-        <ManageFriends onPress={() => setShowManage(false)}/>
-      </Modal> */ }
     </KeyboardAvoidingView>
   )
 }

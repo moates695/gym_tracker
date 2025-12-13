@@ -5,8 +5,6 @@ import { commonStyles } from "@/styles/commonStyles";
 import { useAtom, useSetAtom } from "jotai";
 import React, { useEffect, useMemo, useState } from "react";
 import { View, StyleSheet, TouchableOpacity, Text, FlatList } from "react-native";
-import FriendRequestInboundItem from "./FriendRequestInboundItem";
-import FriendRequestOutboundItem from "./FriendRequestOutboundItem";
 import { friendsListAtom, inboundFriendRequestsAtom, outboundFriendRequestsAtom } from "@/store/general";
 import FriendRequestItem from "./FriendRequestItem";
 
@@ -50,6 +48,7 @@ export default function FriendRequests(props: FriendRequestsProps) {
   };
 
   useEffect(() => {
+    if (inboundRequests.length > 0 || outboundRequests.length > 0) return;
     refreshRequests();
   }, []);
 

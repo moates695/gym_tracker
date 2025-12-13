@@ -304,17 +304,18 @@ export const errorLogsAtom = atomWithStorage<ErrorLog[]>('errorLogs', [], storag
 export const loadableErrorLogsAtom = loadable(errorLogsAtom);
 
 export interface FriendsListItem {
-  id: string
+  user_id: string
   username: string
 }
 
 export const friendsListAtom = atomWithStorage<FriendsListItem[]>('friendsList', [], storage, { getOnInit: true });
 // export const loadableFriendsListAtom = loadable(friendsListAtom);
+export const blockedListAtom = atomWithStorage<FriendsListItem[]>('friendsList', [], storage, { getOnInit: true });
 
 export type FriendRequestState = 'requested' | 'accepted' | 'denied';
 
 export interface FriendRequest {
-  id: string,
+  id: string, // todo change here and backend to user_id
   username: string
   request_state: FriendRequestState
 }

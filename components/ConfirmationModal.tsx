@@ -27,15 +27,15 @@ export default function ConfirmationModal(props: ConfirmationModalProps) {
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               onPress={onConfirm}
-              style={[commonStyles.button,commonStyles.redBorder]}
-              activeOpacity={1}
+              style={[commonStyles.button, commonStyles.redBorder]}
+              // activeOpacity={1}
             >
               <Text style={styles.text}>{confirm_string}</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               onPress={onCancel}
-              style={[commonStyles.button,{borderColor: 'gray'}]}
-              activeOpacity={1}
+              style={[commonStyles.button, {borderColor: 'gray'}]}
+              // activeOpacity={1}
             >
               <Text style={styles.text}>{cancel_string}</Text>
             </TouchableOpacity>
