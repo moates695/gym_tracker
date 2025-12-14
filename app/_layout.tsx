@@ -10,7 +10,7 @@ import { useColorScheme, View, Image } from 'react-native';
 import * as SystemUI from "expo-system-ui"
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { useAtom, useSetAtom } from "jotai";
-import { distributionStatsAtom, exerciseListAtom, favouriteExerciseStatsAtom, loadableChosenHeatMap, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, previousWorkoutStatsAtom, SetClass, userDataAtom, workoutExercisesAtom, workoutHistoryStatsAtom, workoutTotalStatsAtom } from "@/store/general";
+import { distributionStatsAtom, exerciseListAtom, favouriteExerciseStatsAtom, loadableChosenHeatMap, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, permissionsAtom, previousWorkoutStatsAtom, SetClass, userDataAtom, workoutExercisesAtom, workoutHistoryStatsAtom, workoutTotalStatsAtom } from "@/store/general";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from 'expo-status-bar';
 import { classImageMap } from "@/components/ExerciseSet";
@@ -41,7 +41,8 @@ export default function RootLayout() {
   const [, setWorkoutTotalStats] = useAtom(workoutTotalStatsAtom);
   const [, setDistributions] = useAtom(distributionStatsAtom);
   const [, setFavouriteStats] = useAtom(favouriteExerciseStatsAtom);
-  
+  const setPermissions = useSetAtom(permissionsAtom);
+
   const addErrorLog = useSetAtom(addErrorLogAtom);
   const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
@@ -99,6 +100,7 @@ export default function RootLayout() {
             loadFonts(),
             fetchUserData(),
             fetchMappings(),
+            fetchPermissions(),
           ])
         } catch (error) {
           throw new SafeError(`fetching required startup data: ${safeErrorMessage(error)}`);
@@ -151,6 +153,21 @@ export default function RootLayout() {
       if (!data || !data.group_to_targets || !data.target_to_group) throw new Error('muscle maps bad response');
       setGroupToTargets(data.group_to_targets);
       setTargetoGroup(data.target_to_group);
+    } catch (error) {
+      addCaughtErrorLog(error, 'fetching muscle maps');
+      if (error instanceof SafeError) throw error;
+      throw new SafeError('uncaught fetchMappings error');
+    }
+  };
+
+  const fetchPermissions = async () => {
+    try {
+      const data = await fetchWrapper({
+        route: 'users/permissions/get',
+        method: 'GET'
+      })
+      if (!data || !data.permissions) throw new Error('permissions bad response');
+      setPermissions(data.permissions);
     } catch (error) {
       addCaughtErrorLog(error, 'fetching muscle maps');
       if (error instanceof SafeError) throw error;

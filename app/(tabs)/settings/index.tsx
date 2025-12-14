@@ -85,9 +85,14 @@ export default function Settings() {
         <TouchableOpacity
           style={[styles.button, {width: 200}]}
           onPress={() => router.replace('/(tabs)/settings/logs')}
-          // disabled={loadingStats}
         >
           <Text style={styles.text}>error logs</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, {width: 200}]}
+          onPress={() => router.replace('/(tabs)/settings/permissions')}
+        >
+          <Text style={styles.text}>permissions</Text>
         </TouchableOpacity>
       </View>
       <View>
