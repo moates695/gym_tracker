@@ -320,7 +320,7 @@ export default function ExerciseData(props: ExerciseDataProps) {
       </View>
       {exerciseHistory["history"][historyListIndex]?.started_at &&
         <Text 
-          style={[styles.text, {alignSelf: 'center', margin: 5, marginBottom: -10}]}
+          style={[styles.text, {alignSelf: 'center', margin: 5, marginBottom: 0}]}
         >
           Workout on {timestampToDateStr(exerciseHistory["history"][historyListIndex]?.started_at)}
         </Text>

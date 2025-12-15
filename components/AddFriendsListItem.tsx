@@ -35,7 +35,7 @@ export default function AddFriendsListItem(props: AddFriendsListItemProps) {
       });
       if (!data || !data.status) throw new SafeError('bad response');
 
-      if (["added", "existing", "blocked"].includes(data.status)) {
+      if (["added", "existing", "blocked", "private"].includes(data.status)) {
         props.removeItem(props.id);
       } else if (data.status === 'requested') {
         props.updateRelation(props.id, "requested");

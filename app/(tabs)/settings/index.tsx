@@ -1,6 +1,6 @@
 import { commonStyles } from '@/styles/commonStyles';
 import { StatusBar } from 'expo-status-bar';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Text, View, StyleSheet, SafeAreaView, Platform, TouchableOpacity } from 'react-native';
 import * as SecureStore from "expo-secure-store";
 import { useRouter } from 'expo-router';
@@ -11,6 +11,7 @@ import { OptionsObject } from '@/components/ChooseExerciseModal';
 import { useDropdown } from '@/components/ExerciseData';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getColorList, heatMaps } from '@/components/MuscleGroupSvg';
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 interface HeatmapOptionObject {
   label: string
@@ -38,12 +39,15 @@ export default function Settings() {
     return getColorList(heatMaps[heatmap])
   }, [heatmap]);
 
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false);
+
   const logOut = async () => {
     await SecureStore.deleteItemAsync('temp_token');
     await SecureStore.deleteItemAsync('auth_token');
     await AsyncStorage.clear();
-    router.replace("/sign-in")
+    router.replace("/sign-in");
   };
+
 
   return (
     <SafeAreaView style={styles.container}> 
@@ -85,21 +89,38 @@ export default function Settings() {
         <TouchableOpacity
           style={[styles.button, {width: 200}]}
           onPress={() => router.replace('/(tabs)/settings/logs')}
-          // disabled={loadingStats}
         >
           <Text style={styles.text}>error logs</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, {width: 200}]}
+          onPress={() => router.replace('/(tabs)/settings/permissions')}
+        >
+          <Text style={styles.text}>permissions</Text>
+        </TouchableOpacity>
       </View>
       <View>
-        <Text style={commonStyles.text}>{userData?.username}</Text>
-        <Text style={commonStyles.text}>{userData?.email}</Text>
-        <TouchableOpacity 
-          style={styles.button}
-          onPress={logOut}
+        <Text style={commonStyles.text}>
+          Username: {userData?.username}
+        </Text>
+        <Text style={commonStyles.text}>
+          Email: {userData?.email}
+        </Text>
+        <TouchableOpacity
+          style={[styles.button, {marginTop: 4}]}
+          onPress={() => setShowLogoutConfirm(true)}
         >
           <Text style={{ color: "white"}}>log out</Text>
         </TouchableOpacity>
       </View>
+      <ConfirmationModal 
+        visible={showLogoutConfirm}
+        onConfirm={logOut}
+        onCancel={() => setShowLogoutConfirm(false)}
+        message='Log out of account?'
+        confirm_string="yep"
+        cancel_string="nah"
+      />
     </SafeAreaView>
   );
 }
@@ -124,5 +145,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     justifyContent: 'center',
     alignItems: 'center',
+    width: 200
   }
 });

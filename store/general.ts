@@ -322,3 +322,18 @@ export interface FriendRequest {
 
 export const inboundFriendRequestsAtom = atomWithStorage<FriendRequest[]>('inboundFriendRequests', [], storage, { getOnInit: true });
 export const outboundFriendRequestsAtom = atomWithStorage<FriendRequest[]>('outboundFriendRequests', [], storage, { getOnInit: true });
+
+export type PermissionsKey = 
+  | 'searchable'
+  | 'workouts'
+  | 'name'
+  | 'gender'
+  | 'age'
+  | 'goal'
+  | 'height'
+  | 'weight'
+  | 'ped_status';
+
+export type Permissions = Record<PermissionsKey, string[]>
+
+export const permissionsAtom = atomWithStorage<Permissions | null>('permissions', null, storage, { getOnInit: true });
