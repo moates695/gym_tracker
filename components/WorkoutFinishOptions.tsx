@@ -51,7 +51,6 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
     const confirmed = await openConfirm();
     if (!confirmed) return;
     handleFinishOption(option);
-    setShowConfirmation(false);
   };
 
   const openConfirm = (): Promise<boolean> => {
@@ -128,6 +127,7 @@ export default function WorkoutFinishOptions(props: WorkoutFinishOptionsProps) {
       Alert.alert(safeErrorMessage(error, 'error saving workout'));
     } finally {
       setSavingWorkout(false);
+      setShowConfirmation(false);
     }
   };
 
