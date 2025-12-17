@@ -2,7 +2,7 @@
   "expo": {
     "name": "Gym Junkie",
     "slug": "app",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/android_icon.png",
     "userInterfaceStyle": "automatic",
@@ -17,7 +17,7 @@
       }
     },
     "android": {
-      "versionCode": 3,
+      "versionCode": 4,
       "icon": "./assets/images/android_icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android_icon.png",
