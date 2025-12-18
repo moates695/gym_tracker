@@ -29,7 +29,7 @@ interface FormData {
 export default function SignInScreen() {
   const router = useRouter();
 
-  const [, setUserData] = useAtom(userDataAtom);
+  const setUserData = useSetAtom(userDataAtom);
   const fetchMappings = useSetAtom(fetchMappingsAtom);
 
   const addErrorLog = useSetAtom(addErrorLogAtom);
@@ -93,6 +93,10 @@ export default function SignInScreen() {
             previousScreen: 'sign-in'
           }
         });
+      } else if (data.status === 'reviewer') {
+        await SecureStore.setItemAsync("auth_token", data.auth_token);
+        setUserData(data.user_data);
+        router.replace('/(tabs)/home')
       } else {
         throw new SafeError("sign in return status not recognised")
       }
