@@ -1,12 +1,13 @@
 import LoadingScreen from "@/app/loading";
 import { OptionsObject } from "@/components/ChooseExerciseModal";
 import { useDropdown } from "@/components/ExerciseData";
+import LineGraph from "@/components/LineGraph";
 import { fetchWrapper } from "@/middleware/helpers";
 import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 import { commonStyles } from "@/styles/commonStyles";
 import { useSetAtom } from "jotai";
 import React, { useEffect, useState } from "react";
-import { View, Text } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 
 type FieldValue = 'weight' | 'height' | 'goal_status' | 'ped_status' | 'bodyfat';
 interface FieldOption {
@@ -52,29 +53,44 @@ export default function SettingsUserData() {
     fetchHistory();
   }, []);
 
-  if (loadingHistory) {
-    return <LoadingScreen />
-  } else if (dataHistory === null) {
-    return (
-      <View>
-        <Text>could not load user data</Text>
-      </View>
-    )
-  }
+  console.log(dataHistory)
 
   return (
     <View 
       style={{
         flex: 1,
         backgroundColor: 'black',
-        paddingLeft: 10,
-        paddingRight: 10,
+        // paddingLeft: 10,
+        // paddingRight: 10,
+        marginHorizontal: 12
       }}
     >
-      <View>
-        <Text style={commonStyles.text}>Choose a data field:</Text>
-        {useDropdown(fieldOptions, fieldValue, setFieldValue)}
-      </View>
+      <TouchableOpacity
+        style={[commonStyles.thinTextButton, {width: 50, marginBottom: 8}]}
+        onPress={() => fetchHistory()}
+        disabled={loadingHistory}
+      >
+        <Text style={commonStyles.text}>refresh</Text>
+      </TouchableOpacity>
+      {loadingHistory ?
+        <LoadingScreen />
+      :
+        <>
+          {dataHistory === null &&
+            <View>
+              <Text>could not load user data</Text>
+            </View>
+          }
+          <View>
+            <Text style={commonStyles.text}>Choose a data field:</Text>
+            {useDropdown(fieldOptions, fieldValue, setFieldValue)}
+          </View>
+          <LineGraph 
+            points={dataHistory.weight.graph}
+            scale_type="time"
+          />
+        </>
+      }
     </View>
   )
 }
