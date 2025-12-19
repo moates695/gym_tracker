@@ -22,7 +22,10 @@ export default function TabStackHeader(props: TabStackHeaderProps) {
     try {
       let pathParts = pathname.split('/').slice(1);
       for (const i in pathParts) {
-        pathParts[i] = pathParts[i].charAt(0).toUpperCase() + pathParts[i].slice(1);
+        pathParts[i] = pathParts[i]
+                          .split('-')
+                          .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+                          .join(' ');
       }
       return pathParts.join(' / ');
     } catch (error) {
