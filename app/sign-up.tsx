@@ -34,6 +34,7 @@ interface FormData {
   goal_status: GoalStatus
   ped_status: PedStatus
   date_of_birth: string
+  bodyfat: string
 }
 
 interface GenderOption {
@@ -53,6 +54,7 @@ interface PedOption {
 
 type SignUpScreen = 'details' | 'stats';
 type UniqueStringState = null | 'checking' | 'good' | 'error';
+
 // todo: add body fat percentage
 
 export default function SignUpScreen() {
@@ -71,7 +73,8 @@ export default function SignUpScreen() {
     gender: "male",
     goal_status: "bulking",
     ped_status: "natural",
-    date_of_birth: ""
+    date_of_birth: "",
+    bodyfat: ""
   })
 
   const [inError, setInError] = useState<Record<string, string>>({
@@ -185,6 +188,9 @@ export default function SignUpScreen() {
         break;
       case 'weight':
         validateWeight(value);
+        break;
+      case 'bodyfat':
+        validateBodyfat(value);
         break;
     }
   };
@@ -316,6 +322,15 @@ export default function SignUpScreen() {
     })
   };
 
+  const validateBodyfat = (bodyfat_str: string) => {
+    const bodyfat = Number(bodyfat_str);
+    if (!Number.isNaN(bodyfat) && bodyfat > 0 && bodyfat < 100) return;
+    setInError({
+      ...inError,
+      bodyfat: "invalid bodyfat %"
+    })
+  };
+
   const isNextButtonDisabled = (): boolean => {
     const keys = ["email", "password", "username"];
     for (const key of keys) {
@@ -345,6 +360,7 @@ export default function SignUpScreen() {
       let form_copy: Record<any, any> = { ...formData};
       form_copy.height = parseFloat(formData.height);
       form_copy.weight = parseFloat(formData.weight);
+      form_copy.bodyfat = parseFloat(formData.bodyfat);
 
       const response = await fetch(`${Constants.expoConfig?.extra?.apiUrl}/register/new`, {
         method: "POST",
@@ -396,7 +412,8 @@ export default function SignUpScreen() {
     weight: "Weight (kg)",
     goal_status: "Current phase",
     ped_status: "PED use",
-    date_of_birth: "Date of birth"
+    date_of_birth: "Date of birth",
+    bodyfat: "Bodyfat %"
   }
 
   const isRequiredMap: Record<keyof FormData, boolean> = {
@@ -410,7 +427,8 @@ export default function SignUpScreen() {
     weight: true,
     goal_status: true,
     ped_status: true,
-    date_of_birth: true
+    date_of_birth: true,
+    bodyfat: false
   }
 
   return (
@@ -591,6 +609,24 @@ export default function SignUpScreen() {
                       <Text style={{ color: "white"}}>choose date</Text>
                     </TouchableOpacity>
                   </View>
+              </View>
+              <View
+                style={[styles.doubleItemRow, {
+                  marginTop: 16,
+                  justifyContent: 'center'
+                }]}
+              >
+                <View style={[{width: '50%'}]}>
+                  <TextInputFeild 
+                    field={'bodyfat'} 
+                    label={formDataLabels['bodyfat']} 
+                    value={formData['bodyfat']} 
+                    is_number={true} 
+                    error_message={inError['bodyfat']} 
+                    onChangeText={handleTextChange}
+                    required={isRequiredMap['bodyfat' as keyof FormData]}
+                  />
+                </View>
               </View>
               <View
                 style={{
