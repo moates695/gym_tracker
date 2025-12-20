@@ -8,7 +8,7 @@ import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 import { commonStyles } from "@/styles/commonStyles";
 import { useSetAtom } from "jotai";
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import ConfirmationModal from "@/components/ConfirmationModal";
@@ -59,6 +59,7 @@ export default function SettingsUserData() {
 
   const [newEntry, setNewEntry] = useState<string>('');
   const [showConfirm, setShowConfirm] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const goalStatusOptions: GoalStatusOption[] = [
     { label: 'bulking', value: 'bulking' },
@@ -109,6 +110,46 @@ export default function SettingsUserData() {
       break
     }
   }, [fieldValue, dataHistory]);
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      let value = newEntry;
+      if (fieldValue === 'goal_status') {
+        value = goalStatusValue;
+      } else if (fieldValue === 'ped_status') {
+        value = pedStatusValue;
+      }
+      
+      const data = await fetchWrapper({
+        route: 'users/data/update',
+        method: 'POST',
+        body: {
+          [fieldValue]: value
+        }
+      })
+      if (!data || !data.status) throw new Error('bad response users/data/update');
+
+      if (data.status === 'error') {
+        Alert.alert('');
+      } else {
+        // todo: add new entry to local data
+      }
+
+    } catch (error) {
+      addCaughtErrorLog(error, 'fetching users/data/get/history');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const isSubmitDisabled = (): boolean => {
+    if (newEntry.trim() === '' || isSubmitting) return true;
+    const num = Number(newEntry);
+    if (Number.isNaN(num) || num <= 0) return true;
+    if (fieldValue === 'bodyfat' && num > 100) return true;
+    return false;
+  };
 
   const inputElement = ((): JSX.Element => {
     if (fieldValue === 'goal_status') {
@@ -168,16 +209,17 @@ export default function SettingsUserData() {
           <View style={{flexDirection: 'row'}}>
             {inputElement}
             <TouchableOpacity
-            onPress={() => setShowConfirm(true)}
-              style={{
-                justifyContent: 'center', 
-                alignItems: 'center',
-              }}
+              onPress={() => setShowConfirm(true)}
+                style={{
+                  justifyContent: 'center', 
+                  alignItems: 'center',
+                }}
+              disabled={isSubmitDisabled()}
             >
               <Ionicons 
                 name="add-circle-outline" 
                 size={30} 
-                color="#ccc"
+                color={isSubmitDisabled() ? 'red' : "#ccc"}
                 style={{
                   marginLeft: 8
                 }} 
@@ -188,8 +230,8 @@ export default function SettingsUserData() {
         <View
           style={{
             flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
+            // justifyContent: 'center',
+            // alignItems: 'center',
           }}
         >
           {['weight','height','bodyfat'].includes(fieldValue) &&
@@ -231,7 +273,7 @@ export default function SettingsUserData() {
       {component}
       <ConfirmationModal 
         visible={showConfirm}
-        onConfirm={() => {}}
+        onConfirm={handleSubmit}
         onCancel={() => setShowConfirm(false)}
         message={'Add new entry?'}
         confirm_string={'yep'}
