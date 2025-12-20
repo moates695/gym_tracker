@@ -48,4 +48,14 @@ export const commonStyles = StyleSheet.create({
     marginBottom: 5,
     color: "white"
   },
+  input: {
+    // flex: 1,
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    backgroundColor: 'black',
+    color: "white"
+  }
 })
