@@ -265,11 +265,11 @@ export const formatMagnitude = (n: number, fix: number = 3): string => {
     ];
 
     for (const u of units) {
-      if (abs >= u.v) {
-        return (n / u.v).toFixed(fix).replace(/\.0$/, "") + u.s;
-      }
+      if (abs < u.v) continue;
+      const formatted = (n / u.v).toFixed(fix);
+      const trimmed = parseFloat(formatted).toString();
+      return trimmed + u.s;
     }
-
     return String(n);
   
   } catch (error) {

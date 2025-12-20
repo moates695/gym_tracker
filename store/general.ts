@@ -334,6 +334,6 @@ export type PermissionsKey =
   | 'weight'
   | 'ped_status';
 
-export type Permissions = Record<PermissionsKey, string[]>
+export type Permissions = Record<PermissionsKey, string>
 
 export const permissionsAtom = atomWithStorage<Permissions | null>('permissions', null, storage, { getOnInit: true });

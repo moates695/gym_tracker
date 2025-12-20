@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View, Text } from "react-native";
 import { OptionsObject } from "./ChooseExerciseModal";
 import { useDropdown } from "./ExerciseData";
@@ -8,7 +8,7 @@ import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 import { PermissionsKey } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 
-interface PermissionsOptionsProps {
+export interface PermissionsOptionsProps {
   permissionKey: PermissionsKey
   initValue: string
   textLabel: string
@@ -70,7 +70,6 @@ export default function PermissionsOptions(props: PermissionsOptionsProps) {
   return (
     <View
       style={{
-
       }}
     >
       <Text style={[commonStyles.text, {marginBottom: 4}]}>

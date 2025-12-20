@@ -1,12 +1,12 @@
 import LoadingScreen from "@/app/loading";
 import { OptionsObject } from "@/components/ChooseExerciseModal";
-import PermissionsOptions from "@/components/PermissionsOptions";
+import PermissionsOptions, { PermissionsOptionsProps } from "@/components/PermissionsOptions";
 import { fetchWrapper } from "@/middleware/helpers";
 import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 import { permissionsAtom, PermissionsKey } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useAtom, useSetAtom } from "jotai";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Text } from "react-native";
 
 
@@ -35,9 +35,69 @@ export default function PermissionSettings() {
   };
 
   useEffect(() => {
-    // if (permissions !== null) return;
     loadPermissions();
   }, []);
+
+  const rows = useMemo((): PermissionsOptionsProps[][] => {
+    if (permissions === null) return [];
+    return [
+      [
+        {
+          "textLabel": "Profile is searchable:",
+          "permissionKey": "searchable",
+          "initValue": permissions.searchable
+        },
+        {
+          "textLabel": "Workout visibility:",
+          "permissionKey": "workouts",
+          "initValue": permissions.workouts
+        }
+      ],
+      [
+        {
+          "textLabel": "Name visibility:",
+          "permissionKey": "name",
+          "initValue": permissions.name
+        },
+        {
+          "textLabel": "Gender visibility:",
+          "permissionKey": "gender",
+          "initValue": permissions.gender
+        }
+      ],
+      [
+        {
+          "textLabel": "Height visibility:",
+          "permissionKey": "height",
+          "initValue": permissions.height
+        },
+        {
+          "textLabel": "Weight visibility:",
+          "permissionKey": "weight",
+          "initValue": permissions.weight
+        }
+      ],
+      [
+        {
+          "textLabel": "Age visibility:",
+          "permissionKey": "age",
+          "initValue": permissions.age
+        },
+        {
+          "textLabel": "Goal visibility:",
+          "permissionKey": "goal",
+          "initValue": permissions.goal
+        }
+      ],
+      [
+        {
+          "textLabel": "PED visibility:",
+          "permissionKey": "ped_status",
+          "initValue": permissions.ped_status
+        },
+      ],
+    ]
+  }, [permissions]);
 
   if (loading) {
     return <LoadingScreen />
@@ -51,63 +111,7 @@ export default function PermissionSettings() {
     )
   }
 
-  const rows = [
-    [
-      {
-        "label": "Profile is searchable:",
-        "key": "searchable",
-        "initValue": permissions.searchable
-      },
-      {
-        "label": "Workout visibility:",
-        "key": "workouts",
-        "initValue": permissions.workouts
-      }
-    ],
-    [
-      {
-        "label": "Name visibility:",
-        "key": "name",
-        "initValue": permissions.name
-      },
-      {
-        "label": "Gender visibility:",
-        "key": "gender",
-        "initValue": permissions.gender
-      }
-    ],
-    [
-      {
-        "label": "Height visibility:",
-        "key": "height",
-        "initValue": permissions.height
-      },
-      {
-        "label": "Weight visibility:",
-        "key": "weight",
-        "initValue": permissions.weight
-      }
-    ],
-    [
-      {
-        "label": "Age visibility:",
-        "key": "age",
-        "initValue": permissions.age
-      },
-      {
-        "label": "Goal visibility:",
-        "key": "goal",
-        "initValue": permissions.goal
-      }
-    ],
-    [
-      {
-        "label": "PED visibility:",
-        "key": "ped_status",
-        "initValue": permissions.ped_status
-      },
-    ],
-  ]
+  console.log(rows)
 
   return (
     <View
@@ -137,15 +141,15 @@ export default function PermissionSettings() {
               }}
             >
               <PermissionsOptions 
-                permissionKey={row[0].key as PermissionsKey} 
-                initValue='private' 
-                textLabel={row[0].label}
+                permissionKey={row[0].permissionKey as PermissionsKey} 
+                initValue={row[0].initValue}
+                textLabel={row[0].textLabel}
               />
-              { row[1] !== undefined &&
+              {row[1] !== undefined &&
                 <PermissionsOptions 
-                  permissionKey={row[1].key as PermissionsKey} 
-                  initValue='private' 
-                  textLabel={row[1].label}
+                  permissionKey={row[1].permissionKey as PermissionsKey} 
+                  initValue={row[1].initValue}
+                  textLabel={row[1].textLabel}
                 />
               }
             </View>
