@@ -34,6 +34,7 @@ export default function TabLayout() {
         name="plan"
         options={{
           title: 'Plan',
+          headerTitle: () => <TabStackHeader tab={'plan'} />,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'list' : 'list-outline'} color={color} size={24} />
           ),
