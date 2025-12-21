@@ -11,6 +11,10 @@
         "image": "latest",
         "gradleCommand": ":app:assembleRelease -x lint"
       },
+      "ios": {
+        "buildConfiguration": "Release",
+        "image": "latest"
+      },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://subtly-ample-bluebird.ngrok-free.app",
         "EXPO_API_TIMEOUT_MS": "5000"
@@ -24,6 +28,10 @@
         "image": "latest",
         "gradleCommand": ":app:assembleRelease -x lint"
       },
+      "ios": {
+        "buildConfiguration": "Release",
+        "image": "latest"
+      },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://gymjunkie.moates.com.au",
         "EXPO_API_TIMEOUT_MS": "5000"
@@ -34,6 +42,10 @@
       "distribution": "store",
       "android": {
         "buildType": "app-bundle",
+        "image": "latest"
+      },
+      "ios": {
+        "buildConfiguration": "Release",
         "image": "latest"
       },
       "env": {
