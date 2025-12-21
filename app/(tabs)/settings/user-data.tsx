@@ -8,7 +8,7 @@ import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
 import { commonStyles } from "@/styles/commonStyles";
 import { useSetAtom } from "jotai";
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
+import { View, Text, TouchableOpacity, TextInput, Alert, Keyboard } from "react-native";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import ConfirmationModal from "@/components/ConfirmationModal";
@@ -69,9 +69,9 @@ export default function SettingsUserData() {
   const [goalStatusValue, setGoalStatusValue] = useState<GoalStatusValue>('bulking');
 
   const pedStatusOptions: PedStatusOption[] = [
-    { label: 'bulking', value: 'natural' },
-    { label: 'cutting', value: 'juicing' },
-    { label: 'maintaining', value: 'silent' },
+    { label: 'natural', value: 'natural' },
+    { label: 'juicing', value: 'juicing' },
+    { label: 'silent', value: 'silent' },
   ]
   const [pedStatusValue, setPedStatusValue] = useState<PedStatusValue>('natural');
 
@@ -112,6 +112,7 @@ export default function SettingsUserData() {
   }, [fieldValue, dataHistory]);
 
   const handleSubmit = async () => {
+    Keyboard.dismiss();
     setIsSubmitting(true);
     try {
       let value = newEntry;
@@ -131,15 +132,16 @@ export default function SettingsUserData() {
       if (!data || !data.status) throw new Error('bad response users/data/update');
 
       if (data.status === 'error') {
-        Alert.alert('');
+        Alert.alert(data.message);
       } else {
-        // todo: add new entry to local data
+        setDataHistory(data.data_history);
       }
 
     } catch (error) {
       addCaughtErrorLog(error, 'fetching users/data/get/history');
     } finally {
       setIsSubmitting(false);
+      setShowConfirm(false);
     }
   };
 
