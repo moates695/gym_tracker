@@ -266,9 +266,7 @@ export const formatMagnitude = (n: number, fix: number = 3): string => {
 
     for (const u of units) {
       if (abs < u.v) continue;
-      const formatted = (n / u.v).toFixed(fix);
-      const trimmed = parseFloat(formatted).toString();
-      return trimmed + u.s;
+      return (n / u.v).toFixed(fix) + u.s;
     }
     return String(n);
   
