@@ -88,7 +88,13 @@ export default function Settings() {
       <View style={{alignItems: 'center'}}>
         <TouchableOpacity
           style={[styles.button, {width: 200}]}
-          onPress={() => router.replace('/(tabs)/settings/logs')}
+          onPress={() => router.replace('/(tabs)/settings/user-data')}
+        >
+          <Text style={styles.text}>user data</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, {width: 200}]}
+          onPress={() => router.replace('/(tabs)/settings/error-logs')}
         >
           <Text style={styles.text}>error logs</Text>
         </TouchableOpacity>

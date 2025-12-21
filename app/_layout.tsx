@@ -9,8 +9,8 @@ import { fetchWrapper, loadFonts, SafeError, safeErrorMessage, useAwaitLoadable 
 import { useColorScheme, View, Image } from 'react-native';
 import * as SystemUI from "expo-system-ui"
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { useAtom, useSetAtom } from "jotai";
-import { distributionStatsAtom, exerciseListAtom, favouriteExerciseStatsAtom, loadableChosenHeatMap, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, permissionsAtom, previousWorkoutStatsAtom, SetClass, userDataAtom, workoutExercisesAtom, workoutHistoryStatsAtom, workoutTotalStatsAtom } from "@/store/general";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { distributionStatsAtom, exerciseListAtom, favouriteExerciseStatsAtom, loadableChosenHeatMap, muscleGroupToTargetsAtom, muscleTargetoGroupAtom, permissionsAtom, previousWorkoutStatsAtom, SetClass, showWorkoutStartOptionsAtom, userDataAtom, workoutExercisesAtom, workoutHistoryStatsAtom, workoutTotalStatsAtom } from "@/store/general";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from 'expo-status-bar';
 import { classImageMap } from "@/components/ExerciseSet";
@@ -42,6 +42,9 @@ export default function RootLayout() {
   const [, setDistributions] = useAtom(distributionStatsAtom);
   const [, setFavouriteStats] = useAtom(favouriteExerciseStatsAtom);
   const setPermissions = useSetAtom(permissionsAtom);
+  const workoutExercises = useAtomValue(workoutExercisesAtom);
+  const setShowStartOptions = useSetAtom(showWorkoutStartOptionsAtom);
+
 
   const addErrorLog = useSetAtom(addErrorLogAtom);
   const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
@@ -105,7 +108,12 @@ export default function RootLayout() {
         } catch (error) {
           throw new SafeError(`fetching required startup data: ${safeErrorMessage(error)}`);
         }
-        router.replace("/(tabs)/home");
+        if (Object.keys(workoutExercises).length !== 0) {
+          setShowStartOptions('workout');
+          router.replace("/(tabs)/workout");
+        } else {
+          router.replace("/(tabs)/home");
+        }
         try {
           await Promise.all([
             fetchExerciseList(),
