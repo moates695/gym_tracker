@@ -18,6 +18,9 @@ interface UserListItem extends FriendsListItem {
   type: 'friend' | 'blocked'
 }
 
+// todo: add friends landing page that shows their latest workouts (paginate and go in order of started_at?)
+// todo: if not friends pass through to add friends screen
+
 export default function Friends() {
   const addErrorLog = useSetAtom(addErrorLogAtom);
   const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);

@@ -2,7 +2,7 @@ import { BodyWeightRatios, ExerciseListItem, SetData, UserData, ValidSetData, Wo
 import * as SecureStore from "expo-secure-store";
 import Constants from 'expo-constants';
 import * as Font from 'expo-font';
-import { MaterialIcons, AntDesign, Ionicons, Feather } from '@expo/vector-icons';
+import { MaterialIcons, AntDesign, Ionicons, Feather, FontAwesome} from '@expo/vector-icons';
 import { useEffect, useState } from "react";
 import { Atom, useAtomValue } from "jotai";
 import { Loadable } from "jotai/vanilla/utils/loadable";
@@ -150,6 +150,7 @@ export const loadFonts = async () => {
     ...AntDesign.font,
     ...Ionicons.font,
     ...Feather.font,
+    ...FontAwesome.font,
   });
 };
 

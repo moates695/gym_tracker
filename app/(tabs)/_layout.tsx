@@ -3,6 +3,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
 import WorkoutHeader from '@/components/WorkoutHeader';
 import TabStackHeader from '@/components/TabStackHeader';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 export default function TabLayout() {
   return (
@@ -31,11 +32,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="plan"
+        name="friends"
         options={{
-          title: 'Plan',
+          title: 'Friends',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'list' : 'list-outline'} color={color} size={24} />
+            <FontAwesome name={focused ? 'user' : 'user-o'} size={24} color={color} />
           ),
         }}
       />
