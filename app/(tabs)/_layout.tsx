@@ -35,6 +35,7 @@ export default function TabLayout() {
         name="friends"
         options={{
           title: 'Friends',
+          headerTitle: () => <TabStackHeader tab={'friends'} />,
           tabBarIcon: ({ color, focused }) => (
             <FontAwesome name={focused ? 'user' : 'user-o'} size={24} color={color} />
           ),

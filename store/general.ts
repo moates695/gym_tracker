@@ -337,3 +337,5 @@ export type PermissionsKey =
 export type Permissions = Record<PermissionsKey, string>
 
 export const permissionsAtom = atomWithStorage<Permissions | null>('permissions', null, storage, { getOnInit: true });
+
+export const homeMuscleHistoryAtom = atom<any | null>(null);

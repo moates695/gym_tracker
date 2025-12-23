@@ -1,8 +1,12 @@
+import { fetchWrapper } from "@/middleware/helpers";
+import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
+import { homeMuscleHistoryAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { Suspense } from "react";
-import { Text, View, StyleSheet, SafeAreaView, TouchableOpacity } from "react-native";
+import { useAtom, useSetAtom } from "jotai";
+import React, { Suspense, useEffect, useState } from "react";
+import { Text, View, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from "react-native";
 
 // if have a schedule, see todays workout(s)
 // button to start workout
@@ -14,20 +18,51 @@ import { Text, View, StyleSheet, SafeAreaView, TouchableOpacity } from "react-na
 export default function Home() {
   const router = useRouter();
 
+  const [homeMuscleHistory, setHomeMuscleHistory] = useAtom(homeMuscleHistoryAtom);
+  const [loadingData, setLoadingData] = useState<boolean>(false);
+
+  const addErrorLog = useSetAtom(addErrorLogAtom);
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom)
+
+  const loadData = async () => {
+    try {
+      setLoadingData(true);
+      const data = await fetchWrapper({
+        route: 'home/muscles-history',
+        method: 'GET'
+      })
+      if (!data || !data.data) throw new Error('loadData bad response');
+
+      setHomeMuscleHistory(data.data);
+
+    } catch (error) {
+      addCaughtErrorLog(error, 'fetching home/muscles-history');
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  useEffect(() => {
+    if (homeMuscleHistory !== null) return;
+    loadData();
+  }, []);
+
   return (
-    <Suspense fallback={<View style={{ flex: 1, backgroundColor: 'black' }} />}>
-      <SafeAreaView style={styles.container}>
-        
-        {/* <TouchableOpacity
-          style={[styles.button, {width: 200}]}
-          onPress={() => router.replace('/(tabs)/home/friends')}
-        >
-          <Text style={commonStyles.text}>friends</Text>
-        </TouchableOpacity> */}
-        <Text style={{color: "white", marginTop: 20}}>home coming soon...</Text>
-        <StatusBar style='dark' />
-      </SafeAreaView >
-    </Suspense>
+    <ScrollView
+      style={{
+        flex: 1,
+        backgroundColor: 'black'
+      }}
+    >        
+      {/* <TouchableOpacity
+        style={[styles.button, {width: 200}]}
+        onPress={() => router.replace('/(tabs)/home/friends')}
+      >
+        <Text style={commonStyles.text}>friends</Text>
+      </TouchableOpacity> */}
+      <Text style={{color: "white", marginTop: 20}}>home coming soon...</Text>
+      <StatusBar style='dark' />
+    </ScrollView>        
   );
 }
 
