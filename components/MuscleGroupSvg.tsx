@@ -116,7 +116,7 @@ export default function MuscleGroupSvg(props: MuscleGroupSvgProps) {
 
   const numToRgbString = (num: number): string => {
     try {
-      if (num < 0 || num > 1) return "none";
+      if (num < 0 || num > 1) return "black";
 
       const colours = heatMaps[heatmap];
 
@@ -157,6 +157,8 @@ export default function MuscleGroupSvg(props: MuscleGroupSvgProps) {
     }
   };
 
+  const testColor = numToRgbString(getValue('chest', 'lower'));
+  
   return (
     <View style={styles.container}>
       <Svg

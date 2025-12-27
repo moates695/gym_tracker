@@ -1,13 +1,15 @@
+import LoadingScreen from "@/app/loading";
 import { OptionsObject } from "@/components/ChooseExerciseModal";
 import { TimeSpanOption, TimeSpanOptionObject, useDropdown } from "@/components/ExerciseData";
 import MuscleGroupSvg from "@/components/MuscleGroupSvg";
 import { fetchWrapper } from "@/middleware/helpers";
 import { addCaughtErrorLogAtom, addErrorLogAtom } from "@/store/actions";
-import { homeMuscleHistoryAtom } from "@/store/general";
+import { homeMuscleHistoryAtom, muscleGroupToTargetsAtom } from "@/store/general";
 import { commonStyles } from "@/styles/commonStyles";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { get } from "lodash";
 import React, { Suspense, useEffect, useState } from "react";
 import { Text, View, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from "react-native";
 
@@ -23,6 +25,8 @@ export default function Home() {
 
   const [homeMuscleHistory, setHomeMuscleHistory] = useAtom(homeMuscleHistoryAtom);
   const [loadingData, setLoadingData] = useState<boolean>(false);
+  
+  const muscleGroupToTargets = useAtomValue(muscleGroupToTargetsAtom);
 
   const timeSpanOptions: TimeSpanOptionObject[] = [
     { label: 'week', value: 'week' },
@@ -41,8 +45,54 @@ export default function Home() {
   ]
   const [metricValue, setMetricValue] = useState<string>('volume');
 
+  const muscleGroupOptions: OptionsObject[] = ((): OptionsObject[] => {
+    const options = [{ label: 'all groups', value: 'all' }];
+    options.push(...Object.keys(muscleGroupToTargets).map(group => ({
+      label: group,
+      value: group
+    })))
+    return options;
+  })();
+  const [muscleGroupValue, setMuscleGroupValue] = useState<string>('all');
+
+  const muscleTargetOptions = ((): Record<string, OptionsObject[]> => {
+    const optionsMap: Record<string, OptionsObject[]> = {};
+    for (const [group, targets] of Object.entries(muscleGroupToTargets)) {
+      optionsMap[group] = targets.map(name => ({
+        label: name,
+        value: name
+      }));
+    }
+    return optionsMap;
+  })();
+  const [muscleTargetValue, setMuscleTargetValue] = useState<string>('disabled');
+
   const addErrorLog = useSetAtom(addErrorLogAtom);
-  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom)
+  const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
+
+  const updateSelectedMuscleGroup = (value: string) => {
+    setMuscleGroupValue(value);
+    if (value === 'all') {
+      setMuscleTargetValue('disabled');
+      // setRatioOptionsValue('disabled');
+    } else {
+      setMuscleTargetValue('all');
+      // setRatioOptionsValue('7');
+    }
+  };
+
+  const getMuscleTargetOptions = (): OptionsObject[] => {
+    if (muscleGroupValue === 'all') {
+      return [{ label: 'disabled (select group)', value: 'disabled' }];
+    }
+    const temp = muscleTargetOptions[muscleGroupValue];
+    return [{ label: 'muscle target (all)', value: 'all' }].concat(temp);
+  };
+
+  const updateSelectedMuscleTarget = (value: string) => {
+    if (muscleGroupValue === 'all') return;
+    setMuscleTargetValue(value);
+  };
 
   const loadData = async () => {
     try {
@@ -54,7 +104,6 @@ export default function Home() {
       if (!data || !data.data) throw new Error('loadData bad response');
 
       setHomeMuscleHistory(data.data);
-
     } catch (error) {
       addCaughtErrorLog(error, 'fetching home/muscles-history');
     } finally {
@@ -74,30 +123,16 @@ export default function Home() {
     try {
       const data = homeMuscleHistory[timeSpanValue];
       for (const [groupName, groupStats] of Object.entries(data)) {
-        const stats = groupStats as Record<string, any>;
-        if (stats[metricValue] === 0) continue;
-        map[groupName] = stats[metricValue];
-        for (const [targetName, targetStats] of Object.entries(stats["targets"])) {
+        for (const [targetName, targetStats] of Object.entries((groupStats as any)["targets"])) {
           const targetStat = targetStats as Record<string, any>;
-          if (targetStat[metricValue] === 0) continue;
+          if (targetStat[metricValue] <= 0) continue;
           map[`${groupName}/${targetName}`] = targetStat[metricValue];
         }
       }
-
-      // for (const [groupName, groupStats] of Object.entries(distributions)) {
-      //   if (heatmapDisplayValue === 'group') {
-      //     if (groupStats[metricOptionValue] === 0) continue;
-      //     map[groupName] = groupStats[metricOptionValue];
-      //     continue;
-      //   } 
-      //   for (const [targetName, targetStats] of Object.entries(groupStats["targets"])) {
-      //     if (targetStats[metricOptionValue] === 0) continue;
-      //     map[`${groupName}/${targetName}`] = targetStats[metricOptionValue];
-      //   }
-      // }
     } catch (error) {
       addCaughtErrorLog(error, 'error building value map');
     }
+
     return map;
   }
 
@@ -117,21 +152,26 @@ export default function Home() {
       <View>
         <Text style={commonStyles.text}>Choose a metric:</Text>
         {useDropdown(metricOptions, metricValue, setMetricValue)}
-      </View> 
-      {/* <TouchableOpacity
-        style={[styles.button, {width: 200}]}
-        onPress={() => router.replace('/(tabs)/home/friends')}
-      >
-        <Text style={commonStyles.text}>friends</Text>
-      </TouchableOpacity> */}
-      <View style={{marginBottom: 20, marginTop: 20}}>
-        <MuscleGroupSvg 
-          valueMap={getValueMap()} 
-          showGroups={false}
-          // showGroups={heatmapDisplayValue === 'group'}
-        />
       </View>
-      <StatusBar style='dark' />
+      {/* <View>
+        <Text style={[commonStyles.text, {marginTop: 4}]}>Choose a muscle group:</Text>
+        {useDropdown(muscleGroupOptions, muscleGroupValue, updateSelectedMuscleGroup)} 
+      </View>
+      <View>
+        <Text style={commonStyles.text}>Choose a muscle target:</Text>
+        {useDropdown(getMuscleTargetOptions(), muscleTargetValue, updateSelectedMuscleTarget, muscleGroupValue==='all')}
+      </View> */}
+      {homeMuscleHistory === null ?
+        <LoadingScreen />
+      :
+        <>
+          <View style={{paddingTop: 10}}/>
+          <MuscleGroupSvg 
+            valueMap={getValueMap()} 
+            showGroups={false}
+          />
+        </>
+      }
     </View>        
   );
 }
