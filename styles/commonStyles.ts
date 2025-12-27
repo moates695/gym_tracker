@@ -40,6 +40,10 @@ export const commonStyles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
   },
+  thinTextButtonHighlighted: {
+    backgroundColor: '#e0e0e0ff',
+    borderColor: '#e0e0e0ff',
+  },
   text: {
     color: 'white'
   },

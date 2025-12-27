@@ -20,6 +20,8 @@ import { Text, View, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } fr
 // other stats and info
 // switch to see friends workouts?
 
+type MuscleHistoryVisual = 'heatmap' | 'radar';
+
 export default function Home() {
   const router = useRouter();
 
@@ -45,54 +47,56 @@ export default function Home() {
   ]
   const [metricValue, setMetricValue] = useState<string>('volume');
 
-  const muscleGroupOptions: OptionsObject[] = ((): OptionsObject[] => {
-    const options = [{ label: 'all groups', value: 'all' }];
-    options.push(...Object.keys(muscleGroupToTargets).map(group => ({
-      label: group,
-      value: group
-    })))
-    return options;
-  })();
-  const [muscleGroupValue, setMuscleGroupValue] = useState<string>('all');
+  const [muscleVisual, setMuscleVisual] = useState<MuscleHistoryVisual>('heatmap');
 
-  const muscleTargetOptions = ((): Record<string, OptionsObject[]> => {
-    const optionsMap: Record<string, OptionsObject[]> = {};
-    for (const [group, targets] of Object.entries(muscleGroupToTargets)) {
-      optionsMap[group] = targets.map(name => ({
-        label: name,
-        value: name
-      }));
-    }
-    return optionsMap;
-  })();
-  const [muscleTargetValue, setMuscleTargetValue] = useState<string>('disabled');
+  // const muscleGroupOptions: OptionsObject[] = ((): OptionsObject[] => {
+  //   const options = [{ label: 'all groups', value: 'all' }];
+  //   options.push(...Object.keys(muscleGroupToTargets).map(group => ({
+  //     label: group,
+  //     value: group
+  //   })))
+  //   return options;
+  // })();
+  // const [muscleGroupValue, setMuscleGroupValue] = useState<string>('all');
+
+  // const muscleTargetOptions = ((): Record<string, OptionsObject[]> => {
+  //   const optionsMap: Record<string, OptionsObject[]> = {};
+  //   for (const [group, targets] of Object.entries(muscleGroupToTargets)) {
+  //     optionsMap[group] = targets.map(name => ({
+  //       label: name,
+  //       value: name
+  //     }));
+  //   }
+  //   return optionsMap;
+  // })();
+  // const [muscleTargetValue, setMuscleTargetValue] = useState<string>('disabled');
 
   const addErrorLog = useSetAtom(addErrorLogAtom);
   const addCaughtErrorLog = useSetAtom(addCaughtErrorLogAtom);
 
-  const updateSelectedMuscleGroup = (value: string) => {
-    setMuscleGroupValue(value);
-    if (value === 'all') {
-      setMuscleTargetValue('disabled');
-      // setRatioOptionsValue('disabled');
-    } else {
-      setMuscleTargetValue('all');
-      // setRatioOptionsValue('7');
-    }
-  };
+  // const updateSelectedMuscleGroup = (value: string) => {
+  //   setMuscleGroupValue(value);
+  //   if (value === 'all') {
+  //     setMuscleTargetValue('disabled');
+  //     // setRatioOptionsValue('disabled');
+  //   } else {
+  //     setMuscleTargetValue('all');
+  //     // setRatioOptionsValue('7');
+  //   }
+  // };
 
-  const getMuscleTargetOptions = (): OptionsObject[] => {
-    if (muscleGroupValue === 'all') {
-      return [{ label: 'disabled (select group)', value: 'disabled' }];
-    }
-    const temp = muscleTargetOptions[muscleGroupValue];
-    return [{ label: 'muscle target (all)', value: 'all' }].concat(temp);
-  };
+  // const getMuscleTargetOptions = (): OptionsObject[] => {
+  //   if (muscleGroupValue === 'all') {
+  //     return [{ label: 'disabled (select group)', value: 'disabled' }];
+  //   }
+  //   const temp = muscleTargetOptions[muscleGroupValue];
+  //   return [{ label: 'muscle target (all)', value: 'all' }].concat(temp);
+  // };
 
-  const updateSelectedMuscleTarget = (value: string) => {
-    if (muscleGroupValue === 'all') return;
-    setMuscleTargetValue(value);
-  };
+  // const updateSelectedMuscleTarget = (value: string) => {
+  //   if (muscleGroupValue === 'all') return;
+  //   setMuscleTargetValue(value);
+  // };
 
   const loadData = async () => {
     try {
@@ -141,37 +145,95 @@ export default function Home() {
       style={{
         flex: 1,
         backgroundColor: 'black',
-        justifyContent: 'center',
+        // justifyContent: 'center',
         alignItems: 'center',
       }}
     >       
-      <View>
-        <Text style={commonStyles.text}>Choose a view:</Text>
-        {useDropdown(timeSpanOptions, timeSpanValue, setTimeSpanValue)}
-      </View> 
-      <View>
-        <Text style={commonStyles.text}>Choose a metric:</Text>
-        {useDropdown(metricOptions, metricValue, setMetricValue)}
-      </View>
-      {/* <View>
-        <Text style={[commonStyles.text, {marginTop: 4}]}>Choose a muscle group:</Text>
-        {useDropdown(muscleGroupOptions, muscleGroupValue, updateSelectedMuscleGroup)} 
-      </View>
-      <View>
-        <Text style={commonStyles.text}>Choose a muscle target:</Text>
-        {useDropdown(getMuscleTargetOptions(), muscleTargetValue, updateSelectedMuscleTarget, muscleGroupValue==='all')}
-      </View> */}
-      {homeMuscleHistory === null ?
-        <LoadingScreen />
-      :
-        <>
-          <View style={{paddingTop: 10}}/>
+      <View
+        style={{
+          // flex: 1,
+          alignItems: 'center',
+          borderColor: '#ccc',
+          borderWidth: 1,
+          borderRadius: 10,
+          padding: 10,
+          width: '100%',
+        }}
+      >
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'center',
+            width: '100%',
+            // marginTop: 10,
+          }}
+        >
+          <View>
+            <Text style={commonStyles.text}>Choose a lookback:</Text>
+            {useDropdown(timeSpanOptions, timeSpanValue, setTimeSpanValue)}
+          </View> 
+          <View 
+            style={{marginLeft: 10}}
+          >
+            <Text style={commonStyles.text}>Choose a metric:</Text>
+            {useDropdown(metricOptions, metricValue, setMetricValue)}
+          </View>
+        </View>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginTop: 10,
+            marginBottom: 10,
+          }}
+        >
+          <TouchableOpacity
+            style={[
+              commonStyles.thinTextButton,
+              muscleVisual === 'heatmap' && commonStyles.thinTextButtonHighlighted
+            ]}
+            onPress={() => setMuscleVisual('heatmap')}
+          >
+            <Text 
+              style={[
+                commonStyles.text,
+                muscleVisual === 'heatmap' && {
+                  color: 'black'
+                }
+              ]}
+            >
+              heatmap
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              commonStyles.thinTextButton,
+              {marginLeft: 10},
+              muscleVisual === 'radar' && commonStyles.thinTextButtonHighlighted
+            ]}
+            onPress={() => setMuscleVisual('radar')}
+          >
+            <Text 
+              style={[
+                commonStyles.text,
+                muscleVisual === 'radar' && {
+                  color: 'black'
+                }
+              ]}
+            >
+              radar chart
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View style={{paddingTop: 10}}/>
+        {muscleVisual === 'heatmap' &&
           <MuscleGroupSvg 
             valueMap={getValueMap()} 
             showGroups={false}
           />
-        </>
-      }
+        }
+      </View>
     </View>        
   );
 }
