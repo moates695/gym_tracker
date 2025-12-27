@@ -10,8 +10,9 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { get } from "lodash";
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { Text, View, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from "react-native";
+import { RadarChart } from "@salmonco/react-native-radar-chart";
 
 // if have a schedule, see todays workout(s)
 // button to start workout
@@ -140,6 +141,66 @@ export default function Home() {
     return map;
   }
 
+  const radarData = useMemo(() => {
+    const data: any[] = [];
+    if (homeMuscleHistory === null) return data;
+    try {
+      const timeData = homeMuscleHistory[timeSpanValue];
+      for (const [groupName, groupStats] of Object.entries(timeData)) {
+        data.push({
+          label: groupName,
+          value: (groupStats as any)[metricValue]
+        })
+      }
+    } catch (error) {
+      addCaughtErrorLog(error, 'error building radar data');
+    }
+    return data;
+  }, [homeMuscleHistory, timeSpanValue, metricValue]);
+
+  const canDisplayRadarData = (radarData: any) => {
+    let count = 0;
+    for (const data of radarData) {
+      if (data.value === 0) count++;
+    }
+    return count < radarData.length;
+  };
+
+  const radarComponent = (() => {
+    if (!canDisplayRadarData(radarData)) {
+      return (
+        <View
+          style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: 200,
+          }}
+        >
+          <Text style={commonStyles.text}>
+            Not enough data to display radar chart :(
+          </Text>
+        </View>
+      )
+    }
+    return (
+      <RadarChart 
+        data={radarData}
+        gradientColor={{
+          startColor: '#00000000',
+          endColor: '#00000000',
+          count: 4,
+        }}
+        strokeWidth={[0.5, 0.5, 0.5, 0.5, 1]}
+        strokeOpacity={[1, 1, 1, 1, 0.13]}
+        labelColor="#f6f6f6ff"
+        dataFillColor="#ff9430ff"
+        dataFillOpacity={0.8}
+        dataStroke="#ff7f08ff"
+        labelSize={10}
+      />
+    )
+  })();
+
   return (
     <View
       style={{
@@ -232,6 +293,9 @@ export default function Home() {
             valueMap={getValueMap()} 
             showGroups={false}
           />
+        }
+        {muscleVisual === 'radar' &&
+          radarComponent 
         }
       </View>
     </View>        

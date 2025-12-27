@@ -111,8 +111,6 @@ export default function PermissionSettings() {
     )
   }
 
-  console.log(rows)
-
   return (
     <View
       style={{
